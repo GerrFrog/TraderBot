@@ -75,8 +75,10 @@ string GetRequest(const string url)
 }
 
 int main(int argc, char *argv[]) {
-    const std::string pk = "...";
-    const std::string sk = "...";
+    dotenv::load("../.env");
+
+    const std::string pk = dotenv::get("PRIVATE_KEY");
+    const std::string sk = dotenv::get("SECRET_KEY");
 
     boost::asio::io_context ioctx;
     binapi::rest::api api(
@@ -91,16 +93,10 @@ int main(int argc, char *argv[]) {
     auto account = api.account_info();
     if ( !account ) {
         std::cerr << "account info error: " << account.errmsg << std::endl;
-        // return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
 
     std::cout << "account info: " << account.v << std::endl << std::endl;
-
-    // create an empty structure (null)
-    json j;
-    j["pi"] = 3.141;
-    j["happy"] = true;
-
 
     // CURL *curl;//Объект CURL
 
@@ -137,20 +133,13 @@ int main(int argc, char *argv[]) {
     //     }
     // }
 
-	string jsonData = GetRequest("https://api.taapi.io/ema?secret=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY&exchange=binance&symbol=BTC/USDT&interval=1h");
-	std::cout << jsonData << std::endl;
+    json jj = json::parse(GetRequest("https://api.taapi.io/ema?secret=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY&exchange=binance&symbol=BTC/USDT&interval=1h"));
 
-    json jj = json::parse(jsonData);
-
-    cout << jj << endl;
+    // cout << jj << endl;
 
     for (auto& [key, value] : jj.items()) {
       std::cout << key << " : " << value << "\n";
     }
-
-    // for (json::iterator it = jj.begin(); it != jj.end(); ++it) {
-    //   std::cout << it.key() << " : " << it.value() << "\n";
-    // }
 
     return EXIT_SUCCESS;
 }

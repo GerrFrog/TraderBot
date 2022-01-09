@@ -10,12 +10,6 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 
 ################ VARIABLES ###########################
-set( HEADER_DB_FILES src/db/inc )
-set( IMPLEMENTED_DB_FILES src/db/src )
-set( HEADER_TELEBOT_FILES src/telebot/inc )
-set( IMPLEMENTED_TELEBOT_FILES src/telebot/src )
-set( HEADER_SERVER_FILES src/server/inc )
-set( IMPLEMENTED_SERVER_FILES src/server/src)
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -44,6 +38,7 @@ set(
     ${LIBS_FILES}/binapi/include/binapi/tools.hpp
     ${LIBS_FILES}/binapi/include/binapi/types.hpp
     ${LIBS_FILES}/binapi/include/binapi/websocket.hpp
+    ${LIBS_FILES}/dotenv/include/dotenv.hpp
 )
 
 set(
@@ -56,21 +51,20 @@ set(
     ${LIBS_FILES}/binapi/src/tools.cpp
     ${LIBS_FILES}/binapi/src/types.cpp
     ${LIBS_FILES}/binapi/src/websocket.cpp
+    ${LIBS_FILES}/dotenv/src/dotenv.cpp
 )
-
 ############## END SOURCE FILES ###########################
 
 ##################### PACKAGES#######################
-
-####################### END PACKAGES#######################
 find_package( Threads REQUIRED )
 find_package( OpenSSL REQUIRED )
 find_package( Boost COMPONENTS system REQUIRED )
 find_package( CURL REQUIRED )
 find_package( Threads REQUIRED )
 find_package( OpenSSL REQUIRED )
-find_package(nlohmann_json REQUIRED)
-# find_package( cpr CONFIG REQUIRED ) # this
+find_package( nlohmann_json REQUIRED )
+####################### END PACKAGES#######################
+
 #################### LINKING ##########################
 include_directories(
     src/libs/binapi/include
@@ -96,13 +90,6 @@ add_executable(
     ${LIBS_IMPLEMENTED_FILES}
 )
 
-if (DEFINED ${BOOST_LIB_DIR})
-    target_link_libraries(
-        ${PROJECT_NAME}
-        -L${BOOST_LIB_DIR}
-    )
-endif()
-
 target_link_libraries(
     ${PROJECT_NAME}
     z
@@ -121,6 +108,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     ${CURL_LIBRARIES}
     ${PYTHON_LIBRARIES}
+    -L${BOOST_LIB_DIR}
 )
 #################### END LINKING ####################################
 

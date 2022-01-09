@@ -5,6 +5,7 @@
 #include <string>
 
 #include "libs/binapi/include/binapi/api.hpp"
+#include "libs/dotenv/include/dotenv.hpp"
 
 // for convenience
 using json = nlohmann::json;
