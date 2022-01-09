@@ -10,6 +10,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 
 ################ VARIABLES ###########################
+set( REQUEST_FILES src/request )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -17,10 +18,12 @@ set( LIBS_FILES src/libs )
 set(
     HEADER_FILES 
     src/main.hpp
+    ${REQUEST_FILES}/inc/request.hpp
 )
 set(
     IMPLEMENTED_FILES
     src/main.cpp
+    ${REQUEST_FILES}/src/request.cpp
 )
 
 set(

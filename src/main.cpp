@@ -1,6 +1,7 @@
 #include "main.hpp"
 
-using namespace std;
+// using namespace std;
+using std::cout, std::string, std::endl;
 
 void Cleanup(CURL *curl, curl_slist *headers)
 {
@@ -79,6 +80,7 @@ int main(int argc, char *argv[]) {
 
     const std::string pk = dotenv::get("PRIVATE_KEY");
     const std::string sk = dotenv::get("SECRET_KEY");
+    const std::string taapi_key = dotenv::get("TAAPI_KEY");
 
     boost::asio::io_context ioctx;
     binapi::rest::api api(
@@ -133,9 +135,19 @@ int main(int argc, char *argv[]) {
     //     }
     // }
 
-    json jj = json::parse(GetRequest("https://api.taapi.io/ema?secret=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY&exchange=binance&symbol=BTC/USDT&interval=1h"));
+    // json jj = json::parse(GetRequest("https://api.taapi.io/ema?secret=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY&exchange=binance&symbol=BTC/USDT&interval=1h"));
 
-    // cout << jj << endl;
+    Request::JSON_Curl json_curl("https://api.taapi.io/ema");
+    std::map<std::string, std::string> params;
+
+    params["secret"] = taapi_key;
+    params["exchange"] = "binance";
+    params["symbol"] = "BTC/USDT";
+    params["interval"] = "1h";
+
+    json_curl.construct_request(params);
+
+    json jj = json_curl.request();
 
     for (auto& [key, value] : jj.items()) {
       std::cout << key << " : " << value << "\n";
