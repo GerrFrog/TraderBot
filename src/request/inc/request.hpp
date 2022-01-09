@@ -10,9 +10,9 @@
 #include <iostream>
 
 /**
- * @brief All Request objects namespace
+ * @brief All Simple Requests (GET, POST, JSON)
  */
-namespace Request
+namespace Request::Simple
 {
     /**
      * @brief Object of JSON Request and Response.
@@ -80,6 +80,16 @@ namespace Request
             ~JSON_Curl() { }
 
             /**
+             * @brief Set the base URL
+             * 
+             * @param url 
+             */
+            void set_base_url(std::string url)
+            {
+                this->base_url = url;
+            }
+
+            /**
              * @brief Construct the Request
              * 
              * @param params Params for request
@@ -103,6 +113,7 @@ namespace Request
             nlohmann::json request(const std::string &url);
     };
 }
+
 
 
 

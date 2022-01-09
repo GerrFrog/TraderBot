@@ -1,16 +1,18 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required( VERSION 3.1.0 )
 
-project(TraderBot VERSION 1.0.0 LANGUAGES CXX)
+project( TraderBot VERSION 1.0.0 LANGUAGES CXX )
 
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -fsanitize=address" )
 set( Boost_USE_MULTITHREADED ON )
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+set( CMAKE_THREAD_PREFER_PTHREAD TRUE )
+set( THREADS_PREFER_PTHREAD_FLAG TRUE )
 
 ################ VARIABLES ###########################
 set( REQUEST_FILES src/request )
+set( STRATEGIES_FILES src/strategies )
+set( INDICATORS_FILES src/indicators )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -19,11 +21,15 @@ set(
     HEADER_FILES 
     src/main.hpp
     ${REQUEST_FILES}/inc/request.hpp
+    ${STRATEGIES_FILES}/inc/strategies.hpp
+    ${INDICATORS_FILES}/inc/indicators.hpp
 )
 set(
     IMPLEMENTED_FILES
     src/main.cpp
     ${REQUEST_FILES}/src/request.cpp
+    ${STRATEGIES_FILES}/src/strategies.cpp
+    ${INDICATORS_FILES}/src/indicators.cpp
 )
 
 set(

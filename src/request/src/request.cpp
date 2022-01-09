@@ -1,6 +1,6 @@
 #include "../inc/request.hpp"
 
-nlohmann::json Request::JSON_Curl::request()
+nlohmann::json Request::Simple::JSON_Curl::request()
 {
 	curl_global_init(CURL_GLOBAL_ALL); // sets the program environment
 	CURL *curl = curl_easy_init(); // initialize curl
@@ -52,7 +52,7 @@ nlohmann::json Request::JSON_Curl::request()
 	return nlohmann::json::parse(response_string);
 }
 
-nlohmann::json Request::JSON_Curl::request(const std::string &url)
+nlohmann::json Request::Simple::JSON_Curl::request(const std::string &url)
 {
 	curl_global_init(CURL_GLOBAL_ALL); // sets the program environment
 	CURL *curl = curl_easy_init(); // initialize curl
@@ -100,7 +100,7 @@ nlohmann::json Request::JSON_Curl::request(const std::string &url)
 	return nlohmann::json::parse(response_string);
 }
 
-void Request::JSON_Curl::construct_request(std::map<std::string, std::string> &params)
+void Request::Simple::JSON_Curl::construct_request(std::map<std::string, std::string> &params)
 {
 	std::string req_param = "";
 
