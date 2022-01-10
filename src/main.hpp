@@ -6,7 +6,6 @@
 
 #include "libs/binapi/include/binapi/api.hpp"
 #include "libs/dotenv/include/dotenv.hpp"
-#include "request/inc/request.hpp"
-#include "indicators/inc/indicators.hpp"
+#include "manager/inc/manager.hpp"
 
 int main(int argc, char *argv[]);

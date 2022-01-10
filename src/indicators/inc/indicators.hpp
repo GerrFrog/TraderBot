@@ -8,6 +8,8 @@
 #include <map>
 #include <iostream>
 
+#include "../../request/inc/request.hpp"
+
 /**
  * @brief Requests to taapi.io 
  */
@@ -16,7 +18,7 @@ namespace Indicators::TAAPI
     /**
      * @brief URL of taapi.io
      */
-    std::string taapi_url = "https://api.taapi.io/";
+    // std::string taapi_url = "https://api.taapi.io/";
 
     /**
      * @brief Get EMA value
@@ -33,31 +35,8 @@ namespace Indicators::TAAPI
         const std::string &key,
         const std::string &symbol, 
         const std::string &interval, 
-        const int &period,
-        int backtrack = 0
-    ) {
-        std::map<std::string, std::string> params;
-
-        params["secret"] = key;
-        params["exchange"] = "binance";
-        params["symbol"] = symbol;
-        params["interval"] = interval;
-        params["backtrack"] = std::to_string(backtrack);
-        params["optInTimePeriod"] = std::to_string(period);
-
-        Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::taapi_url + "ema");
-
-        json_curl.construct_request(params);
-
-        nlohmann::json res = json_curl.request();
-
-        if (res.contains("value")) 
-        {
-            return res["value"];
-        }
-
-        return NULL;
-    };
+        const int &period
+    );
 }
 
 
