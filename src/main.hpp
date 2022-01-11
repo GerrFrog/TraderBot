@@ -12,3 +12,9 @@
 using json = nlohmann::json;
 
 int main(int argc, char *argv[]);
+
+// TODO: Bot heartbeat
+// TODO: GUI managment
+// TODO: Telebot managment
+// TODO: API managment
+// TODO: Site

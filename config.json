@@ -1,6 +1,10 @@
 {
     "fiat_display_currency": "USD",
     "test_mode": true,
+    "taapi": {
+        "request_delay": 15,
+        "plan": "free"
+    },
     "exchange": {
         "trading_pair": [
             "BTC/USDT",

@@ -27,6 +27,11 @@ namespace Managers
              */
             string taapi_key;
 
+            /**
+             * @brief EMA Cross Strategy worker object
+             */
+            Workers::EMA_Cross_Worker ema_worker;
+
         public:
             /**
              * @brief Construct a new Trade_Manager object
@@ -37,7 +42,13 @@ namespace Managers
 
             void foo()
             {
-                Workers::EMA_Cross_Worker ema_worker(this->taapi_key, "BTC/USDT", "1h", 5, 25);
+                // Workers::EMA_Cross_Worker ema_worker(this->taapi_key, "BTC/USDT", "1m", 5, 25);
+                this->ema_worker.set_taapi_key(this->taapi_key);
+                this->ema_worker.set_symbol("BTC/USDT");
+                this->ema_worker.set_interval("1m");
+                this->ema_worker.set_short_period(5);
+                this->ema_worker.set_long_period(25);
+
                 map<string, string> description;
 
                 ema_worker.describe_worker(description);
@@ -45,9 +56,13 @@ namespace Managers
                 for (auto const& [key, val] : description)
                 {
                     std::cout << key << " : " << val << endl;
-                } cout << "\n\n";
+                }
 
                 ema_worker.resolve();
+
+                cout << "Buy signal: " << ema_worker.get_buy_signal() << endl;
+                cout << "Sell signal: " << ema_worker.get_sell_signal() << endl;
+                cout << endl;
             }
     };
 }

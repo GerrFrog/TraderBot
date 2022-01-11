@@ -73,7 +73,9 @@ int main(int argc, char *argv[]) {
 
     Managers::Workers_Manager worker(taapi_key);
 
-    worker.foo();
+    while (true) 
+        worker.foo();
+
 
     return EXIT_SUCCESS;
 }

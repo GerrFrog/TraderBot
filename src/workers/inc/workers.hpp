@@ -6,6 +6,8 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <chrono>
+#include <thread>
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
@@ -54,6 +56,11 @@ namespace Workers
              * @brief Period for Long EMA
              */
             int long_period;
+
+            /**
+             * @brief EMA Cross Strategy object
+             */
+            Strategies::EMA_Cross ema_strategy;
 
         public:
             /**
@@ -149,12 +156,35 @@ namespace Workers
 
             void resolve()
             {
+                std::this_thread::sleep_for(std::chrono::seconds(15));
+
                 double short_value = Indicators::TAAPI::EMA(
                     this->taapi_key, this->symbol,
                     this->interval, this->short_period
                 );
 
-                cout << short_value << endl;
+                // TODO: Remake without delay
+                std::this_thread::sleep_for(std::chrono::seconds(15));
+
+                double long_value = Indicators::TAAPI::EMA(
+                    this->taapi_key, this->symbol,
+                    this->interval, this->long_period
+                );
+
+                // TODO: Remake with throw error
+                if (short_value == 0.0 || long_value == 0.0)
+                {
+                    cout << "Limit of request to https://api.taapi.io/" << endl;
+                    return;
+                }
+
+                cout << "Short value: " << short_value << endl;
+                cout << "Long value: " << long_value << endl;
+
+                this->ema_strategy.resolve(
+                    short_value, long_value,
+                    this->signals
+                );
             }
     };
 }
