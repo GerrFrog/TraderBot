@@ -178,9 +178,6 @@ namespace Workers
                     return;
                 }
 
-                cout << "Short value: " << short_value << endl;
-                cout << "Long value: " << long_value << endl;
-
                 this->ema_strategy.resolve(
                     short_value, long_value,
                     this->signals

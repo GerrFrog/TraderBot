@@ -71,11 +71,19 @@ int main(int argc, char *argv[]) {
     //     }
     // }
 
-    Managers::Workers_Manager worker(taapi_key);
+    std::ifstream ifs("../config.json");
+    json jf = json::parse(ifs);
 
-    while (true) 
-        worker.foo();
+    // cout << jf["timeframes"].size() << endl;
 
+    // for (auto& elem : jf["timeframes"])
+    //     timeframes.push_back(elem);
+
+    Managers::Workers_Manager worker(taapi_key, jf["strategies"]);
+
+    worker.initialize_workers();
+    worker.describe_workers();
+    worker.start();
 
     return EXIT_SUCCESS;
 }

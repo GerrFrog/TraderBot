@@ -1,18 +1,24 @@
 {
     "fiat_display_currency": "USD",
     "test_mode": true,
+    "strategies": {
+        "ema_cross": {
+            "exchange": "binance",
+            "stake_amount": 100,
+            "short_ema_period": 5,
+            "long_ema_period": 25,
+            "timeframes": [
+                "1m", "3m", "5m",
+                "15m", "30m", "1h",
+                "2h", "4h", "6h",
+                "8h", "12h", "1d"
+            ],
+            "symbol": "BTC/USDT"
+        }
+    },
     "taapi": {
         "request_delay": 15,
         "plan": "free"
-    },
-    "exchange": {
-        "trading_pair": [
-            "BTC/USDT",
-            "ETH/USDT",
-            "XRP/USDT",
-            "LTC/USDT",
-            "XMR/USDT"
-        ]
     },
     "telegram": {
         "enabled": false,
