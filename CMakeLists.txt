@@ -13,9 +13,10 @@ set( THREADS_PREFER_PTHREAD_FLAG TRUE )
 set( REQUEST_FILES src/request )
 set( STRATEGIES_FILES src/strategies )
 set( INDICATORS_FILES src/indicators )
-set( MANAGER_FILES src/manager )
+set( MANAGERS_FILES src/managers )
+set( TRADE_FILES src/trade )
+set( WORKERS_FILES src/workers )
 set( LIBS_FILES src/libs )
-set( TRADE_FILES src/trade)
 ############# END VARIABLES ############################
 
 ############### SOURCE FILES ##############################
@@ -25,8 +26,9 @@ set(
     ${REQUEST_FILES}/inc/request.hpp
     ${STRATEGIES_FILES}/inc/strategies.hpp
     ${INDICATORS_FILES}/inc/indicators.hpp
-    ${MANAGER_FILES}/inc/manager.hpp
+    ${MANAGERS_FILES}/inc/managers.hpp
     ${TRADE_FILES}/inc/trade.hpp
+    ${WORKERS_FILES}/inc/workers.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -34,8 +36,9 @@ set(
     ${REQUEST_FILES}/src/request.cpp
     ${STRATEGIES_FILES}/src/strategies.cpp
     ${INDICATORS_FILES}/src/indicators.cpp
-    ${MANAGER_FILES}/src/manager.cpp
+    ${MANAGERS_FILES}/src/managers.cpp
     ${TRADE_FILES}/src/trade.cpp
+    ${WORKERS_FILES}/src/workers.cpp
 )
 
 set(

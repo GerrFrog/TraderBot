@@ -5,7 +5,9 @@
         "trading_pair": [
             "BTC/USDT",
             "ETH/USDT",
-            "XRP/USDT"
+            "XRP/USDT",
+            "LTC/USDT",
+            "XMR/USDT"
         ]
     },
     "telegram": {

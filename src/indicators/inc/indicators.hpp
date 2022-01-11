@@ -10,15 +10,19 @@
 
 #include "../../request/inc/request.hpp"
 
+using std::string, std::map, std::cout, std::endl;
+
 /**
  * @brief Requests to taapi.io 
  */
 namespace Indicators::TAAPI
 {
     /**
-     * @brief URL of taapi.io
+     * @brief Get the taapi url object
+     * 
+     * @return std::string 
      */
-    // std::string taapi_url = "https://api.taapi.io/";
+    std::string get_taapi_url();
 
     /**
      * @brief Get EMA value
@@ -27,8 +31,6 @@ namespace Indicators::TAAPI
      * @param symbol Symbol (pair)
      * @param interval Interval
      * @param period EMA Period
-     * @param backtrack Candles from the data set and calculates the ema value X amount of candles back
-     * @param backtracks The EMA value calculated on every candle for the past X candles
      * @return double 
      */
     double EMA(

@@ -1,5 +1,10 @@
 #include "../inc/indicators.hpp"
 
+std::string Indicators::TAAPI::get_taapi_url()
+{
+    return "https://api.taapi.io/";
+}
+
 double Indicators::TAAPI::EMA (
     const std::string &key,
     const std::string &symbol, 
@@ -14,7 +19,7 @@ double Indicators::TAAPI::EMA (
     params["interval"] = interval;
     params["optInTimePeriod"] = std::to_string(period);
 
-    // Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::taapi_url + "ema");
+    // Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::get_taapi_url() + "ema");
     Request::Simple::JSON_Curl json_curl("https://api.taapi.io/ema");
 
     json_curl.construct_request(params);
@@ -27,5 +32,5 @@ double Indicators::TAAPI::EMA (
         return res["value"];
     }
 
-    return NULL;
+    return 0.0;
 };

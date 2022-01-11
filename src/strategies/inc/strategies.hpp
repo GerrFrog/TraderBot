@@ -136,10 +136,13 @@ namespace Strategies
              */
             void resolve(double short_ema, double long_ema, std::map<std::string, bool> &signals)
             {
+                signals["buy"] = false;
+                signals["sell"] = false;
+
                 if (this->cross_above(short_ema, long_ema)) 
                     signals["buy"] = true;
                 if (this->cross_below(short_ema, long_ema))
-                    signals["sell"] = false;
+                    signals["sell"] = true;
             }
     };
 }
