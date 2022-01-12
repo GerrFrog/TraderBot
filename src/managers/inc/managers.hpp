@@ -47,13 +47,9 @@ namespace Managers
             void initial_ema_cross()
             {
                 vector<string> timeframes;
-                vector<string> symbols;
 
                 for (auto& elem : this->config["ema_cross"]["timeframes"])
                     timeframes.push_back(elem);
-
-                for (auto& elem : this->config["ema_cross"]["symbols"])
-                    symbols.push_back(elem);
 
                 for (string& timeframe : timeframes)
                 {
@@ -68,9 +64,15 @@ namespace Managers
 
         public:
             /**
+             * @brief Construct a new Workers_Manager object
+             */
+            Workers_Manager() { }
+
+            /**
              * @brief Construct a new Trade_Manager object
              * 
              * @param key taapi.io key
+             * @param config JSON config of strategies
              */
             Workers_Manager(
                 const string &key,
@@ -81,6 +83,20 @@ namespace Managers
              * @brief Destroy the Workers_Manager object
              */
             ~Workers_Manager() { }
+
+            /**
+             * @brief Set the key 
+             * 
+             * @param key API Key for taapi.io
+             */
+            void set_key(const string &key) { this->taapi_key = key; }
+
+            /**
+             * @brief Set the config 
+             * 
+             * @param conf 
+             */
+            void set_config(nlohmann::json &conf) { this->config = conf; }
 
             void describe_workers()
             {
@@ -129,12 +145,18 @@ namespace Managers
     class Trade_Manager
     {
         private:
+            Managers::Workers_Manager worker;
 
         public:
             /**
              * @brief Construct a new Trade_Manager object
              */
             Trade_Manager() { }
+
+            /**
+             * @brief Destroy the Trade_Manager object
+             */
+            ~Trade_Manager() { }
     };
 }
 

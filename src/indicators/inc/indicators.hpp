@@ -8,6 +8,7 @@
 #include <map>
 #include <iostream>
 
+#include "../../exceptions/inc/exceptions.hpp"
 #include "../../request/inc/request.hpp"
 
 using std::string, std::map, std::cout, std::endl;

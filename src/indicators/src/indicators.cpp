@@ -19,18 +19,17 @@ double Indicators::TAAPI::EMA (
     params["interval"] = interval;
     params["optInTimePeriod"] = std::to_string(period);
 
-    // Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::get_taapi_url() + "ema");
-    Request::Simple::JSON_Curl json_curl("https://api.taapi.io/ema");
+    Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::get_taapi_url() + "ema");
 
     json_curl.construct_request(params);
 
     nlohmann::json res = json_curl.request();
 
-    // TODO: Throw Request limit error
     if (res.contains("value")) 
-    {
         return res["value"];
-    }
 
-    return 0.0;
+    if (res.contains("error"))
+        throw Exceptions::TAAPI::Rate_Limit(res["error"], 429, 0);
+
+    throw Exceptions::Panic::Panic_Exception("Something went wrong!", 1, 0);
 };

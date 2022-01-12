@@ -16,6 +16,7 @@ set( INDICATORS_FILES src/indicators )
 set( MANAGERS_FILES src/managers )
 set( TRADE_FILES src/trade )
 set( WORKERS_FILES src/workers )
+set( EXCEPTIONS_FILES src/exceptions )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -29,6 +30,7 @@ set(
     ${MANAGERS_FILES}/inc/managers.hpp
     ${TRADE_FILES}/inc/trade.hpp
     ${WORKERS_FILES}/inc/workers.hpp
+    ${EXCEPTIONS_FILES}/inc/exceptions.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -39,6 +41,7 @@ set(
     ${MANAGERS_FILES}/src/managers.cpp
     ${TRADE_FILES}/src/trade.cpp
     ${WORKERS_FILES}/src/workers.cpp
+    ${EXCEPTIONS_FILES}/src/exceptions.cpp
 )
 
 set(

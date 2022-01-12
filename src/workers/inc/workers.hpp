@@ -156,26 +156,31 @@ namespace Workers
 
             void resolve()
             {
-                std::this_thread::sleep_for(std::chrono::seconds(15));
+                double short_value, long_value;
+                // std::this_thread::sleep_for(std::chrono::seconds(15));
 
-                double short_value = Indicators::TAAPI::EMA(
-                    this->taapi_key, this->symbol,
-                    this->interval, this->short_period
-                );
+            again_short:
+                try {
+                    short_value = Indicators::TAAPI::EMA(
+                        this->taapi_key, this->symbol,
+                        this->interval, this->short_period
+                    );
+                } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+                    cout << exp.what() << endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                    goto again_short;
+                }
 
-                // TODO: Remake without delay
-                std::this_thread::sleep_for(std::chrono::seconds(15));
-
-                double long_value = Indicators::TAAPI::EMA(
-                    this->taapi_key, this->symbol,
-                    this->interval, this->long_period
-                );
-
-                // TODO: Remake with throw error
-                if (short_value == 0.0 || long_value == 0.0)
-                {
-                    cout << "Limit of request to https://api.taapi.io/" << endl;
-                    return;
+            again_long:
+                try {
+                    long_value = Indicators::TAAPI::EMA(
+                        this->taapi_key, this->symbol,
+                        this->interval, this->long_period
+                    );
+                } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+                    cout << exp.what() << endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                    goto again_long;
                 }
 
                 this->ema_strategy.resolve(

@@ -80,6 +80,9 @@ int main(int argc, char *argv[]) {
     //     timeframes.push_back(elem);
 
     Managers::Workers_Manager worker(taapi_key, jf["strategies"]);
+    Managers::Trade_Manager trader;
+
+    // cout << Indicators::TAAPI::EMA(taapi_key, "BTC/USDT", "1h", 5) << endl;
 
     worker.initialize_workers();
     worker.describe_workers();

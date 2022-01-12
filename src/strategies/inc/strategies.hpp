@@ -7,6 +7,8 @@
 #include <iostream>
 #include <map>
 
+#include "../../exceptions/inc/exceptions.hpp"
+
 using std::cout, std::string, std::endl;
 
 /**
@@ -54,13 +56,11 @@ namespace Strategies
                 }
 
                 if (this->is_short_above && this->is_short_below)
-                {
-                    // TODO: Throw Exception (can't be)
-                    this->is_short_above = false;
-                    this->is_short_below = false;
-
-                    return false;
-                }
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
 
                 if (this->is_short_below && short_ema > long_ema)
                 {
@@ -97,13 +97,11 @@ namespace Strategies
                 }
 
                 if (this->is_short_above && this->is_short_below)
-                {
-                    // TODO: Throw Exception (can't be)
-                    this->is_short_above = false;
-                    this->is_short_below = false;
-
-                    return false;
-                }
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
 
                 if (this->is_short_above && short_ema < long_ema)
                 {
