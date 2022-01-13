@@ -8,7 +8,7 @@
             "short_ema_period": 5,
             "long_ema_period": 25,
             "timeframes": [
-                "1m"
+                "1m", "3m"
             ],
             "symbol": "BTC/USDT"
         }

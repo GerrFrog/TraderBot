@@ -79,14 +79,13 @@ int main(int argc, char *argv[]) {
     // for (auto& elem : jf["timeframes"])
     //     timeframes.push_back(elem);
 
-    Managers::Workers_Manager worker(taapi_key, jf["strategies"]);
-    Managers::Trade_Manager trader;
-
     // cout << Indicators::TAAPI::EMA(taapi_key, "BTC/USDT", "1h", 5) << endl;
 
-    worker.initialize_workers();
-    worker.describe_workers();
-    worker.start();
+    // Managers::Trade_Manager trader(taapi_key, jf["strategies"]);
+
+    Managers::Employers::EMA_Cross ema_cross(taapi_key, jf["strategies"]["ema_cross"]);
+
+    ema_cross.run();
 
     return EXIT_SUCCESS;
 }

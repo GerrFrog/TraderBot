@@ -17,7 +17,7 @@ using std::string, std::cout, std::endl, std::map;
 /**
  * @brief All Workers which create Trader
  */
-namespace Workers
+namespace Workers::TAAPI
 {
     /**
      * @brief EMA Cross Strategy Worker
@@ -154,6 +154,9 @@ namespace Workers
                 description["interval"] = this->interval;
             }
 
+            /**
+             * @brief Resolve the strategy in worker
+             */
             void resolve()
             {
                 double short_value, long_value;
