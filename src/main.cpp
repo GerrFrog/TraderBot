@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     // Managers::Trade_Manager trader(taapi_key, jf["strategies"]);
 
-    Managers::Employers::EMA_Cross ema_cross(taapi_key, jf["strategies"]["ema_cross"]);
+    Managers::Employers::EMA_Cross_Employer ema_cross(taapi_key, jf["strategies"]["ema_cross"]);
 
     ema_cross.run();
 
