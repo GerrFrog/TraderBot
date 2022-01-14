@@ -8,8 +8,8 @@
             "name": "EMA Cross Strategy",
             "request_delay": 15,
             "worker": {
-                "short_ema_period": 5,
-                "long_ema_period": 10 
+                "short_ema_period": 2,
+                "long_ema_period": 3
             }, 
             "trader": {
                 "stake_amount": 100

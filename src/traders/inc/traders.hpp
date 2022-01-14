@@ -64,7 +64,7 @@ namespace Traders::TAAPI
             double get_current_price()
             {
                 map<string, string> params;
-                string sym = this->symbol;
+                string sym;
 
                 std::remove_copy(
                     this->symbol.begin(),
@@ -81,11 +81,11 @@ namespace Traders::TAAPI
 
                 nlohmann::json res = json_curl.request();
 
-                cout << res << endl;
-                cout << sym << endl;
-
                 if (res.contains("price"))
-                    return res["price"];
+                {
+                    string price = res["price"];
+                    return std::stod(price);
+                }
                 
                 throw Exceptions::Panic::Panic_Exception("Something went wront in trader!", 1, 0);
             }
