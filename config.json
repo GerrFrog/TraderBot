@@ -3,6 +3,10 @@
     "test_mode": true,
     "strategies": {
         "ema_cross": {
+            "exchange": "binance",
+            "symbol": "BTC/USDT",
+            "name": "EMA Cross Strategy",
+            "request_delay": 15,
             "worker": {
                 "short_ema_period": 5,
                 "long_ema_period": 25
@@ -10,16 +14,12 @@
             "trader": {
                 "stake_amount": 100
             },
-            "exchange": "binance",
-
             "timeframes": [
                 "1m", "3m"
-            ],
-            "symbol": "BTC/USDT"
+            ]
         }
     },
     "taapi": {
-        "request_delay": 15,
         "plan": "free"
     },
     "telegram": {

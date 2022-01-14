@@ -14,7 +14,6 @@
 
 using std::map, std::string, std::cout, std::endl, std::vector;
 
-
 /**
  * @brief All Traders which trade
  */
@@ -29,34 +28,7 @@ namespace Managers::Analyst
             /**
              * @brief Vector for EMA Cross Strategy Traders
              */
-            vector<Traders::TAAPI::EMA_Cross_Trader> traders;
-
-            /**
-             * @brief Describe Traders
-             */
-            void describe_traders()
-            {
-                for (Traders::TAAPI::EMA_Cross_Trader &trader : this->traders)
-                {
-                    map<string, string> descr;
-                    trader.describe_trader(descr);
-                    for (auto &[key, val] : descr)
-                        cout << key << " : " << val << endl;
-                }
-            }
-
-            /**
-             * @brief Describe curtain Trader
-             * 
-             * @param trader Trader
-             */
-            void describe_trader(Traders::TAAPI::EMA_Cross_Trader &trader)
-            {
-                map<string, string> descr;
-                trader.describe_trader(descr);
-                for (auto &[key, val] : descr)
-                    cout << key << " : " << val << endl;
-            }
+            vector<Traders::TAAPI::Trader> traders;
             
         public:
             /**
@@ -72,6 +44,43 @@ namespace Managers::Analyst
             { }
 
             /**
+             * @brief Describe Traders
+             */
+            void describe_traders()
+            {
+                for (Traders::TAAPI::Trader &trader : this->traders)
+                {
+                    map<string, string> descr;
+                    trader.get_trader_description(descr);
+                    for (auto &[key, val] : descr)
+                        cout << key << " : " << val << endl;
+                }
+            }
+
+            /**
+             * @brief Describe curtain Trader
+             * 
+             * @param trader Trader
+             */
+            void describe_trader(Traders::TAAPI::Trader &trader)
+            {
+                map<string, string> descr;
+                trader.get_trader_description(descr);
+                for (auto &[key, val] : descr)
+                    cout << key << " : " << val << endl;
+            }
+
+            /**
+             * @brief Get the array with Traders
+             * 
+             * @return vector<Traders::TAAPI::EMA_Cross_Trader>
+             */
+            vector<Traders::TAAPI::Trader> get_ema_cross_traders()
+            {
+                return this->traders;
+            }
+
+            /**
              * @brief Initialize all traders by config
              * 
              * @param config JSON Config for Trader
@@ -85,10 +94,10 @@ namespace Managers::Analyst
 
                 for (string &timeframe : timeframes)
                 {
-                    string symbol = config["symbol"];
-                    Traders::TAAPI::EMA_Cross_Trader trader(
-                        symbol,
+                    Traders::TAAPI::Trader trader(
+                        config["symbol"],
                         timeframe,
+                        config["name"],
                         config["trader"]["stake_amount"]
                     );
                     this->traders.push_back(trader);
@@ -113,32 +122,6 @@ namespace Managers::Employers
              */
             vector<Workers::TAAPI::EMA_Cross_Worker> workers;
 
-            /**
-             * @brief Describe Workers
-             */
-            void describe_workers()
-            {
-                for (auto& worker : this->workers)
-                {
-                    map<string, string> description;
-                    worker.describe_worker(description);
-                    for (auto& [key, val] : description)
-                        cout << key << " : " << val << endl;
-                }
-            }
-
-            /**
-             * @brief Describe curtain Worker
-             * @param worker Worker
-             */
-            void describe_worker(Workers::TAAPI::EMA_Cross_Worker &worker)
-            {
-                map<string, string> description;
-                worker.describe_worker(description);
-                for (auto& [key, val] : description)
-                    cout << key << " : " << val << endl;
-            }
-
         public:
             /**
              * @brief Construct a new Workers_Manager object
@@ -153,12 +136,48 @@ namespace Managers::Employers
             { }
 
             /**
+             * @brief Describe Workers
+             */
+            void describe_workers()
+            {
+                for (auto& worker : this->workers)
+                {
+                    map<string, string> description;
+                    worker.get_worker_description(description);
+                    for (auto& [key, val] : description)
+                        cout << key << " : " << val << endl;
+                }
+            }
+
+            /**
+             * @brief Describe curtain Worker
+             * @param worker Worker
+             */
+            void describe_worker(Workers::TAAPI::EMA_Cross_Worker &worker)
+            {
+                map<string, string> description;
+                worker.get_worker_description(description);
+                for (auto& [key, val] : description)
+                    cout << key << " : " << val << endl;
+            }
+
+            /**
+             * @brief Get the array with Workers
+             * 
+             * @return vector<Workers::TAAPI::EMA_Cross_Worker> 
+             */
+            vector<Workers::TAAPI::EMA_Cross_Worker> get_ema_cross_workers()
+            {
+                return this->workers; 
+            }
+
+            /**
              * @brief Initialize all workers by config
              * 
              * @param config JSON Config for Worker
              * @param taapi_key API Key for taapi.io
              */
-            void initial_workers(nlohmann::json &config, string &taapi_key)
+            void initial_workers(nlohmann::json &config, const string &taapi_key)
             {
                 vector<string> timeframes;
 
@@ -169,8 +188,10 @@ namespace Managers::Employers
                 {
                     Workers::TAAPI::EMA_Cross_Worker worker(
                         taapi_key, config["symbol"], 
-                        timeframe, config["worker"]["short_ema_period"],
-                        config["worker"]["long_ema_period"]
+                        timeframe, config["name"],
+                        config["worker"]["short_ema_period"],
+                        config["worker"]["long_ema_period"],
+                        config["request_delay"]
                     );
                     this->workers.push_back(worker);
                 }

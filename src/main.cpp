@@ -81,11 +81,10 @@ int main(int argc, char *argv[]) {
 
     // cout << Indicators::TAAPI::EMA(taapi_key, "BTC/USDT", "1h", 5) << endl;
 
-    // Managers::Trade_Manager trader(taapi_key, jf["strategies"]);
+    nlohmann::json strategies_config = jf["strategies"];
+    Director director(jf["strategies"], taapi_key);
 
-    Managers::Employers::EMA_Cross_Employer ema_cross(taapi_key, jf["strategies"]["ema_cross"]);
-
-    ema_cross.run();
+    director.run();
 
     return EXIT_SUCCESS;
 }

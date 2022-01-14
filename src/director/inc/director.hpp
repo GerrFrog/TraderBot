@@ -31,7 +31,7 @@ class Director
          */
         void work(
             Workers::TAAPI::EMA_Cross_Worker &worker,
-            Traders::TAAPI::EMA_Cross_Trader &trader
+            Traders::TAAPI::Trader &trader
         ) {
             worker.resolve();
             trader.resolve(
@@ -42,15 +42,16 @@ class Director
             map<string, string> worker_desc;
             map<string, string> trader_desc;
 
-            worker.describe_worker(worker_desc);
-            trader.describe_trader(trader_desc);
+            worker.get_worker_description(worker_desc);
+            trader.get_trader_description(trader_desc);
 
             cout << "WORKER" << endl;
             for (auto &[key, val] : worker_desc)
-                cout << key << " : " << val;
+                cout << key << " : " << val << endl;;
+            cout << endl;
             cout << "TRADER" << endl;
             for (auto &[key, val] : trader_desc)
-                cout << key << " : " << val;
+                cout << key << " : " << val << endl;;
             cout << endl;
         }
 
@@ -63,11 +64,11 @@ class Director
          */
         Director(
             nlohmann::json &config,
-            string &taapi_key
+            const string &taapi_key
         ) 
         { 
-            this->ema_analyst.initial_traders(config);
-            this->ema_employer.initial_workers(config, taapi_key);
+            this->ema_analyst.initial_traders(config["ema_cross"]);
+            this->ema_employer.initial_workers(config["ema_cross"], taapi_key);
         }
 
         /**
@@ -82,15 +83,30 @@ class Director
         void run()
         {
             cout << "Started!" << endl;
+
+            vector<Traders::TAAPI::Trader> traders = this->ema_analyst.get_ema_cross_traders();
+            vector<Workers::TAAPI::EMA_Cross_Worker> workers = this->ema_employer.get_ema_cross_workers();
+
+            cout << "[+] Start working" << endl;
+
+            for (Traders::TAAPI::Trader &trader : traders)
+            {
+                cout << "[+] Got new Trader:" << endl;
+                this->ema_analyst.describe_trader(trader);
+                cout << endl;
+            } cout << endl;
+
+            for (Workers::TAAPI::EMA_Cross_Worker &worker : workers)
+            {
+                cout << "[+] Got new Worker:" << endl;
+                this->ema_employer.describe_worker(worker);
+                cout << endl;
+            } cout << endl;
+
             while (true)
             {
-                for (int i = 0; i < this->workers.size(); i++)
-                {
-                    work(
-                        this->workers[i],
-                        this->traders[i]
-                    );
-                }
+                for (int i = 0; i < workers.size(); i++)
+                    work(workers[i], traders[i]);
             }
         }
 };

@@ -8,7 +8,7 @@
 
 #include "libs/binapi/include/binapi/api.hpp"
 #include "libs/dotenv/include/dotenv.hpp"
-#include "managers/inc/managers.hpp"
+#include "director/inc/director.hpp"
 
 using json = nlohmann::json;
 

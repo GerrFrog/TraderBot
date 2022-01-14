@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "../../trade/inc/trade.hpp"
+#include "../../request/inc/request.hpp"
 #include "../../exceptions/inc/exceptions.hpp"
 
 using std::string, std::map, std::cout, std::endl;
@@ -20,15 +21,20 @@ using std::string, std::map, std::cout, std::endl;
 namespace Traders::TAAPI
 {
     /**
-     * @brief EMA Cross Strategy Trader
+     * @brief Trader decides when open and close order
      */
-    class EMA_Cross_Trader
+    class Trader
     {
         private:
             /**
              * @brief Active Trade for Worker
              */
             Trade trade;
+
+            /**
+             * @brief The name of the Strategy the Trader trades
+             */
+            string strategy_name;
 
             /**
              * @brief The traded pair
@@ -135,23 +141,25 @@ namespace Traders::TAAPI
         public:
             /**
              * @brief Construct a new ema cross trader object
-             */
-            EMA_Cross_Trader() 
-            { }
-
-            /**
-             * @brief Construct a new ema cross trader object
              * 
              * @param symbol Symbol (pair) to trade
              * @param interval Candles interval
+             * @param name The name of the Strategy the Trader trades
              * @param stake Stake Amount to open Trade
              */
-            EMA_Cross_Trader(
-                string &symbol,
-                string &interval,
+            Trader(
+                const string &symbol,
+                const string &interval,
+                const string &name,
                 double stake
             ) : symbol(symbol), interval(interval),
-                stake_amount(stake)
+                strategy_name(name), stake_amount(stake)
+            { }
+
+            /**
+             * @brief Destroy the Trader object
+             */
+            ~Trader()
             { }
 
             /**
@@ -169,6 +177,13 @@ namespace Traders::TAAPI
             string get_interval() { return this->interval; }
 
             /**
+             * @brief Get the strategy name Trader trades
+             * 
+             * @return string 
+             */
+            string get_strategy_name() { return this->strategy_name; }
+
+            /**
              * @brief Is Trade working?
              * 
              * @return true 
@@ -184,14 +199,15 @@ namespace Traders::TAAPI
             double get_stake_amount() { return this->stake_amount; }
 
             /**
-             * @brief Describe the Trader
+             * @brief Get Trader description
              * 
-             * @param description Description
+             * @param description Map for description
              */
-            void describe_trader(map<string, string> &description)
+            void get_trader_description(map<string, string> &description)
             {
                 description["symbol"] = this->symbol;
                 description["interval"] = this->interval;
+                description["strategy"] = this->strategy_name;
                 description["is_work"] = this->work ? "true" : "false";
                 description["stake_amount"] = std::to_string(this->stake_amount);
             }
