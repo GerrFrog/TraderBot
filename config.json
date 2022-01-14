@@ -3,10 +3,15 @@
     "test_mode": true,
     "strategies": {
         "ema_cross": {
+            "worker": {
+                "short_ema_period": 5,
+                "long_ema_period": 25
+            }, 
+            "trader": {
+                "stake_amount": 100
+            },
             "exchange": "binance",
-            "stake_amount": 100,
-            "short_ema_period": 5,
-            "long_ema_period": 25,
+
             "timeframes": [
                 "1m", "3m"
             ],

@@ -23,11 +23,6 @@ class Trade
         unsigned int id;
 
         /**
-         * @brief Trade Status
-         */
-        bool opened = false;
-
-        /**
          * @brief The traded symbol
          */
         string symbol;
@@ -148,44 +143,19 @@ class Trade
         void set_interval(string &intr) { this->interval = intr; }
 
         /**
-         * @brief Is Trade opened?
+         * @brief Set the close time. Behave as exit function for Trade
          * 
-         * @return true 
-         * @return false 
+         * @param close_price Close price
          */
-        bool is_opened() { return this->opened; }
-
-        /**
-         * @brief Open Trade (buy cryptocurrency)
-         */
-        void open_trade()
-        {
-            // TODO: Open a read trade
-            this->opened = true;
-
-            cout << "[+] Open a trade" << endl;
-        }
-
-        /**
-         * @brief Close Trade (sell cryptocurrency)
-         * 
-         * @param close_p Close Price
-         */
-        void close_trade(double close_p)
-        {
-            this->opened = false;
-
-            this->close_time = std::chrono::system_clock::now();
+        void set_close_time(double close_p) 
+        { 
+            this->close_time = std::chrono::system_clock::now(); 
+            this->close_price = close_p;
             this->live_time = (close_time - open_time).count();
 
-            this->close_price = close_p;
-            // TODO: Remake profit
-            // this->profit = got_usdt - this->stake_amount;
-            // this->per_profit = (got_usdt * 100 / this->stake_amount) - 100;
-
-            cout << "[+] Close a trade" << endl; 
-
-            // TODO: Close a real trade
+            double percentage = close_p / this->open_price * 100;
+            this->per_profit = percentage - 100;
+            this->profit = this->stake_amount * percentage / 100 - this->stake_amount;
         }
 };
 

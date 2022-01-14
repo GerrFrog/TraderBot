@@ -1,0 +1,255 @@
+#pragma once
+
+#ifndef TRADERS_HEADER
+#define TRADERS_HEADER
+
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <string>
+#include <map>
+#include <algorithm>
+
+#include "../../trade/inc/trade.hpp"
+#include "../../exceptions/inc/exceptions.hpp"
+
+using std::string, std::map, std::cout, std::endl;
+
+/**
+ * @brief All Traders which trader
+ */
+namespace Traders::TAAPI
+{
+    /**
+     * @brief EMA Cross Strategy Trader
+     */
+    class EMA_Cross_Trader
+    {
+        private:
+            /**
+             * @brief Active Trade for Worker
+             */
+            Trade trade;
+
+            /**
+             * @brief The traded pair
+             */
+            string symbol;
+
+            /**
+             * @brief 
+             */
+            string interval;
+
+            /**
+             * @brief Work Trade Status
+             */
+            bool work = false;
+
+            /**
+             * @brief Stake amount to trade (USDT)
+             */
+            double stake_amount;
+
+            /**
+             * @brief Get the current price of cryptocurrency
+             * 
+             * @return double 
+             */
+            double get_current_price()
+            {
+                map<string, string> params;
+                string sym = this->symbol;
+
+                std::remove_copy(
+                    this->symbol.begin(),
+                    this->symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                params["symbol"] = sym;
+
+                Request::Simple::JSON_Curl json_curl("https://api.binance.com/api/v3/ticker/price");
+
+                json_curl.construct_request(params);
+
+                nlohmann::json res = json_curl.request();
+
+                if (res.contains("price"))
+                    return res["price"];
+                
+                throw Exceptions::Panic::Panic_Exception("Something went wront!", 1, 0);
+            }
+
+            /**
+             * @brief Initialize new Trade
+             */
+            void initialize_trade()
+            {
+                this->work = true;
+                this->trade.set_open_time();
+                // TODO: Unique ID for each Trade
+                this->trade.set_id(1);
+                this->trade.set_symbol(
+                    this->symbol
+                );
+                this->trade.set_stake_amount(
+                    this->stake_amount
+                );
+                this->trade.set_open_price(
+                    this->get_current_price()
+                );
+                this->trade.set_interval(
+                    this->interval
+                );
+            }
+
+            /**
+             * @brief Clear current Trade to open new one
+             */
+            void clear_trade()
+            {
+                this->work = false;
+                // TODO: Clear Trade object
+            }
+
+            /**
+             * @brief Open new Trade
+             */
+            void open_trade()
+            {
+                // TODO: Open trade
+            }
+
+            /**
+             * @brief Close current Trade
+             */
+            void close_trade()
+            {
+                this->trade.set_close_time(
+                    this->get_current_price()
+                );
+                // TODO: Close trade
+            }
+
+        public:
+            /**
+             * @brief Construct a new ema cross trader object
+             */
+            EMA_Cross_Trader() 
+            { }
+
+            /**
+             * @brief Construct a new ema cross trader object
+             * 
+             * @param symbol Symbol (pair) to trade
+             * @param interval Candles interval
+             * @param stake Stake Amount to open Trade
+             */
+            EMA_Cross_Trader(
+                string &symbol,
+                string &interval,
+                double stake
+            ) : symbol(symbol), interval(interval),
+                stake_amount(stake)
+            { }
+
+            /**
+             * @brief Get the symbol
+             * 
+             * @return string 
+             */
+            string get_symbol() { return this->symbol; }
+
+            /**
+             * @brief Get the interval 
+             * 
+             * @return string 
+             */
+            string get_interval() { return this->interval; }
+
+            /**
+             * @brief Is Trade working?
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool is_work() { return this->work; }
+
+            /**
+             * @brief Get the stake amount
+             * 
+             * @return double 
+             */
+            double get_stake_amount() { return this->stake_amount; }
+
+            /**
+             * @brief Describe the Trader
+             * 
+             * @param description Description
+             */
+            void describe_trader(map<string, string> &description)
+            {
+                description["symbol"] = this->symbol;
+                description["interval"] = this->interval;
+                description["is_work"] = this->work ? "true" : "false";
+                description["stake_amount"] = std::to_string(this->stake_amount);
+            }
+
+            /**
+             * @brief Decide what to do with trade
+             * 
+             * @param buy_signal Buy signal
+             * @param sell_signal Sell signal
+             */
+            void resolve(bool buy_signal, bool sell_signal)
+            {
+                if (this->work)
+                {
+                    if (sell_signal) 
+                    {
+                        this->close_trade();
+                        // Do something with Trade
+                        cout << "[+] Trade is closed" << endl;
+                        this->clear_trade();
+                    }
+                    return;
+                } else {
+                    if (buy_signal)
+                    {
+                        this->initialize_trade();
+                        // Do something with Trade
+                        this->open_trade();
+                        cout << "[+] Trade is opened" << endl;
+                    }
+                    return;
+                }
+            }
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
