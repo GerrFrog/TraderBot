@@ -81,10 +81,13 @@ namespace Traders::TAAPI
 
                 nlohmann::json res = json_curl.request();
 
+                cout << res << endl;
+                cout << sym << endl;
+
                 if (res.contains("price"))
                     return res["price"];
                 
-                throw Exceptions::Panic::Panic_Exception("Something went wront!", 1, 0);
+                throw Exceptions::Panic::Panic_Exception("Something went wront in trader!", 1, 0);
             }
 
             /**
@@ -92,7 +95,6 @@ namespace Traders::TAAPI
              */
             void initialize_trade()
             {
-                this->work = true;
                 this->trade.set_open_time();
                 // TODO: Unique ID for each Trade
                 this->trade.set_id(1);
@@ -115,7 +117,6 @@ namespace Traders::TAAPI
              */
             void clear_trade()
             {
-                this->work = false;
                 // TODO: Clear Trade object
             }
 
@@ -124,7 +125,9 @@ namespace Traders::TAAPI
              */
             void open_trade()
             {
-                // TODO: Open trade
+                this->initialize_trade();
+                this->work = true;
+                // TODO: Open trade in binance
             }
 
             /**
@@ -135,7 +138,8 @@ namespace Traders::TAAPI
                 this->trade.set_close_time(
                     this->get_current_price()
                 );
-                // TODO: Close trade
+                this->work = false;
+                // TODO: Close trade in binance
             }
 
         public:
@@ -227,15 +231,14 @@ namespace Traders::TAAPI
                         this->close_trade();
                         // Do something with Trade
                         cout << "[+] Trade is closed" << endl;
-                        this->clear_trade();
+                        this->clear_trade(); // Reset options
                     }
                     return;
                 } else {
                     if (buy_signal)
                     {
-                        this->initialize_trade();
-                        // Do something with Trade
                         this->open_trade();
+                        // Do something with Trade
                         cout << "[+] Trade is opened" << endl;
                     }
                     return;

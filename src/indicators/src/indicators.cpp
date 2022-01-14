@@ -31,5 +31,5 @@ double Indicators::TAAPI::EMA (
     if (res.contains("error"))
         throw Exceptions::TAAPI::Rate_Limit(res["error"], 429, 0);
 
-    throw Exceptions::Panic::Panic_Exception("Something went wrong!", 1, 0);
+    throw Exceptions::Panic::Panic_Exception("Something went wrong in indicators!", 1, 0);
 };

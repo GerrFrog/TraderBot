@@ -9,7 +9,7 @@
             "request_delay": 15,
             "worker": {
                 "short_ema_period": 5,
-                "long_ema_period": 25
+                "long_ema_period": 10 
             }, 
             "trader": {
                 "stake_amount": 100
