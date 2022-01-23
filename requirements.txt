@@ -1,0 +1,5 @@
+binance.py
+python-binance
+binance-api
+python-dotenv
+pandas
