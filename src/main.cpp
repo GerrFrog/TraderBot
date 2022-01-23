@@ -23,6 +23,17 @@ int main(int argc, char *argv[]) {
     const std::string sk = dotenv::get("SECRET_KEY");
     const std::string taapi_key = dotenv::get("TAAPI_KEY");
 
+    // // CSV
+    // io::CSVReader<3> in("../data/BTCUSDT_1d.csv");
+    // string first, second, third;
+    // while(in.read_row(first, second, third))
+    //     cout << "First: " << first << ' '
+    //          << "Second: " << second << ' '
+    //          << "Third: " << third << ' '
+    //          << endl
+    //         ;
+
+    // // Binance API
     // boost::asio::io_context ioctx;
     // binapi::rest::api api(
     //     ioctx
@@ -41,36 +52,7 @@ int main(int argc, char *argv[]) {
 
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
-    // std::ifstream ifs("../config.json");
-    // json jf = json::parse(ifs);
-
-    // for (auto& [key, value] : jf.items()) {
-    //     std::cout << key << " : " << value << "\n";
-    // }
-
-    // for (auto& el : jf.items()) {
-    //     std::cout << el.key() << " : " << el.value() << "\n";
-    // }
-
-    // cout <<"\n\n";
-
-    // recursive_iterate(jf, [](json::const_iterator it){
-    //     std::cout << *it << std::endl;
-    // });
-
-    // cout << "\n\n";
-
-    // for (const auto& item : jf.items())
-    // {
-    //     std::cout << item.key() << "\n";
-    //     // if (item.value().is_object())
-    //     //     cout << " Object";
-    //     for (const auto& val : item.value().items())
-    //     {
-    //         std::cout << "  " << val.key() << ": " << val.value() << "\n";
-    //     }
-    // }
-
+    // // Initialize 
     std::ifstream ifs("../config.json");
     json jf = json::parse(ifs);
 

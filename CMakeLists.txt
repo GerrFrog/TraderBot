@@ -66,6 +66,7 @@ set(
     ${LIBS_FILES}/binapi/include/binapi/types.hpp
     ${LIBS_FILES}/binapi/include/binapi/websocket.hpp
     ${LIBS_FILES}/dotenv/include/dotenv.hpp
+    ${LIBS_FILES}/csv/csv.hpp
 )
 
 set(
