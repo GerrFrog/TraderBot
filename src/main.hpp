@@ -10,7 +10,6 @@
 #include "libs/dotenv/include/dotenv.hpp"
 #include "libs/csv/csv.hpp"
 #include "director/inc/director.hpp"
-
-using json = nlohmann::json;
+#include "tester/inc/tester.hpp"
 
 int main(int argc, char *argv[]);

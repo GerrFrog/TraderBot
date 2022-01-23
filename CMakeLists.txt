@@ -19,6 +19,7 @@ set( WORKERS_FILES src/workers )
 set( TRADERS_FILES src/traders)
 set( EXCEPTIONS_FILES src/exceptions )
 set( DIRECTOR_FILES src/director )
+set( TESTER_FILES src/tester )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -35,6 +36,7 @@ set(
     ${TRADERS_FILES}/inc/traders.hpp
     ${EXCEPTIONS_FILES}/inc/exceptions.hpp
     ${DIRECTOR_FILES}/inc/director.hpp
+    ${TESTER_FILES}/inc/tester.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -48,6 +50,7 @@ set(
     ${TRADERS_FILES}/src/traders.cpp
     ${EXCEPTIONS_FILES}/src/exceptions.cpp
     ${DIRECTOR_FILES}/src/director.cpp
+    ${TESTER_FILES}/src/tester.cpp
 )
 
 set(

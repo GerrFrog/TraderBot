@@ -2,20 +2,6 @@
 
 using std::cout, std::string, std::endl;
 
-template<class UnaryFunction>
-void recursive_iterate(const json& j, UnaryFunction f)
-{
-    for(auto it = j.begin(); it != j.end(); ++it)
-    {
-        if (it->is_structured())
-        {
-            recursive_iterate(*it, f);
-        } else {
-            f(it);
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
     dotenv::load("../.env");
 
@@ -53,20 +39,24 @@ int main(int argc, char *argv[]) {
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
     // // Initialize 
-    std::ifstream ifs("../config.json");
-    json jf = json::parse(ifs);
+    // std::ifstream ifs("../config.json");
+    // nlohmann::json jf = nlohmann::json::parse(ifs);
 
-    // cout << jf["timeframes"].size() << endl;
+    // Director director(jf["strategies"], taapi_key);
 
-    // for (auto& elem : jf["timeframes"])
-    //     timeframes.push_back(elem);
+    // director.run();
 
-    // cout << Indicators::TAAPI::EMA(taapi_key, "BTC/USDT", "1h", 5) << endl;
-
-    nlohmann::json strategies_config = jf["strategies"];
-    Director director(jf["strategies"], taapi_key);
-
-    director.run();
+    // // Backtest Strategy
+    // io::CSVReader<3> in("../data/BTCUSDT_1d.csv");
+    Tester<Strategies::EMA_Cross> tester("BTCUSDT", "1d");
+    tester.backtest();
 
     return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
