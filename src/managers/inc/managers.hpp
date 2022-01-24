@@ -28,7 +28,7 @@ namespace Managers::Analyst
             /**
              * @brief Vector for EMA Cross Strategy Traders
              */
-            vector<Traders::TAAPI::Trader> traders;
+            vector<Traders::Trader> traders;
             
         public:
             /**
@@ -48,10 +48,10 @@ namespace Managers::Analyst
              */
             void describe_traders()
             {
-                for (Traders::TAAPI::Trader &trader : this->traders)
+                for (Traders::Trader &trader : this->traders)
                 {
                     map<string, string> descr;
-                    trader.get_trader_description(descr);
+                    trader.get_description(descr);
                     for (auto &[key, val] : descr)
                         cout << key << " : " << val << endl;
                 }
@@ -62,10 +62,10 @@ namespace Managers::Analyst
              * 
              * @param trader Trader
              */
-            void describe_trader(Traders::TAAPI::Trader &trader)
+            void describe_trader(Traders::Trader &trader)
             {
                 map<string, string> descr;
-                trader.get_trader_description(descr);
+                trader.get_description(descr);
                 for (auto &[key, val] : descr)
                     cout << key << " : " << val << endl;
             }
@@ -75,7 +75,7 @@ namespace Managers::Analyst
              * 
              * @return vector<Traders::TAAPI::EMA_Cross_Trader>
              */
-            vector<Traders::TAAPI::Trader> get_ema_cross_traders()
+            vector<Traders::Trader> get_traders()
             {
                 return this->traders;
             }
@@ -87,20 +87,23 @@ namespace Managers::Analyst
              */
             void initial_traders(nlohmann::json &config)
             {
-                vector<string> timeframes;
-
-                for (auto& elem : config["timeframes"])
-                    timeframes.push_back(elem);
-
-                for (string &timeframe : timeframes)
+                for (auto& [key, val] : config.items())
                 {
-                    Traders::TAAPI::Trader trader(
-                        config["symbol"],
-                        timeframe,
-                        config["name"],
-                        config["trader"]["stake_amount"]
-                    );
-                    this->traders.push_back(trader);
+                    vector<string> timeframes;
+
+                    for (auto& elem : val["timeframes"])
+                        timeframes.push_back(elem);
+
+                    for (string &timeframe : timeframes)
+                    {
+                        Traders::Trader trader(
+                            val["symbol"],
+                            timeframe,
+                            val["name"],
+                            val["trader_params"]["stake_amount"]
+                        );
+                        this->traders.push_back(trader);
+                    }
                 }
             }
     };
@@ -120,7 +123,7 @@ namespace Managers::Employers
             /**
              * @brief Vector for EMA Cross Strategy Workers
              */
-            vector<Workers::TAAPI::EMA_Cross_Worker> workers;
+            vector<Workers::Worker<Strategies::EMA_Cross>> workers;
 
         public:
             /**
@@ -153,7 +156,7 @@ namespace Managers::Employers
              * @brief Describe curtain Worker
              * @param worker Worker
              */
-            void describe_worker(Workers::TAAPI::EMA_Cross_Worker &worker)
+            void describe_worker(Workers::Worker<Strategies::EMA_Cross> &worker)
             {
                 map<string, string> description;
                 worker.get_worker_description(description);
@@ -166,7 +169,7 @@ namespace Managers::Employers
              * 
              * @return vector<Workers::TAAPI::EMA_Cross_Worker> 
              */
-            vector<Workers::TAAPI::EMA_Cross_Worker> get_ema_cross_workers()
+            vector<Workers::Worker<Strategies::EMA_Cross>> get_workers()
             {
                 return this->workers; 
             }
@@ -179,21 +182,22 @@ namespace Managers::Employers
              */
             void initial_workers(nlohmann::json &config, const string &taapi_key)
             {
-                vector<string> timeframes;
-
-                for (auto& elem : config["timeframes"])
-                    timeframes.push_back(elem);
-
-                for (string& timeframe : timeframes)
+                for (auto& [key, val] : config.items())
                 {
-                    Workers::TAAPI::EMA_Cross_Worker worker(
-                        taapi_key, config["symbol"], 
-                        timeframe, config["name"],
-                        config["worker"]["short_ema_period"],
-                        config["worker"]["long_ema_period"],
-                        config["request_delay"]
-                    );
-                    this->workers.push_back(worker);
+                    vector<string> timeframes;
+
+                    for (auto& elem : val["timeframes"])
+                        timeframes.push_back(elem);
+
+                    for (string& timeframe : timeframes)
+                    {
+                        Workers::Worker<Strategies::EMA_Cross> worker(
+                            taapi_key, val["symbol"], 
+                            timeframe, val["name"],
+                            val["strategy_params"]
+                        );
+                        this->workers.push_back(worker);
+                    }
                 }
             }
     };

@@ -18,7 +18,7 @@ using std::string, std::map, std::cout, std::endl;
 /**
  * @brief All Traders which trader
  */
-namespace Traders::TAAPI
+namespace Traders
 {
     /**
      * @brief Trader decides when open and close order
@@ -207,7 +207,7 @@ namespace Traders::TAAPI
              * 
              * @param description Map for description
              */
-            void get_trader_description(map<string, string> &description)
+            void get_description(map<string, string> &description)
             {
                 description["symbol"] = this->symbol;
                 description["interval"] = this->interval;

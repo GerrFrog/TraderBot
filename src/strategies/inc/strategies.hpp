@@ -6,10 +6,12 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <nlohmann/json.hpp>
 
+#include "../../indicators/inc/indicators.hpp"
 #include "../../exceptions/inc/exceptions.hpp"
 
-using std::cout, std::string, std::endl;
+using std::cout, std::string, std::endl, std::map;
 
 /**
  * @brief All Strategies in Bot
@@ -114,32 +116,34 @@ namespace Strategies
                 return false;
             }
 
+
         public:
             /**
              * @brief Construct a new ema cross object
              */
-            EMA_Cross() { }
+            EMA_Cross() 
+            { }
 
             /**
              * @brief Destroy the ema cross object
              */
-            ~EMA_Cross() { }
+            ~EMA_Cross() 
+            { }
 
             /**
              * @brief Resolve EMA Cross Strategy
              * 
-             * @param short_ema Short EMA (e.g. 5 period)
-             * @param long_ema Long EMA (e.g. 30 period)
+             * @param params Short and Long EMAs values
              * @param signals Signals of resolving (sell or buy)
              */
-            void resolve(double short_ema, double long_ema, std::map<std::string, bool> &signals)
+            void resolve(map<string, double> &params, std::map<std::string, bool> &signals)
             {
                 signals["buy"] = false;
                 signals["sell"] = false;
 
-                if (this->cross_above(short_ema, long_ema)) 
+                if (this->cross_above(params["short_ema"], params["long_ema"])) 
                     signals["buy"] = true;
-                if (this->cross_below(short_ema, long_ema))
+                if (this->cross_below(params["short_ema"], params["long_ema"]))
                     signals["sell"] = true;
             }
     };

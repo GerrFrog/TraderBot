@@ -39,17 +39,15 @@ int main(int argc, char *argv[]) {
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
     // // Initialize 
-    // std::ifstream ifs("../config.json");
-    // nlohmann::json jf = nlohmann::json::parse(ifs);
+    std::ifstream ifs("../config.json");
+    nlohmann::json jf = nlohmann::json::parse(ifs);
 
-    // Director director(jf["strategies"], taapi_key);
-
-    // director.run();
+    Director director(jf["strategies"], taapi_key);
+    director.run();
 
     // // Backtest Strategy
-    // io::CSVReader<3> in("../data/BTCUSDT_1d.csv");
-    Tester<Strategies::EMA_Cross> tester("BTCUSDT", "1d");
-    tester.backtest();
+    // Tester<Strategies::EMA_Cross> tester("BTCUSDT", "1d");
+    // tester.backtest();
 
 
     return EXIT_SUCCESS;

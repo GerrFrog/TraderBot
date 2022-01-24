@@ -17,10 +17,11 @@
 - [ ] Site
 - [ ] Database
 - [ ] Logging
+- [ ] For each strategy and indicator create method, which describe how setup it in config.json
 
 # Analyse
 - [ ] Approximation
-- Time Series Analysis
+- [ ] Time Series Analysis
   - [ ] ARIMA models
   - [ ] Box-Jenkins Model
   - [ ] Fourier transforms

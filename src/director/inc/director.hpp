@@ -23,15 +23,16 @@ class Director
          */
         Managers::Employers::EMA_Cross_Employer ema_employer;
 
+        // TODO: One work function (not for certain strategy)
         /**
          * @brief Start working for pair Worker-Trader
          * 
          * @param worker Worker
          * @param trader Trader
          */
-        void work(
-            Workers::TAAPI::EMA_Cross_Worker &worker,
-            Traders::TAAPI::Trader &trader
+        void ema_work(
+            Workers::Worker<Strategies::EMA_Cross> &worker,
+            Traders::Trader &trader
         ) {
             worker.resolve();
             trader.resolve(
@@ -43,7 +44,7 @@ class Director
             map<string, string> trader_desc;
 
             worker.get_worker_description(worker_desc);
-            trader.get_trader_description(trader_desc);
+            trader.get_description(trader_desc);
 
             cout << "WORKER" << endl;
             for (auto &[key, val] : worker_desc)
@@ -84,19 +85,19 @@ class Director
         {
             cout << "Started!" << endl;
 
-            vector<Traders::TAAPI::Trader> traders = this->ema_analyst.get_ema_cross_traders();
-            vector<Workers::TAAPI::EMA_Cross_Worker> workers = this->ema_employer.get_ema_cross_workers();
+            vector<Traders::Trader> traders = this->ema_analyst.get_traders();
+            vector<Workers::Worker<Strategies::EMA_Cross>> workers = this->ema_employer.get_workers();
 
             cout << "[+] Start working" << endl;
 
-            for (Traders::TAAPI::Trader &trader : traders)
+            for (Traders::Trader &trader : traders)
             {
                 cout << "[+] Got new Trader:" << endl;
                 this->ema_analyst.describe_trader(trader);
                 cout << endl;
             } cout << endl;
 
-            for (Workers::TAAPI::EMA_Cross_Worker &worker : workers)
+            for (Workers::Worker<Strategies::EMA_Cross> &worker : workers)
             {
                 cout << "[+] Got new Worker:" << endl;
                 this->ema_employer.describe_worker(worker);
@@ -106,7 +107,7 @@ class Director
             while (true)
             {
                 for (int i = 0; i < workers.size(); i++)
-                    work(workers[i], traders[i]);
+                    ema_work(workers[i], traders[i]);
             }
         }
 };

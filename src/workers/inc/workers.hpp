@@ -17,12 +17,13 @@ using std::string, std::cout, std::endl, std::map;
 /**
  * @brief All Workers which create Trader
  */
-namespace Workers::TAAPI
+namespace Workers
 {
     /**
      * @brief EMA Cross Strategy Worker
      */
-    class EMA_Cross_Worker
+    template <class Strategy>
+    class Worker
     {
         private:
             /**
@@ -53,24 +54,14 @@ namespace Workers::TAAPI
             };
 
             /**
-             * @brief Period for Short EMA
+             * @brief Params for strategy
              */
-            int short_period;
-
-            /**
-             * @brief Period for Long EMA
-             */
-            int long_period;
-
-            /**
-             * @brief The delay between requests
-             */
-            int delay;
+            nlohmann::json strategy_params;
 
             /**
              * @brief EMA Cross Strategy object
              */
-            Strategies::EMA_Cross ema_strategy;
+            Strategy strategy;
 
         public:
             /**
@@ -84,21 +75,19 @@ namespace Workers::TAAPI
              * @param long_ema_period Period for Long EMA
              * @param delay Delay between request
              */
-            EMA_Cross_Worker(
+            Worker(
                 const string &taapi_key, const string &trade_symbol,
                 const string &timeframe, const string &name,
-                int short_ema_period, int long_ema_period,
-                int delay
+                nlohmann::json &params
             ) : taapi_key(taapi_key), symbol(trade_symbol),
                 interval(timeframe), strategy_name(name),
-                short_period(short_ema_period), long_period(long_ema_period),
-                delay(delay)
+                strategy_params(params)
             { }
 
             /**
              * @brief Destroy the ema cross 15m object
              */
-            ~EMA_Cross_Worker() { };
+            ~Worker() { };
 
             /**
              * @brief Get the buy signal 
@@ -123,8 +112,6 @@ namespace Workers::TAAPI
              */
             void get_worker_description(map<string, string> &description)
             {
-                description["short"] = std::to_string(this->short_period);
-                description["long"] = std::to_string(this->long_period);
                 description["symbol"] = this->symbol;
                 description["interval"] = this->interval;
                 description["strategy"] = this->strategy_name;
@@ -135,45 +122,76 @@ namespace Workers::TAAPI
              */
             void resolve()
             {
-                double short_value, long_value;
-                // std::this_thread::sleep_for(std::chrono::seconds(15));
+                map<string, double> params;
 
-            again_short:
-                try {
-                    short_value = Indicators::TAAPI::EMA(
-                        this->taapi_key, this->symbol,
-                        this->interval, this->short_period
-                    );
-                } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-                    cout << exp.what() << endl;
-                    std::this_thread::sleep_for(
-                        std::chrono::seconds(
-                            this->delay
-                        )
-                    );
-                    goto again_short;
+                // TODO: Create instance from config. Without if-else
+                for (auto& [key, value] : this->strategy_params.items()) {
+                    if (value["indicator"] == "EMA")
+                    {
+                        if (value["type"] == "TAAPI")
+                        {
+                        again:
+                            try {
+                                params[key] = Indicators::TAAPI::EMA(
+                                    this->taapi_key, this->symbol,
+                                    this->interval, value["indicator_params"]
+                                );
+                            } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+                                cout << exp.what() << endl;
+                                // TODO: Pass delay from config
+                                std::this_thread::sleep_for(
+                                    std::chrono::seconds(
+                                        15
+                                    )
+                                );
+                                goto again;
+                            }
+                        }
+                    } // else if () // Other indicator
                 }
-
-            again_long:
-                try {
-                    long_value = Indicators::TAAPI::EMA(
-                        this->taapi_key, this->symbol,
-                        this->interval, this->long_period
-                    );
-                } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-                    cout << exp.what() << endl;
-                    std::this_thread::sleep_for(
-                        std::chrono::seconds(
-                            this->delay
-                        )
-                    );
-                    goto again_long;
-                }
-
-                this->ema_strategy.resolve(
-                    short_value, long_value,
+                this->strategy.resolve(
+                    params,
                     this->signals
                 );
+
+            //     double short_value, long_value;
+
+            // again_short:
+            //     try {
+            //         short_value = Indicators::TAAPI::EMA(
+            //             this->taapi_key, this->symbol,
+            //             this->interval, this->strategy_params["short_ema"]
+            //         );
+            //     } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+            //         cout << exp.what() << endl;
+            //         std::this_thread::sleep_for(
+            //             std::chrono::seconds(
+            //                 this->strategy_params["delay"]
+            //             )
+            //         );
+            //         goto again_short;
+            //     }
+
+            // again_long:
+            //     try {
+            //         long_value = Indicators::TAAPI::EMA(
+            //             this->taapi_key, this->symbol,
+            //             this->interval, this->strategy_params["long_ema"]
+            //         );
+            //     } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+            //         cout << exp.what() << endl;
+            //         std::this_thread::sleep_for(
+            //             std::chrono::seconds(
+            //                 this->strategy_params["delay"]
+            //             )
+            //         );
+            //         goto again_long;
+            //     }
+
+            //     this->strategy.resolve(
+            //         short_value, long_value,
+            //         this->signals
+            //     );
             }
     };
 }

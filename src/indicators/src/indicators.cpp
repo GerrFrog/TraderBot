@@ -9,9 +9,11 @@ double Indicators::TAAPI::EMA (
     const std::string &key,
     const std::string &symbol, 
     const std::string &interval, 
-    const int &period
+    nlohmann::json &indicator_params
 ) {
     std::map<std::string, std::string> params;
+
+    int period = indicator_params["period"];
 
     params["secret"] = key;
     params["exchange"] = "binance";

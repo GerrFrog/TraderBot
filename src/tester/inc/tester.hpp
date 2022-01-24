@@ -25,6 +25,21 @@ class Tester
          */
         string filename;
 
+        /**
+         * @brief Start balance
+         */
+        double start_balance = 10000.0;
+
+        /**
+         * @brief Current balance
+         */
+        double balance = 10000.0;
+
+        /**
+         * @brief Stake amount to trade
+         */
+        double stake_amount = 10000.0;
+
     public:
         /**
          * @brief Construct a new Tester object

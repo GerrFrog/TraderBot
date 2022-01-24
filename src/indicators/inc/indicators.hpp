@@ -34,14 +34,14 @@ namespace Indicators::TAAPI
      * @param key Key of taapi.io
      * @param symbol Symbol (pair)
      * @param interval Interval
-     * @param period EMA Period
+     * @param indicator_params Params for Indicator
      * @return double 
      */
     double EMA(
         const std::string &key,
         const std::string &symbol, 
         const std::string &interval, 
-        const int &period
+        nlohmann::json &indicator_params
     );
 }
 
