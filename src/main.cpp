@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     const std::string taapi_key = dotenv::get("TAAPI_KEY");
 
     // // CSV
-    // io::CSVReader<3> in("../data/BTCUSDT_1d.csv");
+    // io::CSVReader<3> in("../data/test.csv");
     // string first, second, third;
     // while(in.read_row(first, second, third))
     //     cout << "First: " << first << ' '
@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
     // io::CSVReader<3> in("../data/BTCUSDT_1d.csv");
     Tester<Strategies::EMA_Cross> tester("BTCUSDT", "1d");
     tester.backtest();
+
 
     return EXIT_SUCCESS;
 }

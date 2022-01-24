@@ -80,10 +80,13 @@ df = pd.DataFrame(
     )
 )
 
+df = df.drop("Ignore", 1)
+print(df)
+
 try:
-    df.to_csv("../data/{}_{}.csv".format(symbol, timeframe), sep='\t')
+    df.to_csv("../data/{}_{}.csv".format(symbol, timeframe), sep='\t', index=False)
 except OSError:
-    df.to_csv("./data/{}_{}.csv".format(symbol, timeframe), sep='\t')
+    df.to_csv("./data/{}_{}.csv".format(symbol, timeframe), sep='\t', index=False)
 except Exception as exp:
     print("Something went wrong!")    
     print(exp)

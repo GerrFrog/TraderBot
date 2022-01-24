@@ -20,6 +20,7 @@ set( TRADERS_FILES src/traders)
 set( EXCEPTIONS_FILES src/exceptions )
 set( DIRECTOR_FILES src/director )
 set( TESTER_FILES src/tester )
+set( CANDLE_FILES src/candle )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -37,6 +38,7 @@ set(
     ${EXCEPTIONS_FILES}/inc/exceptions.hpp
     ${DIRECTOR_FILES}/inc/director.hpp
     ${TESTER_FILES}/inc/tester.hpp
+    ${CANDLE_FILES}/inc/candle.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -51,6 +53,7 @@ set(
     ${EXCEPTIONS_FILES}/src/exceptions.cpp
     ${DIRECTOR_FILES}/src/director.cpp
     ${TESTER_FILES}/src/tester.cpp
+    ${CANDLE_FILES}/src/candle.cpp
 )
 
 set(
