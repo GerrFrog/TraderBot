@@ -33,14 +33,24 @@ int main(int argc, char *argv[]) {
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
     // // Start job
-    // Director director(jf["strategies"], taapi_key);
-    // director.run();
+    Managers::Manager manager(
+        jf["strategies"],
+        taapi_key
+    );
+    manager.run();
 
     // // Backtest Strategy
-    Tester btcusdt_1d_tester(
-        "BTCUSDT", "1d"
-    );
-    btcusdt_1d_tester.backtest();
+    // Tester btcusdt_1d_tester(
+    //     "BTCUSDT", "1d"
+    // );
+    // btcusdt_1d_tester.backtest<Strategies::EMA_Cross>(
+    //     jf["strategies"]["ema_cross"]["1"]["strategy_params"]
+    // );
+
+
+
+
+
 
 
     return EXIT_SUCCESS;

@@ -4,60 +4,58 @@
     "strategies": {
         "ema_cross": {
             "1": {
-                "exchange": "binance",
-                "symbol": "BTC/USDT",
-                "name": "EMA Cross Strategy #1",
-                "request_delay": 15,
+                "trader_params": {
+                    "stake_amount": 100,
+                    "exchange": "binance",
+                    "symbol": "BTC/USDT",
+                    "name": "EMA Cross Strategy #1",
+                    "timeframe": "1h"
+                },
                 "strategy_params": {
                     "short_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 3
+                            "period": 11,
+                            "interval": "1h"
                         }
                     },
                     "long_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 4
+                            "period": 22,
+                            "interval": "1h"
                         }
                     }
-                }, 
-                "trader_params": {
-                    "stake_amount": 100
-                },
-                "timeframes": [
-                    "1m", "3m"
-                ]
+                }
             },
             "2": {
-                "exchange": "binance",
-                "symbol": "BTC/USDT",
-                "name": "EMA Cross Strategy #2",
-                "request_delay": 15,
+                "trader_params": {
+                    "stake_amount": 100,
+                    "exchange": "binance",
+                    "symbol": "BTC/USDT",
+                    "name": "EMA Cross Strategy #2",
+                    "timeframe": "2h"
+                },
                 "strategy_params": {
                     "short_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 3
+                            "period": 50,
+                            "interval": "1h"
                         }
                     },
                     "long_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 4
+                            "period": 200,
+                            "interval": "1h"
                         }
                     }
-                }, 
-                "trader_params": {
-                    "stake_amount": 100
-                },
-                "timeframes": [
-                    "5m", "15m"
-                ]
+                }
             }
         }
     },

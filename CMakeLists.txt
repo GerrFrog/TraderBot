@@ -16,9 +16,7 @@ set( INDICATORS_FILES src/indicators )
 set( MANAGERS_FILES src/managers )
 set( TRADE_FILES src/trade )
 set( WORKERS_FILES src/workers )
-set( TRADERS_FILES src/traders)
 set( EXCEPTIONS_FILES src/exceptions )
-set( DIRECTOR_FILES src/director )
 set( TESTER_FILES src/tester )
 set( CANDLE_FILES src/candle )
 set( LIBS_FILES src/libs )
@@ -34,9 +32,7 @@ set(
     ${MANAGERS_FILES}/inc/managers.hpp
     ${TRADE_FILES}/inc/trade.hpp
     ${WORKERS_FILES}/inc/workers.hpp
-    ${TRADERS_FILES}/inc/traders.hpp
     ${EXCEPTIONS_FILES}/inc/exceptions.hpp
-    ${DIRECTOR_FILES}/inc/director.hpp
     ${TESTER_FILES}/inc/tester.hpp
     ${CANDLE_FILES}/inc/candle.hpp
 )
@@ -49,9 +45,7 @@ set(
     ${MANAGERS_FILES}/src/managers.cpp
     ${TRADE_FILES}/src/trade.cpp
     ${WORKERS_FILES}/src/workers.cpp
-    ${TRADERS_FILES}/src/traders.cpp
     ${EXCEPTIONS_FILES}/src/exceptions.cpp
-    ${DIRECTOR_FILES}/src/director.cpp
     ${TESTER_FILES}/src/tester.cpp
     ${CANDLE_FILES}/src/candle.cpp
 )

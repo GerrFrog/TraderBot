@@ -8,43 +8,256 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <algorithm>
+#include <nlohmann/json.hpp>
+#include <vector>
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
+#include "../../candle/inc/candle.hpp"
+#include "../../exceptions/inc/exceptions.hpp"
+#include "../../trade/inc/trade.hpp"
+#include "../../request/inc/request.hpp"
 
-using std::string, std::cout, std::endl, std::map;
+using std::string; 
+using std::cout; 
+using std::endl; 
+using std::map; 
+using std::vector;
 
 /**
  * @brief All Workers which create Trader
  */
 namespace Workers
 {
+    // TODO: Trader opens several trades
     /**
-     * @brief EMA Cross Strategy Worker
+     * @brief Trader decides when open and close order
      */
-    template <class Strategy>
-    class Worker
+    class Trader
     {
         private:
             /**
-             * @brief Strategy name worker works
+             * @brief Parameters of Trader
              */
-            string strategy_name;
+            nlohmann::json trader_params;
 
             /**
-             * @brief API Key for taapi.io
+             * @brief Active Trade for Worker
              */
-            string taapi_key;
+            Trade trade;
 
             /**
-             * @brief Symbol (pair) for trading
+             * @brief Work Trade Status
              */
-            string symbol;
+            bool work = false;
 
             /**
-             * @brief Timeframe interval for trading
+             * @brief Get the current price of cryptocurrency
+             * 
+             * @return double 
              */
-            string interval;
+            double get_current_price()
+            {
+                map<string, string> params;
+
+                string sym;
+                string symbol = this->trader_params["symbol"];
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                params["symbol"] = sym;
+
+                Request::Simple::JSON_Curl json_curl("https://api.binance.com/api/v3/ticker/price");
+
+                json_curl.construct_request(params);
+
+                nlohmann::json res = json_curl.request();
+
+                if (res.contains("price"))
+                {
+                    string price = res["price"];
+                    return std::stod(price);
+                }
+                
+                throw Exceptions::Panic::Panic_Exception("Something went wront in trader!", 1, 0);
+            }
+
+            /**
+             * @brief Initialize new Trade
+             */
+            void initialize_trade()
+            {
+                string symbol = this->trader_params["symbol"];
+                string timeframe = this->trader_params["timeframe"];
+
+                double stake_amount = this->trader_params["stake_amount"];
+
+                this->trade.set_open_time();
+                // TODO: Unique ID for each Trade
+                this->trade.set_id(1);
+                this->trade.set_symbol(
+                    symbol
+                );
+                this->trade.set_stake_amount(
+                    stake_amount
+                );
+                this->trade.set_open_price(
+                    this->get_current_price()
+                );
+                this->trade.set_interval(
+                    timeframe
+                );
+            }
+
+            /**
+             * @brief Clear current Trade to open new one
+             */
+            void clear_trade()
+            {
+                // TODO: Clear Trade object
+            }
+
+            /**
+             * @brief Open new Trade
+             */
+            void open_trade()
+            {
+                this->initialize_trade();
+                this->work = true;
+                // TODO: Open trade in binance
+            }
+
+            /**
+             * @brief Close current Trade
+             */
+            void close_trade()
+            {
+                this->trade.set_close_time(
+                    this->get_current_price()
+                );
+                this->work = false;
+                // TODO: Close trade in binance
+            }
+
+        public:
+            /**
+             * @brief Construct a new Trader object
+             */
+            Trader() = default;
+
+            /**
+             * @brief Construct a new ema cross trader object
+             * 
+             * @param trader_params Parameters of Trader
+             */
+            Trader(
+                nlohmann::json &trader_params
+            ) : trader_params(trader_params)
+            { }
+
+            /**
+             * @brief Destroy the Trader object
+             */
+            ~Trader() = default;
+
+            /**
+             * @brief Set the trader params object
+             * 
+             * @param params Params for Trader
+             */
+            void set_trader_params(nlohmann::json &params) { this->trader_params = params; }
+
+            /**
+             * @brief Get the symbol
+             * 
+             * @return string 
+             */
+            string get_symbol() { return this->trader_params["symbol"]; }
+
+            /**
+             * @brief Get the interval 
+             * 
+             * @return string 
+             */
+            string get_timeframe() { return this->trader_params["timeframe"]; }
+
+            /**
+             * @brief Get the name of Trader
+             * 
+             * @return string 
+             */
+            string get_name() { return this->trader_params["name"]; }
+
+            /**
+             * @brief Get the exchange 
+             * 
+             * @return string 
+             */
+            string get_exchange() { return this->trader_params["exchange"]; }
+
+            /**
+             * @brief Get the stake amount
+             * 
+             * @return double 
+             */
+            double get_stake_amount() { return (double)this->trader_params["stake_amount"]; }
+
+            /**
+             * @brief Is Trade working?
+             * 
+             * @return true 
+             * @return false 
+             */
+            bool is_work() { return this->work; }
+
+            // TODO: Other work: with stop-loss and profit
+            /**
+             * @brief Decide what to do with trade
+             * 
+             * @param buy_signal Buy signal
+             * @param sell_signal Sell signal
+             */
+            void resolve(bool buy_signal, bool sell_signal)
+            {
+                if (this->work)
+                {
+                    if (sell_signal) 
+                    {
+                        this->close_trade();
+                        // Do something with Trade
+                        cout << "[+] Trade is closed" << endl;
+                        this->clear_trade(); // Reset options
+                    }
+                    return;
+                } else {
+                    if (buy_signal)
+                    {
+                        this->open_trade();
+                        // Do something with Trade
+                        cout << "[+] Trade is opened" << endl;
+                    }
+                    return;
+                }
+            }
+    };
+
+    /**
+     * @brief Solves the Strategy
+     */
+    template <class Strategy>
+    class Solver
+    {
+        private:
+            /**
+             * @brief Params for Strategy
+             */
+            nlohmann::json strategy_params;
 
             /**
              * @brief Data container for resolved signals
@@ -54,40 +267,37 @@ namespace Workers
             };
 
             /**
-             * @brief Params for strategy
-             */
-            nlohmann::json strategy_params;
-
-            /**
              * @brief EMA Cross Strategy object
              */
             Strategy strategy;
 
         public:
             /**
-             * @brief Construct a new ema cross 15m object
-             * 
-             * @param taapi_key API Key for taapi.io
-             * @param trade_symbol Symbol (pair) for trading
-             * @param timeframe Timeframe interval for trading
-             * @param name Strategy name Worker works
-             * @param short_ema_period Period for Short EMA
-             * @param long_ema_period Period for Long EMA
-             * @param delay Delay between request
+             * @brief Construct a new Solver 
              */
-            Worker(
-                const string &taapi_key, const string &trade_symbol,
-                const string &timeframe, const string &name,
-                nlohmann::json &params
-            ) : taapi_key(taapi_key), symbol(trade_symbol),
-                interval(timeframe), strategy_name(name),
-                strategy_params(params)
+            Solver() = default;
+
+            /**
+             * @brief Construct a new Solver object
+             * 
+             * @param strategy_params Params for Strategy
+             */
+            Solver(
+                nlohmann::json &strategy_params
+            ) : strategy_params(strategy_params)
             { }
 
             /**
              * @brief Destroy the ema cross 15m object
              */
-            ~Worker() { };
+            ~Solver() = default;
+
+            /**
+             * @brief Get the strategy params object
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_strategy_params() { return this->strategy_params; }
 
             /**
              * @brief Get the buy signal 
@@ -106,35 +316,153 @@ namespace Workers
             bool get_sell_signal() { return signals["sell"]; }
 
             /**
-             * @brief Get Worker description
-             * 
-             * @param description Map for description
+             * @brief Resolve the strategy in worker
              */
-            void get_worker_description(map<string, string> &description)
+            void resolve(map<string, double> &params)
             {
-                description["symbol"] = this->symbol;
-                description["interval"] = this->interval;
-                description["strategy"] = this->strategy_name;
+                this->strategy.resolve(
+                    params,
+                    this->signals
+                );
+            }
+    };
+
+    /**
+     * @brief Responsable for Indicators
+     */
+    class Watcher
+    {
+        private:
+            /**
+             * @brief All type of EMA indicators
+             */
+            vector<Indicators::Integral::EMA> emas;
+
+            /**
+             * @brief All strategies in config
+             */
+            nlohmann::json strategies;
+
+            /**
+             * @brief Base URL of taapi.io
+             */
+            string taapi_url = "https://api.taapi.io/";
+
+            /**
+             * @brief API Key for taapi.io
+             */
+            string taapi_key;
+
+        public:
+            /**
+             * @brief Construct a new Watcher object
+             */
+            Watcher() = default;
+
+            /**
+             * @brief Construct a new Watcher object
+             * 
+             * @param strategies All strategies in config
+             * @param taapi_key API Key for taapi.io
+             */
+            Watcher(
+                nlohmann::json &strategies,
+                const string &taapi_key
+            ) : taapi_key(taapi_key), strategies(strategies)
+            { }
+
+            /**
+             * @brief Destroy the Watcher object
+             */
+            ~Watcher() = default;
+
+            /**
+             * @brief Set the strategies 
+             * 
+             * @param strat Strategies in config
+             */
+            void set_strategies(nlohmann::json &strat) { this->strategies = strat; }
+
+            /**
+             * @brief Set the taapi key 
+             * 
+             * @param key API Key for taapi.io
+             */
+            void set_taapi_key(const string &key) { this->taapi_key = key; }
+
+            /**
+             * @brief Describe all indicators
+             */
+            void describe_indicators()
+            {
+                for (Indicators::Integral::EMA& ema : this->emas)
+                    cout << "EMA : " << ema.get_period() << endl;
             }
 
             /**
-             * @brief Resolve the strategy in worker
+             * @brief Initialize the Watcher
              */
-            void resolve()
+            void initialize()
+            {
+                for (auto& [key1, val1] : this->strategies.items())
+                    for (auto& [key2, val2] : val1.items())
+                        for (auto& [key3, val3] : val2["strategy_params"].items())
+                        {
+                            if (val3["indicator"] == "EMA")
+                                this->emas.push_back(
+                                    Indicators::Integral::EMA(
+                                        val3["indicator_params"]
+                                    )
+                                );
+                            // if () // Other indicator
+                        }
+            }
+
+            /**
+             * @brief When next candle is set Watcher should be resolved
+             */
+            void resolve(Candle &candle)
+            {
+                for (Indicators::Integral::EMA& ema : this->emas)
+                    ema.resolve(candle);
+            }
+
+            /**
+             * @brief Get values for specified indicators
+             * 
+             * @param strategy_params strategy_params in config
+             * @param symbol Symbol (pair) to trade
+             * @param backtest If backtest all Indicators will be calculated as Integral
+             * @return map<string, double>
+             */
+            map<string, double> get(
+                nlohmann::json &strategy_params, 
+                const string &symbol,
+                bool backtest = false
+            )
             {
                 map<string, double> params;
 
-                // TODO: Create instance from config. Without if-else
-                for (auto& [key, value] : this->strategy_params.items()) {
-                    if (value["indicator"] == "EMA")
+                for (auto& [key, val] : strategy_params.items())
+                {
+                    double period = val["indicator_params"]["period"];
+
+                    string indicator = val["indicator"];
+                    string type = val["type"];
+
+                    // TODO: Create instance from config. Without if-else
+                    if (type == "TAAPI" && !backtest)
                     {
-                        if (value["type"] == "TAAPI")
+                        if (indicator == "EMA")
                         {
                         again:
                             try {
-                                params[key] = Indicators::TAAPI::EMA(
-                                    this->taapi_key, this->symbol,
-                                    this->interval, value["indicator_params"]
+                                Indicators::TAAPI::EMA ema;
+                                params[key] = ema.get(
+                                    this->taapi_url,
+                                    this->taapi_key, symbol,
+                                    val["indicator_params"]["interval"], 
+                                    val["indicator_params"]
                                 );
                             } catch (Exceptions::TAAPI::Rate_Limit& exp) {
                                 cout << exp.what() << endl;
@@ -147,12 +475,28 @@ namespace Workers
                                 goto again;
                             }
                         }
-                    } // else if () // Other indicator
+                    }
+                    if (type == "Integral" || backtest)
+                    {
+                        if (indicator == "EMA")
+                        {
+                            for (auto& [key, val] : strategy_params.items())
+                            {
+                                for (Indicators::Integral::EMA &ema : this->emas)
+                                {
+                                    double period = val["indicator_params"]["period"];
+
+                                    string interval = val["indicator_params"]["interval"];
+
+                                    if (ema.get_period() == period && ema.get_interval() == interval)
+                                        params[key] = ema.get_ema();
+                                }
+                            }
+                        }
+                    }
                 }
-                this->strategy.resolve(
-                    params,
-                    this->signals
-                );
+
+                return params;
             }
     };
 }

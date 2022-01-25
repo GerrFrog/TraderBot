@@ -5,11 +5,17 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 
-#include "../../libs/csv/csv.hpp"
+#include "../../managers/inc/managers.hpp"
 #include "../../indicators/inc/indicators.hpp"
+#include "../../libs/csv/csv.hpp"
 
-using std::string, std::map, std::cout, std::endl;
+using std::string; 
+using std::map; 
+using std::cout; 
+using std::endl; 
+using std::vector;
 
 class Tester
 {
@@ -22,17 +28,25 @@ class Tester
         /**
          * @brief Start balance
          */
-        double start_balance = 10000.0;
+        double start_balance;
 
         /**
          * @brief Current balance
          */
-        double balance = 10000.0;
+        double balance;
 
         /**
          * @brief Stake amount to trade
          */
-        double stake_amount = 10000.0;
+        double stake_amount;
+
+        template <class Strategy>
+        void work(
+            Workers::Solver<Strategy> &worker,
+            Workers::Trader &trader
+        ) {
+
+        }
 
     public:
         /**
@@ -60,9 +74,94 @@ class Tester
         ~Tester() 
         { }
 
-        void backtest()
+        /**
+         * @brief Start backtesting 
+         * 
+         * @tparam Strategy Strategy to backtest
+         * @param config Config for strategy
+         * @param config_strategy The name of strategy in config file
+         */
+        template <class Strategy>
+        void backtest(nlohmann::json &config, string &config_strategy)
         {
+            io::CSVReader<11> file(this->filename);
 
+            string open_price, high_price, low_price, close_price,
+                   volume, quote, trades_count, tbbav, tbqav,
+                   open_time, close_time
+            ;
+
+            // Managers::Employers::Employer<Strategy> employer;
+            // Managers::Analysts::Analyst analyst;
+
+            // employer.initial_workers(config[config_strategy]);
+
+            // vector<Workers::Trader> traders = analyst.get_traders();
+            // vector<Workers::Solver<Strategy>> workers = employer.get_workers();
+
+            // while(file.read_row(
+            //     open_time, open_price, high_price, 
+            //     low_price, close_price, volume, close_time, 
+            //     quote, trades_count, tbbav, tbqav
+            // )) {
+            //     // TODO: Remake without try-catch
+            //     // The first value of variables is columns names
+            //     try {
+            //         Candle candle(
+            //             std::stod(open_time),
+            //             std::stod(close_time),
+            //             std::stod(open_price),
+            //             std::stod(high_price),
+            //             std::stod(low_price),
+            //             std::stod(close_price),
+            //             std::stod(volume),
+            //             std::stod(quote),
+            //             std::stod(trades_count),
+            //             std::stod(tbbav),
+            //             std::stod(tbqav)
+            //         );
+
+                    
+            //     } catch (std::invalid_argument& exp) {
+            //         cout << exp.what() << endl;
+            //         continue;
+            //     }
+            // }
+
+            // Strategy strategy;
+
+            // map<string, double> params;
+            // map<string, bool> signals;
+
+            // io::CSVReader<11> file(this->filename);
+
+            // // TODO: Add what strategy we are testing
+            // cout << "[+] Start backtesting for strategy" << endl;
+
+            // cout << "[+] Strategy params:" << endl;
+            // for (auto& [key, val] : strategy_params.items())
+            // {
+            //     cout << key << endl;
+            //     for (auto& [k, v] : val["indicator_params"].items())
+            //         cout << "    " << k << " : " << v << endl;
+            // }
+
+            // for (auto& [key, val] : strategy_params.items())
+            // {
+            //     if (val["indicator"] == "EMA")
+            //     {
+            //         Indicators::Integral::EMA ema(
+            //             val["indicator_params"]
+            //         );
+            //     }
+            // }
+
+            // for (auto& [key, val] : strategy_params)
+            // {
+            //     params[key] = Indicators::Integral::EMA(
+            //         val["indicator_params"]
+            //     );
+            // }
         }
 
         /**

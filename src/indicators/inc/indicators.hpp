@@ -13,8 +13,11 @@
 #include "../../request/inc/request.hpp"
 #include "../../candle/inc/candle.hpp"
 
-using std::string, std::map, std::cout, std::endl,
-      std::vector;
+using std::string; 
+using std::map; 
+using std::cout; 
+using std::endl;
+using std::vector;
 
 /**
  * @brief Requests to taapi.io for indicators values
@@ -29,20 +32,40 @@ namespace Indicators::TAAPI
     std::string get_taapi_url();
 
     /**
-     * @brief Get EMA value
-     * 
-     * @param key Key of taapi.io
-     * @param symbol Symbol (pair)
-     * @param interval Interval
-     * @param indicator_params Params for Indicator
-     * @return double 
+     * @brief Exponential Moving Average
      */
-    double EMA(
-        const std::string &key,
-        const std::string &symbol, 
-        const std::string &interval, 
-        nlohmann::json &indicator_params
-    );
+    class EMA
+    {
+        private:
+
+        public:
+            /**
+             * @brief Construct a new EMA object
+             */
+            EMA() = default;
+
+            /**
+             * @brief Destroy the EMA object
+             */
+            ~EMA() = default;
+
+            /**
+             * @brief Get EMA value
+             * 
+             * @param key API Key for taapi.io
+             * @param symbol Symbol (pair)
+             * @param interval Interval
+             * @param indicator_params Params for Indicator
+             * @return double 
+             */
+            double get(
+                const std::string &url,
+                const std::string &key,
+                const std::string &symbol, 
+                const std::string &interval, 
+                nlohmann::json &indicator_params
+            );
+    };
 }
 
 /**
@@ -63,6 +86,11 @@ namespace Indicators::Integral
             int period;
 
             /**
+             * @brief Interval (timeframe) of EMA
+             */
+            string interval;
+
+            /**
              * @brief Last EMA value
              */
             double last_ema;
@@ -80,20 +108,29 @@ namespace Indicators::Integral
         public:
             /**
              * @brief Construct a new EMA object
-             * 
-             * @param period Period for EMA
              */
-            EMA(
-                int period
-            ) : period(period)
+            EMA()
             { }
 
             /**
-             * @brief Get the EMA for last passed Candle
+             * @brief Construct a new EMA object
              * 
-             * @return double 
+             * @param indicator_params Params for EMA
              */
-            double get_ema() { return this->ema; }
+            EMA(
+                nlohmann::json &indicator_params
+            )
+            { 
+                this->period = indicator_params["period"];
+                this->interval = indicator_params["interval"];
+            }
+
+            /**
+             * @brief Set the period object
+             * 
+             * @param per Period for EMA
+             */
+            void set_period(double per) { this->period = per; }
 
             /**
              * @brief Get the period of EMA
@@ -101,6 +138,20 @@ namespace Indicators::Integral
              * @return double 
              */
             double get_period() { return this->period; }
+
+            /**
+             * @brief Get the interval of EMA
+             * 
+             * @return string 
+             */
+            string get_interval() { return this->interval; }
+
+            /**
+             * @brief Get the EMA for last passed Candle
+             * 
+             * @return double 
+             */
+            double get_ema() { return this->ema; }
 
             /**
              * @brief Resolve the EMA Indicator for new Candle

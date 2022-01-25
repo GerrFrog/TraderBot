@@ -3,211 +3,140 @@
 #ifndef MANAGER_HEADER
 #define MANAGER_HEADER
 
-#include <string>
-#include <iostream>
-#include <map>
-#include <nlohmann/json.hpp>
-#include <vector>
-
 #include "../../workers/inc/workers.hpp"
-#include "../../traders/inc/traders.hpp"
 
-using std::map, std::string, std::cout, std::endl, std::vector;
+using std::map; 
+using std::string; 
+using std::cout; 
+using std::endl; 
+using std::vector;
 
 /**
- * @brief All Traders which trade
+ * @brief All Managers 
  */
-namespace Managers::Analysts
+namespace Managers
 {
     /**
-     * @brief EMA Cross Strategy Analyst
+     * @brief Manager for workers
      */
-    class Analyst
+    class Manager
     {
         private:
             /**
-             * @brief Vector for EMA Cross Strategy Traders
+             * @brief Strategies in config
              */
-            vector<Traders::Trader> traders;
-            
-        public:
-            /**
-             * @brief Construct a new ema trader object
-             */
-            Analyst() 
-            { }
+            nlohmann::json strategies;
 
             /**
-             * @brief Destroy the ema trader object
+             * @brief Watcher for indicators
              */
-            ~Analyst() 
-            { }
+            Workers::Watcher watcher;
 
             /**
-             * @brief Describe Traders
+             * @brief All Traders
              */
-            void describe_traders()
-            {
-                for (Traders::Trader &trader : this->traders)
-                {
-                    map<string, string> descr;
-                    trader.get_description(descr);
-                    for (auto &[key, val] : descr)
-                        cout << key << " : " << val << endl;
-                }
-            }
+            vector<Workers::Trader> ema_cross_traders;
 
             /**
-             * @brief Describe curtain Trader
+             * @brief EMA Cross Strategy Solver
+             */
+            vector<Workers::Solver<Strategies::EMA_Cross>> ema_cross_solvers;
+
+            /**
+             * @brief Work for pair
              * 
+             * @tparam Strategy Strategy to work
              * @param trader Trader
+             * @param solver Solver
              */
-            void describe_trader(Traders::Trader &trader)
+            template <class Strategy>
+            void work(
+                Workers::Trader &trader,
+                Workers::Solver<Strategy> &solver
+            )
             {
-                map<string, string> descr;
-                trader.get_description(descr);
-                for (auto &[key, val] : descr)
-                    cout << key << " : " << val << endl;
+                nlohmann::json strategy_params = solver.get_strategy_params();
+
+                // TODO: Candle for watcher
+                // TODO: Request to taapi for indicator when it's time (check timeframe in strategy)
+                map<string, double> params = this->watcher.get(
+                    strategy_params,
+                    trader.get_symbol()
+                );
+
+                solver.resolve(params);
+                trader.resolve(
+                    solver.get_buy_signal(),
+                    solver.get_sell_signal()
+                );
+
+                cout << trader.get_name() << endl;
+                cout << trader.get_timeframe() << endl;
+                cout << trader.get_symbol() << endl;
+                cout << "Work: " << trader.is_work() << endl;
+                cout << "Sell signal: " << solver.get_sell_signal() << endl;
+                cout << "Buy signal: " << solver.get_buy_signal() << endl;
             }
-
-            /**
-             * @brief Get the array with Traders
-             * 
-             * @return vector<Traders::TAAPI::EMA_Cross_Trader>
-             */
-            vector<Traders::Trader> get_traders()
-            {
-                return this->traders;
-            }
-
-            /**
-             * @brief Initialize all traders by config
-             * 
-             * @param config JSON Config for Trader
-             */
-            void initial_traders(nlohmann::json &config)
-            {
-                for (auto& [key, val] : config.items())
-                {
-                    vector<string> timeframes;
-
-                    for (auto& elem : val["timeframes"])
-                        timeframes.push_back(elem);
-
-                    for (string &timeframe : timeframes)
-                    {
-                        Traders::Trader trader(
-                            val["symbol"],
-                            timeframe,
-                            val["name"],
-                            val["trader_params"]["stake_amount"]
-                        );
-                        this->traders.push_back(trader);
-                    }
-                }
-            }
-    };
-}
-
-/**
- * @brief All Managers for working
- */
-namespace Managers::Employers
-{
-    /**
-     * @brief EMA Cross Strategy Employer
-     * 
-     * @tparam Strategy Strategy with which the Employer works
-     */
-    template <class Strategy>
-    class Employer
-    {
-        private:
-            /**
-             * @brief Vector for EMA Cross Strategy Workers
-             */
-            vector<Workers::Worker<Strategy>> workers;
 
         public:
             /**
-             * @brief Construct a new Workers_Manager object
-             */
-            Employer() 
-            { }
-
-            /**
-             * @brief Destroy the Workers_Manager object
-             */
-            ~Employer() 
-            { }
-
-            /**
-             * @brief Describe Workers
-             */
-            void describe_workers()
-            {
-                for (auto& worker : this->workers)
-                {
-                    map<string, string> description;
-                    worker.get_worker_description(description);
-                    for (auto& [key, val] : description)
-                        cout << key << " : " << val << endl;
-                }
-            }
-
-            /**
-             * @brief Describe curtain Worker
-             * @param worker Worker
-             */
-            void describe_worker(Workers::Worker<Strategy> &worker)
-            {
-                map<string, string> description;
-                worker.get_worker_description(description);
-                for (auto& [key, val] : description)
-                    cout << key << " : " << val << endl;
-            }
-
-            /**
-             * @brief Get the array with Workers
+             * @brief Construct a new Manager object
              * 
-             * @return vector<Workers::TAAPI::EMA_Cross_Worker> 
-             */
-            vector<Workers::Worker<Strategy>> get_workers()
-            {
-                return this->workers; 
-            }
-
-            /**
-             * @brief Initialize all workers by config
-             * 
-             * @param config JSON Config for Worker
+             * @param strategies Strategies in config
              * @param taapi_key API Key for taapi.io
              */
-            void initial_workers(nlohmann::json &config, const string &taapi_key)
-            {
-                for (auto& [key, val] : config.items())
+            Manager(
+                nlohmann::json &strategies,
+                const string &taapi_key
+            ) : strategies(strategies)
+            { 
+                this->watcher.set_strategies(
+                    strategies
+                );
+                this->watcher.set_taapi_key(
+                    taapi_key
+                );
+
+                for (auto& [key1, val1] : strategies.items())
                 {
-                    vector<string> timeframes;
-
-                    for (auto& elem : val["timeframes"])
-                        timeframes.push_back(elem);
-
-                    for (string& timeframe : timeframes)
+                    for (auto& [key2, val2] : val1.items())
                     {
-                        Workers::Worker<Strategy> worker(
-                            taapi_key, val["symbol"], 
-                            timeframe, val["name"],
-                            val["strategy_params"]
+                        this->ema_cross_traders.push_back(
+                            Workers::Trader(
+                                val2["trader_params"]
+                            )
                         );
-                        this->workers.push_back(worker);
+                        this->ema_cross_solvers.push_back(
+                            Workers::Solver<Strategies::EMA_Cross>(
+                                val2["strategy_params"]
+                            )
+                        );
                     }
+
                 }
+            }
+
+            /**
+             * @brief Destroy the Manager object
+             */
+            ~Manager() = default;
+
+            /**
+             * @brief 
+             */
+            void run()
+            {
+                cout << "[+] Start working" << endl;
+
+                while (true)
+                    for (int i = 0; i < this->ema_cross_solvers.size(); i++)
+                        this->work<Strategies::EMA_Cross>(
+                            this->ema_cross_traders[i],
+                            this->ema_cross_solvers[i]
+                        );
             }
     };
 }
-
-
-
 
 
 

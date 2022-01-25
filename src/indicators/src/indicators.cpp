@@ -5,7 +5,8 @@ std::string Indicators::TAAPI::get_taapi_url()
     return "https://api.taapi.io/";
 }
 
-double Indicators::TAAPI::EMA (
+double Indicators::TAAPI::EMA::get (
+    const std::string &url,
     const std::string &key,
     const std::string &symbol, 
     const std::string &interval, 
@@ -21,7 +22,7 @@ double Indicators::TAAPI::EMA (
     params["interval"] = interval;
     params["optInTimePeriod"] = std::to_string(period);
 
-    Request::Simple::JSON_Curl json_curl(Indicators::TAAPI::get_taapi_url() + "ema");
+    Request::Simple::JSON_Curl json_curl(url + "ema");
 
     json_curl.construct_request(params);
 

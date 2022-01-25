@@ -7,6 +7,8 @@
 #include <exception>
 #include <typeinfo>
 
+// TODO: Bad config exception
+
 /**
  * @brief Panic Exceptions
  */

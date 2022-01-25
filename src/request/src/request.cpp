@@ -1,5 +1,7 @@
 #include "../inc/request.hpp"
 
+// TODO: Construct request safer
+
 nlohmann::json Request::Simple::JSON_Curl::request()
 {
 	curl_global_init(CURL_GLOBAL_ALL); // sets the program environment
