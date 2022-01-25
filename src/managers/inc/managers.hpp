@@ -17,12 +17,12 @@ using std::map, std::string, std::cout, std::endl, std::vector;
 /**
  * @brief All Traders which trade
  */
-namespace Managers::Analyst
+namespace Managers::Analysts
 {
     /**
      * @brief EMA Cross Strategy Analyst
      */
-    class EMA_Cross_Analyst
+    class Analyst
     {
         private:
             /**
@@ -34,13 +34,13 @@ namespace Managers::Analyst
             /**
              * @brief Construct a new ema trader object
              */
-            EMA_Cross_Analyst() 
+            Analyst() 
             { }
 
             /**
              * @brief Destroy the ema trader object
              */
-            ~EMA_Cross_Analyst() 
+            ~Analyst() 
             { }
 
             /**
@@ -116,26 +116,29 @@ namespace Managers::Employers
 {
     /**
      * @brief EMA Cross Strategy Employer
+     * 
+     * @tparam Strategy Strategy with which the Employer works
      */
-    class EMA_Cross_Employer
+    template <class Strategy>
+    class Employer
     {
         private:
             /**
              * @brief Vector for EMA Cross Strategy Workers
              */
-            vector<Workers::Worker<Strategies::EMA_Cross>> workers;
+            vector<Workers::Worker<Strategy>> workers;
 
         public:
             /**
              * @brief Construct a new Workers_Manager object
              */
-            EMA_Cross_Employer() 
+            Employer() 
             { }
 
             /**
              * @brief Destroy the Workers_Manager object
              */
-            ~EMA_Cross_Employer() 
+            ~Employer() 
             { }
 
             /**
@@ -156,7 +159,7 @@ namespace Managers::Employers
              * @brief Describe curtain Worker
              * @param worker Worker
              */
-            void describe_worker(Workers::Worker<Strategies::EMA_Cross> &worker)
+            void describe_worker(Workers::Worker<Strategy> &worker)
             {
                 map<string, string> description;
                 worker.get_worker_description(description);
@@ -169,7 +172,7 @@ namespace Managers::Employers
              * 
              * @return vector<Workers::TAAPI::EMA_Cross_Worker> 
              */
-            vector<Workers::Worker<Strategies::EMA_Cross>> get_workers()
+            vector<Workers::Worker<Strategy>> get_workers()
             {
                 return this->workers; 
             }
@@ -191,7 +194,7 @@ namespace Managers::Employers
 
                     for (string& timeframe : timeframes)
                     {
-                        Workers::Worker<Strategies::EMA_Cross> worker(
+                        Workers::Worker<Strategy> worker(
                             taapi_key, val["symbol"], 
                             timeframe, val["name"],
                             val["strategy_params"]

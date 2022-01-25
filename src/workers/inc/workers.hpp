@@ -153,45 +153,6 @@ namespace Workers
                     params,
                     this->signals
                 );
-
-            //     double short_value, long_value;
-
-            // again_short:
-            //     try {
-            //         short_value = Indicators::TAAPI::EMA(
-            //             this->taapi_key, this->symbol,
-            //             this->interval, this->strategy_params["short_ema"]
-            //         );
-            //     } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-            //         cout << exp.what() << endl;
-            //         std::this_thread::sleep_for(
-            //             std::chrono::seconds(
-            //                 this->strategy_params["delay"]
-            //             )
-            //         );
-            //         goto again_short;
-            //     }
-
-            // again_long:
-            //     try {
-            //         long_value = Indicators::TAAPI::EMA(
-            //             this->taapi_key, this->symbol,
-            //             this->interval, this->strategy_params["long_ema"]
-            //         );
-            //     } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-            //         cout << exp.what() << endl;
-            //         std::this_thread::sleep_for(
-            //             std::chrono::seconds(
-            //                 this->strategy_params["delay"]
-            //             )
-            //         );
-            //         goto again_long;
-            //     }
-
-            //     this->strategy.resolve(
-            //         short_value, long_value,
-            //         this->signals
-            //     );
             }
     };
 }
