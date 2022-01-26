@@ -15,6 +15,11 @@ class Candle
 {
     private:
         /**
+         * @brief Candle set status
+         */
+        bool set = false;
+
+        /**
          * @brief Open time 
          */
         double open_time;
@@ -72,6 +77,12 @@ class Candle
     public:
         /**
          * @brief Construct a new Candle object
+         */
+        Candle()
+        { }
+
+        /**
+         * @brief Construct a new Candle object
          * 
          * @param open_time Open time
          * @param close_time Close time
@@ -108,12 +119,22 @@ class Candle
             open_price(open_price),
             close_time(close_time),
             open_time(open_time)
-        { }
+        { 
+            this->set = true;
+        }
 
         /**
          * @brief Destroy the Candle object
          */
         ~Candle() { }
+
+        /**
+         * @brief Is Candle set?
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool is_set() { return this->set; }
 
         /**
          * @brief Get the close price 

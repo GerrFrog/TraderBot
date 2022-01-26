@@ -91,7 +91,7 @@ namespace Workers
             /**
              * @brief Initialize new Trade
              */
-            void initialize_trade()
+            void initialize_trade(double price = 0)
             {
                 string symbol = this->trader_params["symbol"];
                 string timeframe = this->trader_params["timeframe"];
@@ -107,9 +107,16 @@ namespace Workers
                 this->trade.set_stake_amount(
                     stake_amount
                 );
-                this->trade.set_open_price(
-                    this->get_current_price()
-                );
+
+                if (price == 0)
+                    this->trade.set_open_price(
+                        this->get_current_price()
+                    );
+                else
+                    this->trade.set_open_price(
+                        price
+                    );
+
                 this->trade.set_interval(
                     timeframe
                 );
@@ -126,9 +133,12 @@ namespace Workers
             /**
              * @brief Open new Trade
              */
-            void open_trade()
+            void open_trade(Candle* candle = NULL)
             {
-                this->initialize_trade();
+                if (candle == NULL)
+                    this->initialize_trade();
+                else 
+                    this->initialize_trade(candle->get_close_price());
                 this->work = true;
                 // TODO: Open trade in binance
             }
@@ -136,11 +146,17 @@ namespace Workers
             /**
              * @brief Close current Trade
              */
-            void close_trade()
+            // void close_trade(const Candle &candle = Candle())
+            void close_trade(Candle* candle = NULL)
             {
-                this->trade.set_close_time(
-                    this->get_current_price()
-                );
+                if (candle == NULL)
+                    this->trade.set_close_time(
+                        this->get_current_price()
+                    );
+                else 
+                    this->trade.set_close_time(
+                        candle->get_close_price()
+                    );
                 this->work = false;
                 // TODO: Close trade in binance
             }
@@ -222,15 +238,29 @@ namespace Workers
              * 
              * @param buy_signal Buy signal
              * @param sell_signal Sell signal
+             * @param ret_trade Trade object to return
+             * @param candle Pointer to last candle
              */
-            void resolve(bool buy_signal, bool sell_signal)
+            void resolve(
+                bool buy_signal, 
+                bool sell_signal, 
+                Trade &ret_trade,
+                // Candle &candle = Candle()
+                Candle* candle = NULL
+            )
             {
                 if (this->work)
                 {
                     if (sell_signal) 
                     {
-                        this->close_trade();
+                        if (candle != NULL)
+                            this->close_trade(candle);
+                        else 
+                            this->clear_trade();
+
                         // Do something with Trade
+                        ret_trade = this->trade;
+
                         cout << "[+] Trade is closed" << endl;
                         this->clear_trade(); // Reset options
                     }
@@ -238,7 +268,10 @@ namespace Workers
                 } else {
                     if (buy_signal)
                     {
-                        this->open_trade();
+                        if (candle == NULL)
+                            this->open_trade();
+                        else
+                            this->open_trade(candle);
                         // Do something with Trade
                         cout << "[+] Trade is opened" << endl;
                     }
@@ -404,7 +437,6 @@ namespace Workers
              */
             void initialize()
             {
-                cout << "HERE" << endl;
                 // TODO: Remake without try-catch. We pass "strategies" or "strategies.strategy.1.strategy_params" from config
                 try {
                     for (auto& [key1, val1] : this->strategies.items())

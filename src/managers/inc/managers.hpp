@@ -55,6 +55,8 @@ namespace Managers
                 Workers::Solver<Strategy> &solver
             )
             {
+                Trade trade;
+
                 nlohmann::json strategy_params = solver.get_strategy_params();
 
                 // TODO: Pass Candle for watcher
@@ -67,7 +69,8 @@ namespace Managers
                 solver.resolve(params);
                 trader.resolve(
                     solver.get_buy_signal(),
-                    solver.get_sell_signal()
+                    solver.get_sell_signal(),
+                    trade
                 );
 
                 cout << trader.get_name() << endl;

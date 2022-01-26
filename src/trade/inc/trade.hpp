@@ -16,6 +16,7 @@ using std::map, std::cout, std::endl, std::string;
  */
 class Trade
 {
+    // TODO: Long and Short Trade
     private:
         /**
          * @brief Unique Trade id
@@ -157,7 +158,67 @@ class Trade
             this->per_profit = percentage - 100;
             this->profit = this->stake_amount * percentage / 100 - this->stake_amount;
         }
+
+        /**
+         * @brief Get the symbol of trade
+         * 
+         * @return string 
+         */
+        string get_symbol() { return this->symbol; }
+
+        /**
+         * @brief Get the interval 
+         * 
+         * @return string 
+         */
+        string get_interval() { return this->interval; }
+
+        /**
+         * @brief Get the live time 
+         * 
+         * @return double 
+         */
+        double get_live_time() { return this->live_time; }
+
+        /**
+         * @brief Get the stake amount 
+         * 
+         * @return double 
+         */
+        double get_stake_amount() { return this->stake_amount; }
+
+        /**
+         * @brief Get the open price 
+         * 
+         * @return double 
+         */
+        double get_open_price() { return this->open_price; }
+
+        /**
+         * @brief Get the close price
+         * 
+         * @return double 
+         */
+        double get_close_price() { return this->close_price; }
+
+        /**
+         * @brief Get the abs profit 
+         * 
+         * @return double 
+         */
+        double get_abs_profit() { return this->profit; }
+
+        /**
+         * @brief Get the per profit 
+         * 
+         * @return double 
+         */
+        double get_per_profit() { return this->per_profit; }
+
+        // TODO: Get open time
+        // TODO: Get close time
 };
+
 
 
 

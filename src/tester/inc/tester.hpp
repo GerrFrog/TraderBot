@@ -19,6 +19,8 @@ using std::cout;
 using std::endl; 
 using std::vector;
 
+// TODO: Backtest with profit/stop-loss strategy
+
 /**
  * @brief Tester for configured strategy
  */
@@ -36,20 +38,75 @@ class Tester
         string taapi_key;
 
         /**
-         * @brief Current balance
-         */
-        double balance;
-
-        /**
          * @brief Stake amount to trade
          */
         double stake_amount;
 
         /**
-         * @brief Count of Closed trades in backtesting
+         * @brief Current balance
          */
-        int closed_trades = 0;
+        double balance;
 
+        /**
+         * @brief Minimal balance per testing
+         */
+        double minimal_balance;
+
+        /**
+         * @brief Maximum balance per testing
+         */
+        double maximum_balance;
+
+        /**
+         * @brief Absolute (USD) profit
+         */
+        double abs_profit = 0;
+
+        /**
+         * @brief Percentage profit
+         */
+        double per_profit = 0;
+
+        /**
+         * @brief Total Trades per testing
+         */
+        int total_trades = 0;
+
+        /**
+         * @brief Total win trades
+         */
+        int wins = 0;
+
+        /**
+         * @brief Total lose trades
+         */
+        int loses = 0;
+
+        /**
+         * @brief Best Trade per testing
+         */
+        Trade best_trade;
+
+        /**
+         * @brief Worst Trade per testing
+         */
+        Trade worst_trade;
+
+        /**
+         * @brief Status of Trade for previous Candle
+         */
+        bool last_trade_state = false;
+
+        /**
+         * @brief Work for got candle
+         * 
+         * @tparam Strategy Strategy for testing
+         * @param config Configuration for strategy
+         * @param trader Trader
+         * @param solver Solver
+         * @param watcher Watcher
+         * @param candle Current Candle
+         */
         template <class Strategy>
         void work(
             nlohmann::json &config,
@@ -59,6 +116,8 @@ class Tester
             Candle &candle
         )
         {
+            Trade trade;
+
             watcher.resolve(candle);
             
             map<string, double> params = watcher.get(
@@ -70,11 +129,32 @@ class Tester
             solver.resolve(params);
             trader.resolve(
                 solver.get_buy_signal(),
-                solver.get_sell_signal()
+                solver.get_sell_signal(),
+                trade,
+                &candle
             );
 
-            if (solver.get_sell_signal())
-                this->closed_trades++;
+// Total trades + 
+// Starting balance + 
+// Absolute profit
+// Percentage profit
+// Best trade (most profit)
+// Worst trade (less profit)
+// win/draw/lose
+// Minimal balance
+// Maximum balance
+            if (trader.is_work() && !this->last_trade_state)
+                this->last_trade_state = true;
+            if (!trader.is_work() && this->last_trade_state)
+            {
+                this->last_trade_state = false;
+                this->total_trades++;
+                cout << "Absolute profit: " << trade.get_abs_profit() << endl;
+                cout << "Percentage profit: " << trade.get_per_profit() << endl;
+                cout << "Open price: " << trade.get_open_price() << endl;
+                cout << "Close price: " << trade.get_close_price() << endl;
+                cout << "Stake amount: " << trade.get_stake_amount() << endl;
+            }
 
             cout << trader.get_name() << endl;
             cout << trader.get_timeframe() << endl;
@@ -84,7 +164,8 @@ class Tester
             cout << "Work: " << trader.is_work() << endl;
             cout << "Sell signal: " << solver.get_sell_signal() << endl;
             cout << "Buy signal: " << solver.get_buy_signal() << endl;
-            cout << "Closed trades: " << closed_trades << endl;
+            cout << "Total trades: " << this->total_trades << endl;
+            cout << "Candle close: " << candle.get_close_price() << endl;
             cout << endl;
         }
 
@@ -138,6 +219,8 @@ class Tester
             );
 
             this->balance = start_balance;
+            this->minimal_balance = start_balance;
+            this->maximum_balance = start_balance;
 
             watcher.set_strategies(
                 config["strategy_params"]
