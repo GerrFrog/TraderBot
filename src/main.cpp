@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
     const std::string sk = dotenv::get("SECRET_KEY");
     const std::string taapi_key = dotenv::get("TAAPI_KEY");
 
+cout << "HERE" << endl;
     std::ifstream ifs("../config.json");
     nlohmann::json jf = nlohmann::json::parse(ifs);
 

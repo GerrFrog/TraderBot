@@ -127,6 +127,7 @@ class Tester
             );
 
             solver.resolve(params);
+            trader.set_stake_amount(this->balance);
             trader.resolve(
                 solver.get_buy_signal(),
                 solver.get_sell_signal(),
@@ -149,11 +150,13 @@ class Tester
             {
                 this->last_trade_state = false;
                 this->total_trades++;
+                this->balance = trade.get_abs_profit();
                 cout << "Absolute profit: " << trade.get_abs_profit() << endl;
                 cout << "Percentage profit: " << trade.get_per_profit() << endl;
                 cout << "Open price: " << trade.get_open_price() << endl;
                 cout << "Close price: " << trade.get_close_price() << endl;
                 cout << "Stake amount: " << trade.get_stake_amount() << endl;
+                cout << "Current balance: " << this->balance << endl;
             }
 
             cout << trader.get_name() << endl;

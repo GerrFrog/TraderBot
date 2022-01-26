@@ -38,14 +38,34 @@ namespace Workers
     {
         private:
             /**
-             * @brief Parameters of Trader
-             */
-            nlohmann::json trader_params;
-
-            /**
              * @brief Active Trade for Worker
              */
             Trade trade;
+
+            /**
+             * @brief Symbol (pair) to trade
+             */
+            string symbol;
+
+            /**
+             * @brief Timeframe (interval) of candles
+             */
+            string timeframe;
+
+            /**
+             * @brief Name of Trader
+             */
+            string name;
+
+            /**
+             * @brief Exchange
+             */
+            string exchange;
+
+            /**
+             * @brief Stake amount to trade
+             */
+            double stake_amount;
 
             /**
              * @brief Work Trade Status
@@ -62,7 +82,7 @@ namespace Workers
                 map<string, string> params;
 
                 string sym;
-                string symbol = this->trader_params["symbol"];
+                string symbol = this->symbol;
 
                 std::remove_copy(
                     symbol.begin(),
@@ -93,19 +113,14 @@ namespace Workers
              */
             void initialize_trade(double price = 0)
             {
-                string symbol = this->trader_params["symbol"];
-                string timeframe = this->trader_params["timeframe"];
-
-                double stake_amount = this->trader_params["stake_amount"];
-
                 this->trade.set_open_time();
                 // TODO: Unique ID for each Trade
                 this->trade.set_id(1);
                 this->trade.set_symbol(
-                    symbol
+                    this->symbol
                 );
                 this->trade.set_stake_amount(
-                    stake_amount
+                    this->stake_amount
                 );
 
                 if (price == 0)
@@ -118,7 +133,7 @@ namespace Workers
                     );
 
                 this->trade.set_interval(
-                    timeframe
+                    this->timeframe
                 );
             }
 
@@ -174,8 +189,15 @@ namespace Workers
              */
             Trader(
                 nlohmann::json &trader_params
-            ) : trader_params(trader_params)
-            { }
+            )
+            { 
+                this->symbol = (string)trader_params["symbol"];
+                this->timeframe = (string)trader_params["timeframe"];
+                if ((string)trader_params["stake_amount"] != "all")
+                    this->stake_amount = (double)trader_params["stake_amount"];
+                this->name = (string)trader_params["name"];
+                this->exchange = (string)trader_params["exchange"];
+            }
 
             /**
              * @brief Destroy the Trader object
@@ -183,46 +205,61 @@ namespace Workers
             ~Trader() = default;
 
             /**
-             * @brief Set the trader params object
+             * @brief Set the trader params via JSON Object
              * 
-             * @param params Params for Trader
+             * @param trader_params Params for Trader
              */
-            void set_trader_params(nlohmann::json &params) { this->trader_params = params; }
+            void set_trader_params(nlohmann::json &trader_params) 
+            { 
+                this->symbol = trader_params["symbol"];
+                this->timeframe = trader_params["timeframe"];
+                if ((string)trader_params["stake_amount"] != "all")
+                    this->stake_amount = (double)trader_params["stake_amount"];
+                this->name = trader_params["name"];
+                this->exchange = trader_params["exchange"];
+            }
+
+            /**
+             * @brief Set the stake amount 
+             * 
+             * @param sa Stake amount
+             */
+            void set_stake_amount(double sa) { this->stake_amount = sa; }
 
             /**
              * @brief Get the symbol
              * 
              * @return string 
              */
-            string get_symbol() { return this->trader_params["symbol"]; }
+            string get_symbol() { return this->symbol; }
 
             /**
              * @brief Get the interval 
              * 
              * @return string 
              */
-            string get_timeframe() { return this->trader_params["timeframe"]; }
+            string get_timeframe() { return this->timeframe; }
 
             /**
              * @brief Get the name of Trader
              * 
              * @return string 
              */
-            string get_name() { return this->trader_params["name"]; }
+            string get_name() { return this->name; }
 
             /**
              * @brief Get the exchange 
              * 
              * @return string 
              */
-            string get_exchange() { return this->trader_params["exchange"]; }
+            string get_exchange() { return this->exchange; }
 
             /**
              * @brief Get the stake amount
              * 
              * @return double 
              */
-            double get_stake_amount() { return (double)this->trader_params["stake_amount"]; }
+            double get_stake_amount() { return this->stake_amount; }
 
             /**
              * @brief Is Trade working?

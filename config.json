@@ -5,7 +5,7 @@
         "ema_cross": {
             "1": {
                 "trader_params": {
-                    "stake_amount": 100,
+                    "stake_amount": "all",
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "EMA Cross Strategy #1",
