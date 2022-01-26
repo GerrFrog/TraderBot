@@ -85,12 +85,12 @@ class Tester
         /**
          * @brief Best Trade per testing
          */
-        Trade best_trade;
+        double best_trade = 0.0;
 
         /**
          * @brief Worst Trade per testing
          */
-        Trade worst_trade;
+        double worst_trade = 0.0;
 
         /**
          * @brief Status of Trade for previous Candle
@@ -151,6 +151,28 @@ class Tester
                 this->last_trade_state = false;
                 this->balance *= (trade.get_per_profit() + 100) / 100;
                 this->total_trades++;
+
+                if (this->best_trade == 0.0)
+                    this->best_trade = trade.get_per_profit();
+                else
+                    if (this->best_trade <= trade.get_per_profit())
+                        this->best_trade = trade.get_per_profit();
+                if (this->worst_trade == 0.0)
+                    this->worst_trade = trade.get_per_profit();
+                else
+                    if (this->worst_trade >= trade.get_per_profit())
+                        this->worst_trade = trade.get_per_profit();
+
+                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                    this->wins++;
+                else
+                    this->loses++;
+
+                if (balance > this->maximum_balance)
+                    this->maximum_balance = balance;
+                if (balance < this->minimal_balance)
+                    this->minimal_balance = balance;
+
                 cout << "Absolute profit: " << trade.get_abs_profit() << endl;
                 cout << "Percentage profit: " << trade.get_per_profit() << endl;
                 cout << "Open price: " << trade.get_open_price() << endl;
@@ -280,6 +302,20 @@ class Tester
             auto end_time = std::chrono::high_resolution_clock::now();
             auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
+            this->abs_profit = this->balance - start_balance;
+            this->per_profit = this->balance / start_balance * 100;
+
+            cout << "Wins: " << this->wins << endl;
+            cout << "Loses: " << this->loses << endl;
+            cout << "Start Balance: " << start_balance << endl;
+            cout << "Final Balance: " << this->balance << endl;
+            cout << "Best trade: " << this->best_trade << endl;
+            cout << "Worst trade: " << this->worst_trade << endl;
+            cout << "Maximum balance: " << this->maximum_balance << endl;
+            cout << "Minimal balance: " << this->minimal_balance << endl;
+            cout << "Absolute profit: " << this->abs_profit << endl;
+            cout << "Percentage profit: " << this->per_profit << '%' << endl;
+            cout << "Total trades: " << this->total_trades << endl;
             cout << "Test time (ms): " << exec_time.count() << endl;
         }
 };
