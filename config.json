@@ -9,7 +9,7 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "EMA Cross Strategy #1",
-                    "timeframe": "1h"
+                    "timeframe": "1d"
                 },
                 "strategy_params": {
                     "short_ema": {
@@ -17,7 +17,7 @@
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 11,
-                            "interval": "1h"
+                            "interval": "1d"
                         }
                     },
                     "long_ema": {
@@ -25,7 +25,7 @@
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 22,
-                            "interval": "1h"
+                            "interval": "1d"
                         }
                     }
                 }

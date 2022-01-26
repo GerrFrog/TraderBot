@@ -404,18 +404,35 @@ namespace Workers
              */
             void initialize()
             {
-                for (auto& [key1, val1] : this->strategies.items())
-                    for (auto& [key2, val2] : val1.items())
-                        for (auto& [key3, val3] : val2["strategy_params"].items())
-                        {
-                            if (val3["indicator"] == "EMA")
-                                this->emas.push_back(
-                                    Indicators::Integral::EMA(
-                                        val3["indicator_params"]
-                                    )
-                                );
-                            // if () // Other indicator
-                        }
+                cout << "HERE" << endl;
+                // TODO: Remake without try-catch. We pass "strategies" or "strategies.strategy.1.strategy_params" from config
+                try {
+                    for (auto& [key1, val1] : this->strategies.items())
+                        for (auto& [key2, val2] : val1.items())
+                            for (auto& [key3, val3] : val2["strategy_params"].items())
+                            {
+                                if (val3["indicator"] == "EMA")
+                                    this->emas.push_back(
+                                        Indicators::Integral::EMA(
+                                            val3["indicator_params"]
+                                        )
+                                    );
+                                // if () // Other indicator
+                            }
+                } catch(nlohmann::detail::type_error& exp) {
+                    cout << exp.what() << endl;
+                    for (auto& [key, val] : this->strategies.items())
+                    {
+                        if (val["indicator"] == "EMA")
+                            this->emas.push_back(
+                                Indicators::Integral::EMA(
+                                    val["indicator_params"]
+                                )
+                            );
+                        // if () // Other indicator
+                    }
+                }
+
             }
 
             /**

@@ -57,7 +57,7 @@ namespace Managers
             {
                 nlohmann::json strategy_params = solver.get_strategy_params();
 
-                // TODO: Candle for watcher
+                // TODO: Pass Candle for watcher
                 // TODO: Request to taapi for indicator when it's time (check timeframe in strategy)
                 map<string, double> params = this->watcher.get(
                     strategy_params,
@@ -96,6 +96,7 @@ namespace Managers
                 this->watcher.set_taapi_key(
                     taapi_key
                 );
+                this->watcher.initialize();
 
                 for (auto& [key1, val1] : strategies.items())
                 {
