@@ -9,23 +9,23 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "EMA Cross Strategy #1",
-                    "timeframe": "1d"
+                    "timeframe": "1h"
                 },
                 "strategy_params": {
                     "short_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 11,
-                            "interval": "1d"
+                            "period": 30,
+                            "interval": "1h"
                         }
                     },
                     "long_ema": {
                         "type": "TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 22,
-                            "interval": "1d"
+                            "period": 50,
+                            "interval": "1h"
                         }
                     }
                 }

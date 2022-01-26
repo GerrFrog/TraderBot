@@ -149,10 +149,7 @@ class Tester
             if (!trader.is_work() && this->last_trade_state)
             {
                 this->last_trade_state = false;
-                if (trade.get_abs_profit() > 0)
-                    this->balance = trade.get_abs_profit();
-                else
-                    this->balance += trade.get_abs_profit();
+                this->balance *= (trade.get_per_profit() + 100) / 100;
                 this->total_trades++;
                 cout << "Absolute profit: " << trade.get_abs_profit() << endl;
                 cout << "Percentage profit: " << trade.get_per_profit() << endl;
@@ -160,6 +157,7 @@ class Tester
                 cout << "Close price: " << trade.get_close_price() << endl;
                 cout << "Stake amount: " << trade.get_stake_amount() << endl;
                 cout << "Current balance: " << this->balance << endl;
+                cout << endl;
             }
 
             cout << trader.get_name() << endl;
