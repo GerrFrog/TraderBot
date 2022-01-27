@@ -409,6 +409,11 @@ namespace Workers
             vector<Indicators::Integral::EMA> emas;
 
             /**
+             * @brief All type of Normalized MACD indicators
+             */
+            vector<Indicators::TradingView::Normalized_MACD> normalized_macds;
+
+            /**
              * @brief All strategies in config
              */
             nlohmann::json strategies;
@@ -461,12 +466,22 @@ namespace Workers
             void set_taapi_key(const string &key) { this->taapi_key = key; }
 
             /**
-             * @brief Describe all indicators
+             * @brief Describe all configured indicators
              */
             void describe_indicators()
             {
+                cout << "EMA indicators:" << endl;
                 for (Indicators::Integral::EMA& ema : this->emas)
-                    cout << "EMA : " << ema.get_period() << endl;
+                {
+                    nlohmann::json desc = ema.get_description();
+                    cout << desc << endl;
+                }
+                cout << "Normalized MACD indicators:" << endl;
+                for (Indicators::TradingView::Normalized_MACD& n_macd : this->normalized_macds)
+                {
+                    nlohmann::json desc = n_macd.get_description();
+                    cout << desc << endl;
+                }
             }
 
             /**
@@ -478,6 +493,7 @@ namespace Workers
                 try {
                     for (auto& [key1, val1] : this->strategies.items())
                         for (auto& [key2, val2] : val1.items())
+                        {
                             for (auto& [key3, val3] : val2["strategy_params"].items())
                             {
                                 if (val3["indicator"] == "EMA")
@@ -486,8 +502,15 @@ namespace Workers
                                             val3["indicator_params"]
                                         )
                                     );
+                                if (val3["indicator"] == "Normalized_MACD")
+                                    this->normalized_macds.push_back(
+                                        Indicators::TradingView::Normalized_MACD(
+                                            val3["indicator_params"]
+                                        )
+                                    );
                                 // if () // Other indicator
                             }
+                        }
                 } catch(nlohmann::detail::type_error& exp) {
                     cout << exp.what() << endl;
                     for (auto& [key, val] : this->strategies.items())
@@ -498,10 +521,16 @@ namespace Workers
                                     val["indicator_params"]
                                 )
                             );
+                        if (val["indicator"] == "Normalized_MACD")
+                            this->normalized_macds.push_back(
+                                Indicators::TradingView::Normalized_MACD(
+                                    val["indicator_params"]
+                                )
+                            );
                         // if () // Other indicator
                     }
                 }
-
+                this->describe_indicators();
             }
 
             /**
@@ -511,6 +540,8 @@ namespace Workers
             {
                 for (Indicators::Integral::EMA& ema : this->emas)
                     ema.resolve(candle);
+                for (Indicators::TradingView::Normalized_MACD& n_macd : this->normalized_macds)
+                    n_macd.resolve(candle);
             }
 
             /**
@@ -531,8 +562,6 @@ namespace Workers
 
                 for (auto& [key, val] : strategy_params.items())
                 {
-                    double period = val["indicator_params"]["period"];
-
                     string indicator = val["indicator"];
                     string type = val["type"];
 
@@ -562,7 +591,10 @@ namespace Workers
                             }
                         }
                     }
-                    if (type == "Indicators::Integral" || backtest)
+                    if (
+                        type == "Indicators::Integral" || 
+                        backtest
+                    )
                     {
                         if (indicator == "EMA")
                         {
@@ -570,13 +602,23 @@ namespace Workers
                             {
                                 for (Indicators::Integral::EMA &ema : this->emas)
                                 {
-                                    double period = val["indicator_params"]["period"];
-
-                                    string interval = val["indicator_params"]["interval"];
-
-                                    if (ema.get_period() == period && ema.get_interval() == interval)
+                                    if (ema.get_description() == val["indicator_params"])
                                         params[key] = ema.get();
                                 }
+                            }
+                        }
+                    }
+                    if (
+                        type == "Indicators::TradingView" || 
+                        backtest
+                    )
+                    {
+                        if (indicator == "Normalized_MACD")
+                        {
+                            for (Indicators::TradingView::Normalized_MACD &n_macd : this->normalized_macds)
+                            {
+                                if (n_macd.get_description() == val["indicator_params"])
+                                    params[key] = n_macd.get();
                             }
                         }
                     }

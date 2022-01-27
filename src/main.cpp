@@ -44,8 +44,12 @@ int main(int argc, char *argv[]) {
         "../data/",
         taapi_key
     );
-    tester.backtest<Strategies::EMA_Cross>(
-        jf["strategies"]["ema_cross"]["1"],
+    // tester.backtest<Strategies::EMA_Cross>(
+    //     jf["strategies"]["ema_cross"]["1"],
+    //     10000.0
+    // );
+    tester.backtest<Strategies::Normalized_MACD_Cross>(
+        jf["strategies"]["normalized_macd_cross"]["1"],
         10000.0
     );
 

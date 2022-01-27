@@ -124,7 +124,7 @@ class Tester
             Trade trade;
 
             watcher.resolve(candle);
-            
+
             nlohmann::json params = watcher.get(
                 config["strategy_params"],
                 trader.get_symbol(),
@@ -140,15 +140,6 @@ class Tester
                 &candle
             );
 
-// Total trades + 
-// Starting balance + 
-// Absolute profit
-// Percentage profit
-// Best trade (most profit)
-// Worst trade (less profit)
-// win/draw/lose
-// Minimal balance
-// Maximum balance
             if (trader.is_work() && !this->last_trade_state)
                 this->last_trade_state = true;
             if (!trader.is_work() && this->last_trade_state)

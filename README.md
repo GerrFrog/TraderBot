@@ -21,27 +21,11 @@ Example: for **Indicators::TradingView**
     "type": "Indicators::TradingView",
     "indicator": "Normalized_MACD",
     "indicator_params": {
-        // This basic indicators are used for calculation
-        "sma": { // If you don't now a parameter name then check it in pine-script
-            "indicator": "EMA",
-            "indicator_params": {
-                "period": 12,
-                "interval": "1d"
-            }
-        },
-        "lma": {
-            "indicator": "EMA",
-            "indicator_params": {
-                "period": 21,
-                "interval": "1d"
-            }
-        },
-        "tsp": {
-            "value": 9
-        },
-        "np": {
-            "value": 50
-        }
+        "sma": 12,
+        "lma": 21,
+        "tsp": 9,
+        "np": 50,
+        "type": "EMA"
     }
 }
 ```
@@ -72,10 +56,9 @@ Example: for **Indicators::TradingView**
     Implemented technical indicators:
     - [x] Normalized Moving Average Convergence/Divergence by "glaz" (Normalize_MACD)
 
-
-
-
-
+# Create new Strategy
+1. Describe new Strategy in src/strategies
+2. Add Strategy to Manager in src/managers
 
 # Create new Worker and Strategy
 1. Describe new Indicator in src/indicators, if it does not exist

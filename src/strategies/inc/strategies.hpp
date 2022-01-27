@@ -116,19 +116,16 @@ namespace Strategies
                 return false;
             }
 
-
         public:
             /**
              * @brief Construct a new ema cross object
              */
-            EMA_Cross() 
-            { }
+            EMA_Cross() = default;
 
             /**
              * @brief Destroy the ema cross object
              */
-            ~EMA_Cross() 
-            { }
+            ~EMA_Cross() = default;
 
             /**
              * @brief Resolve EMA Cross Strategy
@@ -144,6 +141,133 @@ namespace Strategies
                 if (this->cross_above(params["short_ema"]["value"], params["long_ema"]["value"])) 
                     signals["buy"] = true;
                 if (this->cross_below(params["short_ema"]["value"], params["long_ema"]["value"]))
+                    signals["sell"] = true;
+            }
+    };
+
+    /**
+     * @brief Normalized MACD Cross Strategy
+     */
+    class Normalized_MACD_Cross
+    {
+        private:
+            /**
+             * @brief Is Short EMA above Long EMA?
+             */
+            bool is_trigger_above = false;
+
+            /**
+             * @brief Is Short EMA below Long EMA?
+             */
+            bool is_trigger_below = false;
+
+            /**
+             * @brief Does Trigger crossed MacNorm above? (Buy signal)
+             * 
+             * @param trigger Trigger
+             * @param macnorm MacNorm
+             * @return true 
+             * @return false 
+             */
+            bool cross_above(double trigger, double macnorm)
+            {
+                if (!this->is_trigger_above && !this->is_trigger_below)
+                {
+                    if (trigger > macnorm)
+                    {
+                        this->is_trigger_above = true;
+                        this->is_trigger_below = false;
+                    } else {
+                        this->is_trigger_above = false;
+                        this->is_trigger_below = true;
+                    }
+                    return false;
+                }
+
+                if (this->is_trigger_above && this->is_trigger_below)
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
+
+                if (this->is_trigger_below && trigger > macnorm)
+                {
+                    this->is_trigger_above = true;
+                    this->is_trigger_below = false;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            /**
+             * @brief Does Trigger crossed MacNorm below? (Sell signal)
+             * 
+             * @param trigger Trigger
+             * @param macnorm MacNorm
+             * @return true 
+             * @return false 
+             */
+            bool cross_below(double trigger, double macnorm)
+            {
+                if (!this->is_trigger_above && !this->is_trigger_below)
+                {
+                    if (trigger > macnorm)
+                    {
+                        this->is_trigger_above = true;
+                        this->is_trigger_below = false;
+                    } else {
+                        this->is_trigger_above = false;
+                        this->is_trigger_below = true;
+                    }
+                    return false;
+                }
+
+                if (this->is_trigger_above && this->is_trigger_below)
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
+
+                if (this->is_trigger_above && trigger < macnorm)
+                {
+                    this->is_trigger_above = false;
+                    this->is_trigger_below = true;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+        public:
+            /**
+             * @brief Construct a new Normalized_MACD_Cross object
+             */
+            Normalized_MACD_Cross() = default;
+
+            /**
+             * @brief Destroy the Normalized_MACD_Cross object
+             */
+            ~Normalized_MACD_Cross() = default;
+
+            /**
+             * @brief Resolve Normalized MACD Cross Strategy
+             * 
+             * @param params Trigger and MacNorm values
+             * @param signals Signals of resolving (sell or buy)
+             */
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
+            {
+                signals["buy"] = false;
+                signals["sell"] = false;
+
+                if (this->cross_above((double)params["normalized_macd"]["Trigger"], (double)params["normalized_macd"]["MacNorm"])) 
+                    signals["buy"] = true;
+                if (this->cross_below(params["normalized_macd"]["Trigger"], params["normalized_macd"]["MacNorm"]))
                     signals["sell"] = true;
             }
     };

@@ -33,14 +33,24 @@ namespace Managers
             Workers::Watcher watcher;
 
             /**
-             * @brief All Traders
+             * @brief EMA Cross Strategy Traders
              */
             vector<Workers::Trader> ema_cross_traders;
 
             /**
-             * @brief EMA Cross Strategy Solver
+             * @brief EMA Cross Strategy Solvers
              */
             vector<Workers::Solver<Strategies::EMA_Cross>> ema_cross_solvers;
+
+            /**
+             * @brief Normalized MACD Cross Strategy Traders
+             */
+            vector<Workers::Trader> normalized_macd_cross_traders;
+
+            /**
+             * @brief Normalized MACD Cross Strategy Solvers
+             */
+            vector<Workers::Solver<Strategies::EMA_Cross>> normalized_macd_cross_solvers;
 
             /**
              * @brief Work for pair
@@ -116,7 +126,6 @@ namespace Managers
                             )
                         );
                     }
-
                 }
             }
 
@@ -133,11 +142,18 @@ namespace Managers
                 cout << "[+] Start working" << endl;
 
                 while (true)
+                {
                     for (int i = 0; i < this->ema_cross_solvers.size(); i++)
                         this->work<Strategies::EMA_Cross>(
                             this->ema_cross_traders[i],
                             this->ema_cross_solvers[i]
                         );
+                    for (int i = 0; i < this->normalized_macd_cross_solvers.size(); i++)
+                        this->work<Strategies::EMA_Cross>(
+                            this->normalized_macd_cross_traders[i],
+                            this->normalized_macd_cross_solvers[i]
+                        );
+                }
             }
     };
 }
