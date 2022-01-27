@@ -186,7 +186,6 @@ class Tester
             cout << "Work: " << trader.is_work() << endl;
             cout << "Sell signal: " << solver.get_sell_signal() << endl;
             cout << "Buy signal: " << solver.get_buy_signal() << endl;
-            cout << "Total trades: " << this->total_trades << endl;
             cout << "Candle close: " << candle.get_close_price() << endl;
             cout << endl;
         }
@@ -299,7 +298,7 @@ class Tester
             auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
             this->abs_profit = this->balance - start_balance;
-            this->per_profit = this->balance / start_balance * 100;
+            this->per_profit = this->balance / start_balance * 100 - 100;
 
             this->per_wins = (double)this->wins / (double)this->total_trades;
 
