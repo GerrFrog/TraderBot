@@ -136,14 +136,14 @@ namespace Strategies
              * @param params Short and Long EMAs values
              * @param signals Signals of resolving (sell or buy)
              */
-            void resolve(map<string, double> &params, std::map<std::string, bool> &signals)
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
             {
                 signals["buy"] = false;
                 signals["sell"] = false;
 
-                if (this->cross_above(params["short_ema"], params["long_ema"])) 
+                if (this->cross_above(params["short_ema"]["value"], params["long_ema"]["value"])) 
                     signals["buy"] = true;
-                if (this->cross_below(params["short_ema"], params["long_ema"]))
+                if (this->cross_below(params["short_ema"]["value"], params["long_ema"]["value"]))
                     signals["sell"] = true;
             }
     };

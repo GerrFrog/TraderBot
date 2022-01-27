@@ -83,6 +83,11 @@ class Tester
         int loses = 0;
 
         /**
+         * @brief Percent of win trades
+         */
+        double per_wins;
+
+        /**
          * @brief Best Trade per testing
          */
         double best_trade = 0.0;
@@ -120,7 +125,7 @@ class Tester
 
             watcher.resolve(candle);
             
-            map<string, double> params = watcher.get(
+            nlohmann::json params = watcher.get(
                 config["strategy_params"],
                 trader.get_symbol(),
                 true
@@ -185,7 +190,7 @@ class Tester
             cout << trader.get_name() << endl;
             cout << trader.get_timeframe() << endl;
             cout << trader.get_symbol() << endl;
-            for (auto& [key, val] : params)
+            for (auto& [key, val] : params.items())
                 cout << key << " : " << val << endl;
             cout << "Work: " << trader.is_work() << endl;
             cout << "Sell signal: " << solver.get_sell_signal() << endl;
@@ -305,18 +310,27 @@ class Tester
             this->abs_profit = this->balance - start_balance;
             this->per_profit = this->balance / start_balance * 100;
 
-            cout << "Wins: " << this->wins << endl;
-            cout << "Loses: " << this->loses << endl;
-            cout << "Start Balance: " << start_balance << endl;
-            cout << "Final Balance: " << this->balance << endl;
-            cout << "Best trade: " << this->best_trade << endl;
-            cout << "Worst trade: " << this->worst_trade << endl;
-            cout << "Maximum balance: " << this->maximum_balance << endl;
-            cout << "Minimal balance: " << this->minimal_balance << endl;
-            cout << "Absolute profit: " << this->abs_profit << endl;
-            cout << "Percentage profit: " << this->per_profit << '%' << endl;
-            cout << "Total trades: " << this->total_trades << endl;
-            cout << "Test time (ms): " << exec_time.count() << endl;
+            this->per_wins = (double)this->wins / (double)this->total_trades;
+
+            cout 
+                << "Wins: " << this->wins << endl
+                << "Loses: " << this->loses << endl
+                << "Percent wins: " << this->per_wins << '%' << endl
+                << "----------------------------------" << endl
+                << "Start Balance: " << start_balance << endl
+                << "Final Balance: " << this->balance << endl 
+                << "Maximum balance: " << this->maximum_balance << endl
+                << "Minimal balance: " << this->minimal_balance << endl
+                << "----------------------------------" << endl
+                << "Total trades: " << this->total_trades << endl
+                << "Best trade: " << this->best_trade << '%' << endl
+                << "Worst trade: " << this->worst_trade << '%' << endl
+                << "----------------------------------" << endl
+                << "Absolute profit: " << this->abs_profit << endl
+                << "Percentage profit: " << this->per_profit << '%' << endl
+                << "----------------------------------" << endl
+                << "Test time (ms): " << exec_time.count() << endl
+            ;
         }
 };
 

@@ -388,7 +388,7 @@ namespace Workers
             /**
              * @brief Resolve the strategy in worker
              */
-            void resolve(map<string, double> &params)
+            void resolve(nlohmann::json &params)
             {
                 this->strategy.resolve(
                     params,
@@ -519,15 +519,15 @@ namespace Workers
              * @param strategy_params strategy_params in config
              * @param symbol Symbol (pair) to trade
              * @param backtest If backtest all Indicators will be calculated as Integral
-             * @return map<string, double>
+             * @return nlohmann::json
              */
-            map<string, double> get(
+            nlohmann::json get(
                 nlohmann::json &strategy_params, 
                 const string &symbol,
                 bool backtest = false
             )
             {
-                map<string, double> params;
+                nlohmann::json params;
 
                 for (auto& [key, val] : strategy_params.items())
                 {
@@ -537,7 +537,7 @@ namespace Workers
                     string type = val["type"];
 
                     // TODO: Create instance from config. Without if-else
-                    if (type == "TAAPI" && !backtest)
+                    if (type == "Indicators::TAAPI" && !backtest)
                     {
                         if (indicator == "EMA")
                         {
@@ -562,7 +562,7 @@ namespace Workers
                             }
                         }
                     }
-                    if (type == "Integral" || backtest)
+                    if (type == "Indicators::Integral" || backtest)
                     {
                         if (indicator == "EMA")
                         {
@@ -575,7 +575,7 @@ namespace Workers
                                     string interval = val["indicator_params"]["interval"];
 
                                     if (ema.get_period() == period && ema.get_interval() == interval)
-                                        params[key] = ema.get_ema();
+                                        params[key] = ema.get();
                                 }
                             }
                         }

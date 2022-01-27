@@ -13,7 +13,7 @@
                 },
                 "strategy_params": {
                     "short_ema": {
-                        "type": "TAAPI",
+                        "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 30,
@@ -21,7 +21,7 @@
                         }
                     },
                     "long_ema": {
-                        "type": "TAAPI",
+                        "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 50,
@@ -40,7 +40,7 @@
                 },
                 "strategy_params": {
                     "short_ema": {
-                        "type": "TAAPI",
+                        "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 50,
@@ -48,11 +48,50 @@
                         }
                     },
                     "long_ema": {
-                        "type": "TAAPI",
+                        "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
                             "period": 200,
                             "interval": "1d"
+                        }
+                    }
+                }
+            }
+        },
+        "normalized_macd_cross": {
+            "1": {
+                "trader_params": {
+                    "stake_amount": "all",
+                    "exchange": "binance",
+                    "symbol": "BTC/USDT",
+                    "name": "Normalized MACD Cross Strategy #1",
+                    "timeframe": "1d"
+                },
+                "strategy_params": {
+                    "normalized_macd": {
+                        "type": "Indicators::TradingView",
+                        "indicator": "Normalized_MACD",
+                        "indicator_params": {
+                            "sma": {
+                                "indicator": "EMA",
+                                "indicator_params": {
+                                    "period": 12,
+                                    "interval": "1d"
+                                }
+                            },
+                            "lma": {
+                                "indicator": "EMA",
+                                "indicator_params": {
+                                    "period": 21,
+                                    "interval": "1d"
+                                }
+                            },
+                            "tsp": {
+                                "value": 9
+                            },
+                            "np": {
+                                "value": 50
+                            }
                         }
                     }
                 }

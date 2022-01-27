@@ -58,7 +58,7 @@ namespace Indicators::TAAPI
              * @param indicator_params Params for Indicator
              * @return double 
              */
-            double get(
+            nlohmann::json get(
                 const std::string &url,
                 const std::string &key,
                 const std::string &symbol, 
@@ -151,7 +151,12 @@ namespace Indicators::Integral
              * 
              * @return double 
              */
-            double get_ema() { return this->ema; }
+            nlohmann::json get() 
+            { 
+                nlohmann::json ret;
+                ret["value"] = this->ema;
+                return ret; 
+            }
 
             /**
              * @brief Resolve the EMA Indicator for new Candle
@@ -184,7 +189,65 @@ namespace Indicators::Integral
     };
 }
 
+/**
+ * @brief Community indicators from tradingview.com
+ */
+namespace Indicators::TradingView
+{
+    /**
+     * @brief Normalized MACD Indicator
+     * 
+     * @note Normalized MACD by glaz
+     */
+    class Normalized_MACD
+    {
+        private:
+            // Get candle
+            // Calculate Mac for Candle and save it
+            // Save in vector with np size
+            // Calculate MacNorm and MacNorm2
+            // Save in vector with tsp size
+            // Calculate Trigger by using MacNorm vector
+            // MacNorm2 and Trigger is our values
 
+            /**
+             * @brief Get minimal value 
+             * 
+             * @param num1 First number
+             * @param num2 Second number
+             * @return double 
+             */
+            double min(double num1, double num2)
+            {
+                return num1 > num2 ? num2 : num1;
+            }
+
+            /**
+             * @brief Get max value
+             * 
+             * @param num1 First number
+             * @param num2 Second number
+             * @return double 
+             */
+            double max(double num1, double num2)
+            {
+                return num1 > num2 ? num1 : num2;
+            }
+
+        public:
+            /**
+             * @brief Construct a new Normalized_MACD object
+             */
+            Normalized_MACD()
+            { }
+
+            /**
+             * @brief Destroy the Normalized_MACD object
+             */
+            ~Normalized_MACD()
+            { }
+    };
+}
 
 
 

@@ -18,6 +18,7 @@
 - [ ] Database
 - [ ] Logging
 - [ ] For each strategy and indicator create method, which describe how setup it in config.json
+- [x] Tester for strategy
 
 # Analyse
 - [ ] Approximation

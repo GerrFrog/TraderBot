@@ -61,7 +61,7 @@ namespace Managers
 
                 // TODO: Pass Candle for watcher
                 // TODO: Request to taapi for indicator when it's time (check timeframe in strategy)
-                map<string, double> params = this->watcher.get(
+                nlohmann::json params = this->watcher.get(
                     strategy_params,
                     trader.get_symbol()
                 );

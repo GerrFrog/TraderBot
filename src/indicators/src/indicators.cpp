@@ -5,7 +5,7 @@ std::string Indicators::TAAPI::get_taapi_url()
     return "https://api.taapi.io/";
 }
 
-double Indicators::TAAPI::EMA::get (
+nlohmann::json Indicators::TAAPI::EMA::get (
     const std::string &url,
     const std::string &key,
     const std::string &symbol, 
@@ -28,11 +28,8 @@ double Indicators::TAAPI::EMA::get (
 
     nlohmann::json res = json_curl.request();
 
-    if (res.contains("value")) 
-        return res["value"];
-
     if (res.contains("error"))
         throw Exceptions::TAAPI::Rate_Limit(res["error"], 429, 0);
-
-    throw Exceptions::Panic::Panic_Exception("Something went wrong in indicators!", 1, 0);
+    
+    return res;
 };
