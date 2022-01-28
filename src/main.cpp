@@ -6,14 +6,17 @@ int main(int argc, char *argv[]) {
     // // Load Configuration for Bot
     dotenv::load("../.env");
 
-    const std::string pk = dotenv::get("PRIVATE_KEY");
-    const std::string sk = dotenv::get("SECRET_KEY");
-    const std::string taapi_key = dotenv::get("TAAPI_KEY");
-
     std::ifstream ifs("../config.json");
     nlohmann::json jf = nlohmann::json::parse(ifs);
 
-    // // Binance API
+    const std::string mode = dotenv::get("mode");
+    const std::string taapi_key = jf["taapi"]["key"];
+    const std::string plan = jf["taapi"]["plan"];
+    const std::string pk = jf["exchange"]["binance"]["private_key"];
+    const std::string sk = jf["exchange"]["binance"]["secret_key"];
+    std::vector<string> binance_pairs = jf["exchange"]["binance"]["tradable_pairs"];
+
+    // // BINANCE API
     // boost::asio::io_context ioctx;
     // binapi::rest::api api(
     //     ioctx
@@ -32,14 +35,14 @@ int main(int argc, char *argv[]) {
 
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
-    // // Start job
+    // // START JOB
     // Managers::Manager manager(
     //     jf["strategies"],
     //     taapi_key
     // );
     // manager.run();
 
-    // // Backtest Strategy
+    // // STRATEGY BACKTEST
     Tester tester(
         "../data/",
         taapi_key
@@ -52,12 +55,6 @@ int main(int argc, char *argv[]) {
         jf["strategies"]["normalized_macd_cross"]["1"],
         10000.0
     );
-
-
-
-
-
-
 
     return EXIT_SUCCESS;
 }

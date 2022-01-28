@@ -8,6 +8,7 @@
 #include <typeinfo>
 
 // TODO: Bad config exception
+// TODO: Haven't configured some parameter
 
 /**
  * @brief Panic Exceptions

@@ -30,12 +30,13 @@ using std::vector;
  */
 namespace Workers
 {
-    // TODO: Trader opens several trades
     /**
      * @brief Trader decides when open and close order
      */
     class Trader
     {
+        // TODO: Open several trades
+        // TODO: Short position
         private:
             /**
              * @brief Active Trade for Worker
@@ -63,9 +64,24 @@ namespace Workers
             string exchange;
 
             /**
+             * @brief Trader type
+             */
+            string type;
+
+            /**
              * @brief Stake amount to trade
              */
-            double stake_amount;
+            double stake_amount = 0.0;
+
+            /**
+             * @brief Stop-loss percent
+             */
+            double stop_loss = 0.0;
+
+            /**
+             * @brief Target percent
+             */
+            double target = 0.0;
 
             /**
              * @brief Work Trade Status
@@ -193,10 +209,18 @@ namespace Workers
             { 
                 this->symbol = (string)trader_params["symbol"];
                 this->timeframe = (string)trader_params["timeframe"];
-                if ((string)trader_params["stake_amount"] != "all")
-                    this->stake_amount = (double)trader_params["stake_amount"];
+                if ((string)trader_params["strategy"]["stake_amount"] != "all")
+                    this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
                 this->name = (string)trader_params["name"];
                 this->exchange = (string)trader_params["exchange"];
+                if ((string)trader_params["strategy"]["type"] == "scalping")
+                {
+                    this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
+                    this->target = (double)trader_params["strategy"]["target"];
+                    this->type = (string)trader_params["strategy"]["type"];
+                } else if ((string)trader_params["strategy"]["type"] == "position") {
+                    this->type = (string)trader_params["strategy"]["type"];
+                }
             }
 
             /**
@@ -213,10 +237,18 @@ namespace Workers
             { 
                 this->symbol = trader_params["symbol"];
                 this->timeframe = trader_params["timeframe"];
-                if ((string)trader_params["stake_amount"] != "all")
-                    this->stake_amount = (double)trader_params["stake_amount"];
+                if ((string)trader_params["strategy"]["stake_amount"] != "all")
+                    this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
                 this->name = trader_params["name"];
                 this->exchange = trader_params["exchange"];
+                if ((string)trader_params["strategy"]["type"] == "scalping")
+                {
+                    this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
+                    this->target = (double)trader_params["strategy"]["target"];
+                    this->name = (string)trader_params["strategy"]["type"];
+                } else if ((string)trader_params["strategy"]["type"] == "position") {
+                    this->name = (string)trader_params["strategy"]["type"];
+                }
             }
 
             /**
@@ -269,7 +301,6 @@ namespace Workers
              */
             bool is_work() { return this->work; }
 
-            // TODO: Other work: with stop-loss and profit
             /**
              * @brief Decide what to do with trade
              * 
@@ -286,33 +317,68 @@ namespace Workers
                 Candle* candle = NULL
             )
             {
-                if (this->work)
+                if (this->type == "position")
                 {
-                    if (sell_signal) 
+                    if (this->work)
                     {
-                        if (candle != NULL)
+                        if (sell_signal) 
+                        {
+                            if (candle != NULL)
+                                this->close_trade(candle);
+                            else 
+                                this->close_trade();
+
+                            // Do something with Trade
+                            ret_trade = this->trade;
+
+                            cout << "[+] Trade is closed" << endl;
+                            this->clear_trade(); // Reset options
+                        }
+                        return;
+                    } else {
+                        if (buy_signal)
+                        {
+                            if (candle == NULL)
+                                this->open_trade();
+                            else
+                                this->open_trade(candle);
+                            // Do something with Trade
+                            cout << "[+] Trade is opened" << endl;
+                        }
+                        return;
+                    }
+                }
+                if (
+                    this->type == "scalping" &&
+                    candle != NULL
+                )
+                {
+                    double current_price = candle->get_close_price();
+                    double opened_price = this->trade.get_open_price();
+                    double percent = (current_price / opened_price - 1) * 100;
+                    if (this->work)
+                    {
+                        if (
+                            this->target <= percent || 
+                            this->stop_loss >= percent
+                        ) {
                             this->close_trade(candle);
-                        else 
-                            this->clear_trade();
+                            // Do something with Trade
+                            ret_trade = this->trade;
 
-                        // Do something with Trade
-                        ret_trade = this->trade;
-
-                        cout << "[+] Trade is closed" << endl;
-                        this->clear_trade(); // Reset options
-                    }
-                    return;
-                } else {
-                    if (buy_signal)
-                    {
-                        if (candle == NULL)
-                            this->open_trade();
-                        else
+                            cout << "[+] Trade is closed" << endl;
+                            this->clear_trade(); // Reset options
+                        }
+                        return;
+                    } else {
+                        if (buy_signal)
+                        {
                             this->open_trade(candle);
-                        // Do something with Trade
-                        cout << "[+] Trade is opened" << endl;
+                            // Do something with Trade
+                            cout << "[+] Trade is opened" << endl;
+                        }
+                        return;
                     }
-                    return;
                 }
             }
     };

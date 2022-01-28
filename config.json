@@ -1,15 +1,21 @@
 {
+    "bot_name": "Super trading bot",
     "fiat_display_currency": "USD",
     "test_mode": true,
     "strategies": {
         "ema_cross": {
             "1": {
                 "trader_params": {
-                    "stake_amount": "all",
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
-                    "name": "EMA Cross Strategy #1",
-                    "timeframe": "1h"
+                    "name": "Normalized MACD Cross Strategy #1",
+                    "timeframe": "1h",
+                    "strategy": {
+                        "type": "scalping",
+                        "stake_amount": "all",
+                        "stop-loss": 10,
+                        "target": 7
+                    }
                 },
                 "strategy_params": {
                     "short_ema": {
@@ -32,11 +38,14 @@
             },
             "2": {
                 "trader_params": {
-                    "stake_amount": "all",
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
-                    "name": "EMA Cross Strategy #2",
-                    "timeframe": "1d"
+                    "name": "Normalized MACD Cross Strategy #1",
+                    "timeframe": "1m",
+                    "strategy": {
+                        "type": "position",
+                        "stake_amount": "all"
+                    }
                 },
                 "strategy_params": {
                     "short_ema": {
@@ -61,18 +70,23 @@
         "normalized_macd_cross": {
             "1": {
                 "trader_params": {
-                    "stake_amount": "all",
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "1m"
+                    "timeframe": "5m",
+                    "strategy": {
+                        "type": "position",
+                        "stake_amount": "all",
+                        "stop-loss": 0.2,
+                        "target": 0.15
+                    }
                 },
                 "strategy_params": {
                     "normalized_macd": {
                         "type": "Indicators::TradingView",
                         "indicator": "Normalized_MACD",
                         "indicator_params": {
-                            "interval": "1m",
+                            "interval": "5m",
                             "type": "EMA",
                             "sma": 12,
                             "lma": 21,
@@ -85,7 +99,8 @@
         }
     },
     "taapi": {
-        "plan": "free"
+        "plan": "free",
+        "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY"
     },
     "telegram": {
         "enabled": false,
@@ -98,5 +113,14 @@
         "port": 8080,
         "username": "username",
         "password": "password"
+    },
+    "exchange": {
+        "binance": {
+            "private_key": "KSAeI8O7FNNHoYiJEbhCB2Rm1e7E05SZ7uQkj3dzl90orQDyfpN1f6W2DDWhXqhd",
+            "secret_key": "gNYSVslNacipFRitkP75puJCkxd9VeWwssVRLbe4Ca7n5dUaSo9Sn0oky2nS1iEl",
+            "tradable_pairs": [
+                "BTCUSDT"
+            ]
+        }
     }
 }

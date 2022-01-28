@@ -19,8 +19,6 @@ using std::cout;
 using std::endl; 
 using std::vector;
 
-// TODO: Backtest with profit/stop-loss strategy
-
 /**
  * @brief Tester for configured strategy
  */
@@ -66,6 +64,16 @@ class Tester
          * @brief Percentage profit
          */
         double per_profit = 0;
+
+        /**
+         * @brief Average absolute profit per trades
+         */
+        double average_abs_profit_per_trade = 0;
+
+        /**
+         * @brief Average percentage profit per trades
+         */
+        double average_per_profit_per_trade = 0;
 
         /**
          * @brief Total Trades per testing
@@ -168,6 +176,9 @@ class Tester
                     this->maximum_balance = balance;
                 if (balance < this->minimal_balance)
                     this->minimal_balance = balance;
+                
+                this->average_abs_profit_per_trade += trade.get_abs_profit();
+                this->average_per_profit_per_trade += trade.get_per_profit();
 
                 cout << "Absolute profit: " << trade.get_abs_profit() << endl;
                 cout << "Percentage profit: " << trade.get_per_profit() << endl;
@@ -299,25 +310,29 @@ class Tester
 
             this->abs_profit = this->balance - start_balance;
             this->per_profit = this->balance / start_balance * 100 - 100;
+            this->average_abs_profit_per_trade /= this->total_trades;
+            this->average_per_profit_per_trade /= this->total_trades;
 
-            this->per_wins = (double)this->wins / (double)this->total_trades;
+            this->per_wins = (double)this->wins / (double)this->total_trades * 100;
 
             cout 
                 << "Wins: " << this->wins << endl
                 << "Loses: " << this->loses << endl
-                << "Percent wins: " << this->per_wins << '%' << endl
+                << "Percent wins: " << this->per_wins << " %" << endl
                 << "----------------------------------" << endl
-                << "Start Balance: " << start_balance << endl
-                << "Final Balance: " << this->balance << endl 
-                << "Maximum balance: " << this->maximum_balance << endl
-                << "Minimal balance: " << this->minimal_balance << endl
+                << "Start Balance: " << start_balance << " USDT" << endl
+                << "Final Balance: " << this->balance << " USDT" << endl 
+                << "Maximum balance: " << this->maximum_balance<< " USDT"  << endl
+                << "Minimal balance: " << this->minimal_balance << " USDT" << endl
                 << "----------------------------------" << endl
                 << "Total trades: " << this->total_trades << endl
-                << "Best trade: " << this->best_trade << '%' << endl
-                << "Worst trade: " << this->worst_trade << '%' << endl
+                << "Best trade: " << this->best_trade << " %" << endl
+                << "Worst trade: " << this->worst_trade << " %" << endl
                 << "----------------------------------" << endl
-                << "Absolute profit: " << this->abs_profit << endl
-                << "Percentage profit: " << this->per_profit << '%' << endl
+                << "Absolute profit: " << this->abs_profit << " USDT" << endl
+                << "Percentage profit: " << this->per_profit << " %" << endl
+                << "Average absolute profit per trades: " << this->average_abs_profit_per_trade << " USDT" << endl
+                << "Average percentage profit per trades: " << this->average_per_profit_per_trade << " %" << endl
                 << "----------------------------------" << endl
                 << "Test time (ms): " << exec_time.count() << endl
             ;
