@@ -24,6 +24,7 @@ using std::vector;
  */
 class Tester
 {
+    // TODO: if symbol_amount = all then we trade for symbol increase else standard "short" position strategy
     private:
         /**
          * @brief Filename with candles data
@@ -43,7 +44,7 @@ class Tester
         /**
          * @brief Current balance
          */
-        double balance;
+        double balance = 0;
 
         /**
          * @brief Minimal balance per testing
@@ -56,59 +57,124 @@ class Tester
         double maximum_balance;
 
         /**
+         * @brief Count of symbols to trade "short" positions
+         */
+        double symbol_amount;
+
+        /**
+         * @brief Current balance of profit with "short" positions (in USDT)
+         */
+        double symbol_balance = 0;
+
+        /**
+         * @brief Minimal balance of profit with "short" positions per testing (in USDT)
+         */
+        double minimal_symbol_balance;
+
+        /**
+         * @brief Maximum balance of profit with "short" positions per testing (in USDT)
+         */
+        double maximum_symbol_balance;
+
+        /**
          * @brief Absolute (USD) profit
          */
-        double abs_profit = 0;
+        double abs_profit_long = 0;
 
         /**
          * @brief Percentage profit
          */
-        double per_profit = 0;
+        double per_profit_long = 0;
 
         /**
          * @brief Average absolute profit per trades
          */
-        double average_abs_profit_per_trade = 0;
+        double average_abs_profit_per_trade_long = 0;
 
         /**
          * @brief Average percentage profit per trades
          */
-        double average_per_profit_per_trade = 0;
+        double average_per_profit_per_trade_long = 0;
+
+        /**
+         * @brief Absolute (USD) profit
+         */
+        double abs_profit_short = 0;
+
+        /**
+         * @brief Percentage profit
+         */
+        double per_profit_short = 0;
+
+        /**
+         * @brief Average absolute profit per trades
+         */
+        double average_abs_profit_per_trade_short = 0;
+
+        /**
+         * @brief Average percentage profit per trades
+         */
+        double average_per_profit_per_trade_short = 0;
 
         /**
          * @brief Total Trades per testing
          */
-        int total_trades = 0;
+        int total_trades_long = 0;
 
         /**
          * @brief Total win trades
          */
-        int wins = 0;
+        int wins_long = 0;
 
         /**
          * @brief Total lose trades
          */
-        int loses = 0;
+        int loses_long = 0;
 
         /**
          * @brief Percent of win trades
          */
-        double per_wins;
+        double per_wins_long;
 
         /**
-         * @brief Best Trade per testing
+         * @brief Total Trades per testing
          */
-        double best_trade = 0.0;
+        int total_trades_short = 0;
 
         /**
-         * @brief Worst Trade per testing
+         * @brief Total win trades
          */
-        double worst_trade = 0.0;
+        int wins_short = 0;
 
         /**
-         * @brief Status of Trade for previous Candle
+         * @brief Total lose trades
          */
-        bool last_trade_state = false;
+        int loses_short = 0;
+
+        /**
+         * @brief Percent of win trades
+         */
+        double per_wins_short;
+
+        /**
+         * @brief Best long Trade per testing
+         */
+        double best_long_trade = 0.0;
+
+        /**
+         * @brief Worst long Trade per testing
+         */
+        double worst_long_trade = 0.0;
+
+        /**
+         * @brief Best short Trae per testing
+         */
+        double best_short_trade = 0.0;
+
+        /**
+         * @brief Worst short Trae per testing
+         */
+        double worst_short_trade = 0.0;
 
         /**
          * @brief Work for got candle
@@ -141,6 +207,7 @@ class Tester
 
             solver.resolve(params);
             trader.set_stake_amount(this->balance);
+            trader.set_symbol_abount(this->symbol_amount);
             trader.resolve(
                 solver.get_buy_signal(),
                 solver.get_sell_signal(),
@@ -148,45 +215,78 @@ class Tester
                 &candle
             );
 
-            if (trader.is_work() && !this->last_trade_state)
-                this->last_trade_state = true;
-            if (!trader.is_work() && this->last_trade_state)
+            if (trade.is_completed())
             {
-                this->last_trade_state = false;
-                this->balance *= (trade.get_per_profit() + 100) / 100;
-                this->total_trades++;
+                if (trade.get_position() == "long")
+                {
+                    this->balance *= (trade.get_per_profit() + 100) / 100;
 
-                if (this->best_trade == 0.0)
-                    this->best_trade = trade.get_per_profit();
-                else
-                    if (this->best_trade <= trade.get_per_profit())
-                        this->best_trade = trade.get_per_profit();
-                if (this->worst_trade == 0.0)
-                    this->worst_trade = trade.get_per_profit();
-                else
-                    if (this->worst_trade >= trade.get_per_profit())
-                        this->worst_trade = trade.get_per_profit();
+                    if (this->best_long_trade == 0.0)
+                        this->best_long_trade = trade.get_per_profit();
+                    else
+                        if (this->best_long_trade <= trade.get_per_profit())
+                            this->best_long_trade = trade.get_per_profit();
+                    if (this->worst_long_trade == 0.0)
+                        this->worst_long_trade = trade.get_per_profit();
+                    else
+                        if (this->worst_long_trade >= trade.get_per_profit())
+                            this->worst_long_trade = trade.get_per_profit();
 
-                if ((trade.get_per_profit() + 100) / 100 >= 1)
-                    this->wins++;
-                else
-                    this->loses++;
+                    if (this->balance > this->maximum_balance)
+                        this->maximum_balance = this->balance;
+                    if (this->balance < this->minimal_balance)
+                        this->minimal_balance = this->balance;
 
-                if (balance > this->maximum_balance)
-                    this->maximum_balance = balance;
-                if (balance < this->minimal_balance)
-                    this->minimal_balance = balance;
-                
-                this->average_abs_profit_per_trade += trade.get_abs_profit();
-                this->average_per_profit_per_trade += trade.get_per_profit();
+                    this->average_abs_profit_per_trade_long += trade.get_abs_profit();
+                    this->average_per_profit_per_trade_long += trade.get_per_profit();
 
-                cout << "Absolute profit: " << trade.get_abs_profit() << endl;
-                cout << "Percentage profit: " << trade.get_per_profit() << endl;
-                cout << "Open price: " << trade.get_open_price() << endl;
-                cout << "Close price: " << trade.get_close_price() << endl;
-                cout << "Stake amount: " << trade.get_stake_amount() << endl;
-                cout << "Current balance: " << this->balance << endl;
-                cout << endl;
+                    this->total_trades_long++;
+
+                    if ((trade.get_per_profit() + 100) / 100 >= 1)
+                        this->wins_long++;
+                    else
+                        this->loses_long++;
+                } else if (trade.get_position() == "short") {
+                    this->symbol_balance +=trade.get_abs_profit();
+
+                    if (this->best_short_trade == 0.0)
+                        this->best_short_trade = trade.get_per_profit();
+                    else
+                        if (this->best_short_trade <= trade.get_per_profit())
+                            this->best_short_trade = trade.get_per_profit();
+                    if (this->worst_short_trade == 0.0)
+                        this->worst_short_trade = trade.get_per_profit();
+                    else
+                        if (this->worst_short_trade >= trade.get_per_profit())
+                            this->worst_short_trade = trade.get_per_profit();
+
+                    if (this->symbol_balance > this->maximum_symbol_balance)
+                        this->maximum_symbol_balance = this->symbol_balance;
+                    if (this->symbol_balance < this->minimal_symbol_balance)
+                        this->minimal_symbol_balance = this->symbol_balance;
+
+                    this->average_abs_profit_per_trade_short += trade.get_abs_profit();
+                    this->average_per_profit_per_trade_short += trade.get_per_profit();
+
+                    this->total_trades_short++;
+
+                    if ((trade.get_per_profit() + 100) / 100 >= 1)
+                        this->wins_short++;
+                    else
+                        this->loses_short++;
+                }
+
+                cout << "Position: " << trade.get_position() << endl
+                     << "Absolute profit: " << trade.get_abs_profit() << endl
+                     << "Percentage profit: " << trade.get_per_profit() << endl
+                     << "Open price: " << trade.get_open_price() << endl
+                     << "Close price: " << trade.get_close_price() << endl
+                     << "Stake amount: " << trade.get_stake_amount() << endl
+                     << "Symbol amount: " << trade.get_symbol_amount() << endl
+                     << "Current balance: " << this->balance << endl
+                     << "Current symbol balance: " << this->symbol_balance << endl
+                     << endl
+                ;
             }
 
             cout << trader.get_name() << endl;
@@ -230,7 +330,8 @@ class Tester
         template <class Strategy>
         void backtest(
             nlohmann::json &config,
-            double start_balance
+            double start_balance,
+            double start_symbols
         ) 
         {
             auto start_time = std::chrono::high_resolution_clock::now();
@@ -253,6 +354,9 @@ class Tester
             this->balance = start_balance;
             this->minimal_balance = start_balance;
             this->maximum_balance = start_balance;
+            this->symbol_amount = start_symbols;
+            this->minimal_symbol_balance = 0;
+            this->maximum_symbol_balance = 0;
 
             watcher.set_strategies(
                 config["strategy_params"]
@@ -308,31 +412,62 @@ class Tester
             auto end_time = std::chrono::high_resolution_clock::now();
             auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-            this->abs_profit = this->balance - start_balance;
-            this->per_profit = this->balance / start_balance * 100 - 100;
-            this->average_abs_profit_per_trade /= this->total_trades;
-            this->average_per_profit_per_trade /= this->total_trades;
+            this->abs_profit_long = this->balance - start_balance;
+            this->per_profit_long = this->balance / start_balance * 100 - 100;
+            this->average_abs_profit_per_trade_long /= this->total_trades_long;
+            this->average_per_profit_per_trade_long /= this->total_trades_long;
 
-            this->per_wins = (double)this->wins / (double)this->total_trades * 100;
+            this->average_abs_profit_per_trade_short /= this->total_trades_short;
+            this->average_per_profit_per_trade_short /= this->total_trades_short;
+
+            this->per_wins_long = (double)this->wins_long / (double)this->total_trades_long * 100;
+            this->per_wins_short = (double)this->wins_short / (double)this->total_trades_short * 100;
 
             cout 
-                << "Wins: " << this->wins << endl
-                << "Loses: " << this->loses << endl
-                << "Percent wins: " << this->per_wins << " %" << endl
                 << "----------------------------------" << endl
+                << "LONG POSITION STATISTIC:" << endl
+                << endl
+                << "BALANCE:" << endl
                 << "Start Balance: " << start_balance << " USDT" << endl
                 << "Final Balance: " << this->balance << " USDT" << endl 
                 << "Maximum balance: " << this->maximum_balance<< " USDT"  << endl
                 << "Minimal balance: " << this->minimal_balance << " USDT" << endl
+                << endl
+                << "PROFIT:" << endl
+                << "Absolute profit: " << this->abs_profit_long << " USDT" << endl
+                << "Percentage profit: " << this->per_profit_long << " %" << endl
+                << "Average absolute profit per trades: " << this->average_abs_profit_per_trade_long << " USDT" << endl
+                << "Average percentage profit per trades: " << this->average_per_profit_per_trade_long << " %" << endl
+                << endl
+                << "TRADE" << endl
+                << "Total trades: " << this->total_trades_long << endl
+                << "Wins: " << this->wins_long << endl
+                << "Loses: " << this->loses_long << endl
+                << "Percent wins: " << this->per_wins_long << " %" << endl
+                << "Best long trade: " << this->best_long_trade << " %" << endl
+                << "Worst long trade: " << this->worst_long_trade << " %" << endl
                 << "----------------------------------" << endl
-                << "Total trades: " << this->total_trades << endl
-                << "Best trade: " << this->best_trade << " %" << endl
-                << "Worst trade: " << this->worst_trade << " %" << endl
-                << "----------------------------------" << endl
-                << "Absolute profit: " << this->abs_profit << " USDT" << endl
-                << "Percentage profit: " << this->per_profit << " %" << endl
-                << "Average absolute profit per trades: " << this->average_abs_profit_per_trade << " USDT" << endl
-                << "Average percentage profit per trades: " << this->average_per_profit_per_trade << " %" << endl
+                << "SHORT POSITION STATISTIC:" << endl
+                << endl
+                << "BALANCE:" << endl
+                << "Start Balance: " << 0 << " USDT" << endl
+                << "Final Balance: " << this->symbol_balance << " USDT" << endl 
+                << "Maximum balance: " << this->maximum_symbol_balance<< " USDT"  << endl
+                << "Minimal balance: " << this->minimal_symbol_balance << " USDT" << endl
+                << endl
+                << "PROFIT:" << endl
+                // << "Absolute profit: " << this->abs_profit_short << " USDT" << endl
+                // << "Percentage profit: " << this->per_profit_short << " %" << endl
+                << "Average absolute profit per trades: " << this->average_abs_profit_per_trade_short << " USDT" << endl
+                << "Average percentage profit per trades: " << this->average_per_profit_per_trade_short << " %" << endl
+                << endl
+                << "TRADE" << endl
+                << "Total trades: " << this->total_trades_short << endl
+                << "Wins: " << this->wins_short << endl
+                << "Loses: " << this->loses_short << endl
+                << "Percent wins: " << this->per_wins_short << " %" << endl
+                << "Best long trade: " << this->best_short_trade << " %" << endl
+                << "Worst long trade: " << this->worst_short_trade << " %" << endl
                 << "----------------------------------" << endl
                 << "Test time (ms): " << exec_time.count() << endl
             ;

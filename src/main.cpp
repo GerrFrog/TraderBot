@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
     // );
     tester.backtest<Strategies::Normalized_MACD_Cross>(
         jf["strategies"]["normalized_macd_cross"]["1"],
-        10000.0
+        10000.0,
+        100
     );
 
     return EXIT_SUCCESS;

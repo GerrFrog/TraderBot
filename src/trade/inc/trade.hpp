@@ -17,11 +17,23 @@ using std::map, std::cout, std::endl, std::string;
 class Trade
 {
     // TODO: Long and Short Trade
+    // TODO: Get open time
+    // TODO: Get close time
     private:
         /**
          * @brief Unique Trade id
          */
         unsigned int id;
+
+        /**
+         * @brief Activity state of trade
+         */
+        bool active = false;
+
+        /**
+         * @brief Completed status of trade
+         */
+        bool completed = false;
 
         /**
          * @brief The traded symbol
@@ -32,6 +44,11 @@ class Trade
          * @brief Candles Interval
          */
         string interval;
+
+        /**
+         * @brief Trade position (long/short)
+         */
+        string position;
 
         /**
          * @brief Open Time of Trade
@@ -49,9 +66,14 @@ class Trade
         double live_time;
 
         /**
-         * @brief Stake for open trade (buy cryptocurrency with this stake)
+         * @brief Stake for open "long" trade (buy cryptocurrency with this stake)
          */
         double stake_amount;
+
+        /**
+         * @brief Stake for open "short" trade
+         */
+        double symbol_amount;
 
         /**
          * @brief The price of cryptocurrency when trade was created
@@ -77,87 +99,34 @@ class Trade
         /**
          * @brief Construct a new Trade object
          */
-        Trade()
-        { } 
+        Trade() = default;
 
         /**
          * @brief Construct a new Trade object
          * 
-         * @param stake_amount Stake amount to open a trade (USDT)
+         * @param stake_amount Stake amount to open a "long" trade (USDT)
+         * @param symbol_amount Stake amount of symbol to open a "short" trade
          * @param open_price Open Price when Trade was created
          * @param symbol The traded pair
          * @param interval Candles Interval
          */
         Trade(
             double stake_amount, 
+            double symbol_amount,
             double open_price, 
-            string &interval,
-            string &symbol
-        ) : stake_amount(stake_amount), open_price(open_price),
-            symbol(symbol), interval(interval)
+            const string &interval,
+            const string &symbol,
+            const string &position
+        ) : stake_amount(stake_amount), 
+            symbol_amount(symbol_amount),
+            open_price(open_price), symbol(symbol), 
+            interval(interval), position(position)
         { }
 
         /**
          * @brief Destroy the Trade object
          */
-        ~Trade() 
-        { }
-
-        /**
-         * @brief Set the Trade id
-         * 
-         * @param trade_id New Trade id
-         */
-        void set_id(unsigned int trade_id) { this->id = trade_id; }
-
-        /**
-         * @brief Set the stake amount 
-         * 
-         * @param stake Stake amount
-         */
-        void set_stake_amount(double stake) { this->stake_amount = stake; }
-
-        /**
-         * @brief Set the open price 
-         * 
-         * @param open Open price
-         */
-        void set_open_price(double open) { this->open_price = open; }
-
-        /**
-         * @brief Set the symbol 
-         * 
-         * @param sym The traded pair
-         */
-        void set_symbol(string &sym) { this->symbol = sym; }
-
-        /**
-         * @brief Set the open time 
-         */
-        void set_open_time() { this->open_time = std::chrono::system_clock::now(); }
-
-        /**
-         * @brief Set the interval 
-         * 
-         * @param intr Interval
-         */
-        void set_interval(string &intr) { this->interval = intr; }
-
-        /**
-         * @brief Set the close time. Behave as exit function for Trade
-         * 
-         * @param close_price Close price
-         */
-        void set_close_time(double close_p) 
-        { 
-            this->close_time = std::chrono::system_clock::now(); 
-            this->close_price = close_p;
-            this->live_time = (close_time - open_time).count();
-
-            double percentage = close_p / this->open_price * 100;
-            this->per_profit = percentage - 100;
-            this->profit = this->stake_amount * percentage / 100 - this->stake_amount;
-        }
+        ~Trade() = default;
 
         /**
          * @brief Get the symbol of trade
@@ -165,6 +134,13 @@ class Trade
          * @return string 
          */
         string get_symbol() { return this->symbol; }
+
+        /**
+         * @brief Get the position 
+         * 
+         * @return string 
+         */
+        string get_position() { return this->position; }
 
         /**
          * @brief Get the interval 
@@ -186,6 +162,13 @@ class Trade
          * @return double 
          */
         double get_stake_amount() { return this->stake_amount; }
+
+        /**
+         * @brief Get the symbol amount
+         * 
+         * @return double 
+         */
+        double get_symbol_amount() { return this->symbol_amount; }
 
         /**
          * @brief Get the open price 
@@ -215,8 +198,127 @@ class Trade
          */
         double get_per_profit() { return this->per_profit; }
 
-        // TODO: Get open time
-        // TODO: Get close time
+        /**
+         * @brief Set the Trade id
+         * 
+         * @param trade_id New Trade id
+         */
+        void set_id(unsigned int trade_id) { this->id = trade_id; }
+
+        /**
+         * @brief Set the active 
+         * 
+         * @param state Trade state
+         */
+        void set_active(bool state) { this->active = state; }
+
+        /**
+         * @brief Set the position 
+         * 
+         * @param pos Position (long/short)
+         */
+        void set_position(const string &pos) { this->position = pos; }
+
+        /**
+         * @brief Set the stake amount 
+         * 
+         * @param amount Stake amount
+         */
+        void set_stake_amount(double amount) { this->stake_amount = amount; }
+
+        /**
+         * @brief Set the symbol amount
+         * 
+         * @param amount 
+         */
+        void set_symbol_amount(double amount) { this->symbol_amount = amount; }
+
+        /**
+         * @brief Set the open price 
+         * 
+         * @param open Open price
+         */
+        void set_open_price(double open) { this->open_price = open; }
+
+        /**
+         * @brief Set the symbol 
+         * 
+         * @param sym The traded pair
+         */
+        void set_symbol(string &sym) { this->symbol = sym; }
+
+        /**
+         * @brief Set the open time 
+         */
+        void set_open_time() 
+        { 
+            this->open_time = std::chrono::system_clock::now(); 
+            this->completed = false;
+        }
+
+        /**
+         * @brief Set the interval 
+         * 
+         * @param intr Interval
+         */
+        void set_interval(string &intr) { this->interval = intr; }
+
+        /**
+         * @brief Set the close time. Behave as exit function for Trade
+         * 
+         * @param close_price Close price
+         */
+        void set_close_time(double close_p) 
+        { 
+            this->close_time = std::chrono::system_clock::now(); 
+            this->close_price = close_p;
+            this->live_time = (close_time - open_time).count();
+
+            this->active = false;
+            this->completed = true;
+
+            double percentage = close_p / this->open_price * 100;
+            if (this->position == "long")
+            {
+                this->per_profit = percentage - 100;
+                this->profit = this->stake_amount * percentage / 100 - this->stake_amount;
+            } else if (this->position == "short") {
+                this->per_profit = 100 - percentage;
+                this->profit = this->symbol_amount * this->open_price -
+                               this->symbol_amount * close_p;
+            }
+        }
+
+        /**
+         * @brief Is trade active?
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool is_active() { return this->active; }
+
+        /**
+         * @brief Is trade completed?
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool is_completed() { return this->completed; }
+
+        /**
+         * @brief Describe the trade
+         */
+        void describe_trade()
+        {
+            cout << "ID: " << this->id << endl
+                 << "Symbol: " << this->symbol << endl
+                 << "Interval: " << this->interval << endl
+                 << "Position: " << this->position << endl
+                 << "Open price: " << this->open_price << endl
+                 << "Stake amount: " << this->stake_amount << endl
+                 << "Symbol amount: " << this->symbol_amount << endl
+            ;
+        }
 };
 
 

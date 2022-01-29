@@ -13,6 +13,7 @@
                     "strategy": {
                         "type": "scalping",
                         "stake_amount": "all",
+                        "symbol_amount": "all",
                         "stop-loss": 10,
                         "target": 7
                     }
@@ -44,7 +45,8 @@
                     "timeframe": "1m",
                     "strategy": {
                         "type": "position",
-                        "stake_amount": "all"
+                        "stake_amount": "all",
+                        "symbol_amount": "all"
                     }
                 },
                 "strategy_params": {
@@ -73,10 +75,11 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "4h",
+                    "timeframe": "1m",
                     "strategy": {
                         "type": "position",
                         "stake_amount": "all",
+                        "symbol_amount": "all",
                         "stop-loss": 0.2,
                         "target": 0.15
                     }
@@ -86,7 +89,7 @@
                         "type": "Indicators::TradingView",
                         "indicator": "Normalized_MACD",
                         "indicator_params": {
-                            "interval": "4h",
+                            "interval": "1m",
                             "type": "EMA",
                             "sma": 12,
                             "lma": 21,
