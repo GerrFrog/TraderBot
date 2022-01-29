@@ -507,10 +507,16 @@ namespace Indicators::TradingView
              */
             double wma(vector<double> &source)
             {
-                double wma = 0.0;
-                for (int i = 0; i < source.size(); i++)
-                    wma = source[i] * (source.size() - i);
-                return wma / (source.size() * (source.size() + 1) / 2);
+                double norm = 0.0;
+                double sum = 0.0;
+                int length = source.size();
+                for (int i = 0; i < length - 1; i++)
+                {
+                    double weight = (length - i) * length;
+                    norm += weight;
+                    sum += source[i] * weight;
+                }
+                return sum / norm;
             }
 
         public:
@@ -650,7 +656,7 @@ namespace Indicators::TradingView
                     this->macnorm2s.push_back(this->macnorm2);
                 else {
                     this->macnorm2s.erase(this->macnorm2s.begin());
-                    this->macnorm2s.push_back(macnorm2);
+                    this->macnorm2s.push_back(this->macnorm2);
                 }
 
                 this->trigger = this->wma(this->macnorm2s);
