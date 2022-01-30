@@ -75,7 +75,7 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "1m",
+                    "timeframe": "1d",
                     "strategy": {
                         "type": "position",
                         "stake_amount": "all",
@@ -89,7 +89,7 @@
                         "type": "Indicators::TradingView",
                         "indicator": "Normalized_MACD",
                         "indicator_params": {
-                            "interval": "1m",
+                            "interval": "1d",
                             "type": "EMA",
                             "sma": 12,
                             "lma": 21,

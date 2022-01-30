@@ -321,14 +321,88 @@ class Tester
         { }
 
         /**
-         * @brief Start backtesting 
+         * @brief Start backtesting for indicator
+         * 
+         * @tparam Indicator Indicator to backtest
+         * @param indicator_params Indicator params
+         * @param symbol Symbol to test indicator
+         * @param timeframe Timeframe (interval) of candles
+         */
+        template <class Indicator>
+        void backtest_indicator(
+            nlohmann::json &indicator_params,
+            const string &symbol,
+            const string &timeframe
+        )
+        {
+            Indicator indicator;
+
+            nlohmann::json ret;
+
+            auto start_time = std::chrono::high_resolution_clock::now();
+
+            this->filename += symbol + '_' + timeframe + ".csv";
+
+            string open_price, high_price, low_price, close_price,
+                   volume, quote, trades_count, tbbav, tbqav,
+                   open_time, close_time
+            ;
+
+            indicator.set_indicator_params(indicator_params);
+
+            io::CSVReader<11> file(this->filename);
+            while(file.read_row(
+                open_time, open_price, high_price, 
+                low_price, close_price, volume, close_time, 
+                quote, trades_count, tbbav, tbqav
+            )) {
+                try {
+                    Candle candle(
+                        std::stod(open_time),
+                        std::stod(close_time),
+                        std::stod(open_price),
+                        std::stod(high_price),
+                        std::stod(low_price),
+                        std::stod(close_price),
+                        std::stod(volume),
+                        std::stod(quote),
+                        std::stod(trades_count),
+                        std::stod(tbbav),
+                        std::stod(tbqav)
+                    );
+
+                    indicator.resolve(candle);
+
+                    ret = indicator.get();
+
+                    cout << "Candle close: " << candle.get_close_price() << endl
+                         << "Indicator params:" << endl
+                    ;
+                    for (auto& [key, val] : ret.items())
+                        cout << key << " : " << val << endl;
+                    cout << endl;
+
+                } catch (std::invalid_argument& exp) {
+                    cout << exp.what() << endl;
+                    continue;
+                }
+            }
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+            cout << "Test time (ms): " << exec_time.count() << endl;
+        }
+
+        /**
+         * @brief Start backtesting for strategy
          * 
          * @tparam Strategy Strategy to backtest
          * @param config Config for strategy
          * @param start_balance Start balance
          */
         template <class Strategy>
-        void backtest(
+        void backtest_strategy(
             nlohmann::json &config,
             double start_balance,
             double start_symbols
@@ -340,8 +414,8 @@ class Tester
                    volume, quote, trades_count, tbbav, tbqav,
                    open_time, close_time
             ;
-            string symbol = config["trader_params"]["symbol"];
             string timeframe = config["trader_params"]["timeframe"];
+            string symbol = config["trader_params"]["symbol"];
 
             Workers::Watcher watcher;
             Workers::Trader trader(
@@ -372,6 +446,7 @@ class Tester
                 std::back_inserter(this->filename),
                 '/'
             );
+
             this->filename += '_' + timeframe + ".csv";
 
             io::CSVReader<11> file(this->filename);

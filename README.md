@@ -49,8 +49,8 @@ Example: for **Indicators::TradingView**
     Implemented technical indicators:
     - [x] Exponential Moving Average (EMA)
     - [ ] Relative Strength Index (RSI)
-    - [ ] Simple Moving Average (SMA)
-    - [ ] Weighted Moving Average (WMA)
+    - [x] Simple Moving Average (SMA)
+    - [x] Weighted Moving Average (WMA)
 - **Indicators::TradingView**<br>
     Overwritten pine-scripts to C++. Object calculates value of technical indicator by passed candle.<br>
     Implemented technical indicators:
@@ -109,14 +109,30 @@ bash scripts/download_big_data.sh
 
 **WARNING:** After you have downloaded dataset you should delete last column in csv file to avoid error.
 
-Start backtesting
+Start backtesting for strategy
 ```C
 Tester tester(
-    "../data/", // Path to data directory
+    "../data/",
     taapi_key
 );
 tester.backtest<Strategies::Normalized_MACD_Cross>(
-    jf["strategies"]["normalized_macd_cross"]["1"], // Strategy to test
-    10000.0 // Your start balance (USDT)
+    jf["strategies"]["normalized_macd_cross"]["1"],
+    10000.0
+);
+```
+Start backtesting for indicator
+```C
+nlohmann::json indicator_params = {
+    {"interval", "1d"},
+    {"period", 30}
+};
+Tester tester(
+    "../data/",
+    taapi_key
+);
+tester.backtest_indicator<Indicators::Integral::SMA>(
+    indicator_params,
+    "BTCUSDT",
+    "1d"
 );
 ```

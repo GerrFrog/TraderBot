@@ -535,6 +535,16 @@ namespace Workers
             vector<Indicators::Integral::EMA> emas;
 
             /**
+             * @brief All type of WMA indicators
+             */
+            vector<Indicators::Integral::WMA> wmas;
+
+            /**
+             * @brief All type of SMA indicators
+             */
+            vector<Indicators::Integral::SMA> smas;
+
+            /**
              * @brief All type of Normalized MACD indicators
              */
             vector<Indicators::TradingView::Normalized_MACD> normalized_macds;
@@ -634,6 +644,18 @@ namespace Workers
                                             val3["indicator_params"]
                                         )
                                     );
+                                if (val3["indicator"] == "WMA")
+                                    this->wmas.push_back(
+                                        Indicators::Integral::WMA(
+                                            val3["indicator_params"]
+                                        )
+                                    );
+                                if (val3["indicator"] == "SMA")
+                                    this->smas.push_back(
+                                        Indicators::Integral::SMA(
+                                            val3["indicator_params"]
+                                        )
+                                    );
                                 // if () // Other indicator
                             }
                         }
@@ -644,6 +666,18 @@ namespace Workers
                         if (val["indicator"] == "EMA")
                             this->emas.push_back(
                                 Indicators::Integral::EMA(
+                                    val["indicator_params"]
+                                )
+                            );
+                        if (val["indicator"] == "WMA")
+                            this->wmas.push_back(
+                                Indicators::Integral::WMA(
+                                    val["indicator_params"]
+                                )
+                            );
+                        if (val["indicator"] == "SMA")
+                            this->smas.push_back(
+                                Indicators::Integral::SMA(
                                     val["indicator_params"]
                                 )
                             );

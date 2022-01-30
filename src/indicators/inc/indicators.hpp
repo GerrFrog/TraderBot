@@ -101,9 +101,14 @@ namespace Indicators::Integral
             double ema = 0.0;
 
             /**
-             * @brief Last value of Candles from 1 to period
+             * @brief Last Candles
              */
-            vector<double> last_candles;
+            vector<Candle> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
 
         public:
             /**
@@ -148,12 +153,7 @@ namespace Indicators::Integral
              * 
              * @return nlohmann::json
              */
-            nlohmann::json get() 
-            { 
-                nlohmann::json ret;
-                ret["value"] = this->ema;
-                return ret; 
-            }
+            nlohmann::json get() { return ret; }
 
             /**
              * @brief Resolve the EMA Indicator for new Candle
@@ -166,12 +166,10 @@ namespace Indicators::Integral
                 {
                     double curr = 0;
 
-                    last_candles.push_back(
-                        candle.get_close_price()
-                    );
+                    last_candles.push_back(candle);
 
-                    for (double &last_candle : this->last_candles)
-                        curr += last_candle / this->last_candles.size();
+                    for (Candle &last_candle : this->last_candles)
+                        curr += last_candle.get_close_price() / this->last_candles.size();
 
                     this->ema = curr;
                     this->last_ema = curr;
@@ -182,6 +180,7 @@ namespace Indicators::Integral
                     ;
                     this->last_ema = this->ema;
                 }
+                ret["value"] = this->ema;
             }
     };
 
@@ -190,7 +189,7 @@ namespace Indicators::Integral
      */
     class WMA
     {
-        // TODO: WMA
+        // TODO: WMA with different source (close, low, high...)
         private:
             /**
              * @brief Description of WMA
@@ -198,14 +197,24 @@ namespace Indicators::Integral
             nlohmann::json description;
 
             /**
+             * @brief Period of WMA
+             */
+            int period;
+
+            /**
              * @brief WMA for last passed Candle
              */
             double wma = 0.0;
 
             /**
-             * @brief Period of WMA
+             * @brief Last Candles
              */
-            int period;
+            vector<Candle> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
 
         public:
             /**
@@ -247,12 +256,7 @@ namespace Indicators::Integral
              * 
              * @return nlohmann::json 
              */
-            nlohmann::json get()
-            {
-                nlohmann::json ret;
-                ret["value"] = this->wma;
-                return ret;
-            }
+            nlohmann::json get() { return this->ret; }
 
             /**
              * @brief Resolve the WMA
@@ -261,7 +265,19 @@ namespace Indicators::Integral
              */
             void resolve(Candle &candle)
             {
-
+                if (this->last_candles.size() < this->period)
+                {
+                    this->last_candles.push_back(candle);
+                } else {
+                    this->last_candles.push_back(candle);
+                    this->last_candles.erase(this->last_candles.begin());
+                }
+                int length = this->last_candles.size();
+                for (int i = 0; i < length; i++)
+                    this->wma += this->last_candles[i].get_close_price() * (i + 1);
+                this->wma /= length * (length + 1) / 2;
+                ret["value"] = this->wma;
+                this->wma = 0;
             }       
     };
 
@@ -270,7 +286,7 @@ namespace Indicators::Integral
      */
     class SMA
     {
-        // TODO: SMA
+        // TODO: SMA with different source (close, high, low...)
         private:
             /**
              * @brief Description of SMA
@@ -286,6 +302,16 @@ namespace Indicators::Integral
              * @brief Period of SMA
              */
             int period;
+
+            /**
+             * @brief Last Candles
+             */
+            vector<Candle> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
 
         public:
             /**
@@ -327,12 +353,7 @@ namespace Indicators::Integral
              * 
              * @return nlohmann::json 
              */
-            nlohmann::json get()
-            {
-                nlohmann::json ret;
-                ret["value"] = this->sma;
-                return ret;
-            }
+            nlohmann::json get() { return ret; }
 
             /**
              * @brief Resolve the SMA
@@ -341,7 +362,19 @@ namespace Indicators::Integral
              */
             void resolve(Candle &candle)
             {
-
+                if (this->last_candles.size() < period)
+                {
+                    this->last_candles.push_back(candle);
+                } else {
+                    this->last_candles.push_back(candle);
+                    this->last_candles.erase(this->last_candles.begin());
+                }
+                int length = this->last_candles.size();
+                for (Candle& last_candle : this->last_candles)
+                    this->sma += last_candle.get_close_price();
+                this->sma /= length;
+                this->ret["value"] = this->sma;
+                this->sma = 0;
             }       
     };
 }
@@ -639,7 +672,7 @@ namespace Indicators::TradingView
                 double ratio = this->min(sh, lon) / this->max(sh, lon);
                 double mac = (sh > lon ? 2 - ratio : ratio) - 1;
 
-                if (this->macs.size() <= this->np)
+                if (this->macs.size() < this->np)
                     this->macs.push_back(mac);
                 else {
                     this->macs.erase(this->macs.begin());
@@ -652,7 +685,7 @@ namespace Indicators::TradingView
 
                 this->macnorm2 = this->np < 2 ? mac : macnorm;
                 
-                if (this->macnorm2s.size() <= this->tsp)
+                if (this->macnorm2s.size() < this->tsp)
                     this->macnorm2s.push_back(this->macnorm2);
                 else {
                     this->macnorm2s.erase(this->macnorm2s.begin());

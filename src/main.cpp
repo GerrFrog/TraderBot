@@ -47,14 +47,23 @@ int main(int argc, char *argv[]) {
         "../data/",
         taapi_key
     );
-    // tester.backtest<Strategies::EMA_Cross>(
+    // tester.backtest_strategy<Strategies::EMA_Cross>(
     //     jf["strategies"]["ema_cross"]["1"],
     //     10000.0
     // );
-    tester.backtest<Strategies::Normalized_MACD_Cross>(
-        jf["strategies"]["normalized_macd_cross"]["1"],
-        10000.0,
-        100
+    // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
+    //     jf["strategies"]["normalized_macd_cross"]["1"],
+    //     10000.0,
+    //     1
+    // );
+    nlohmann::json indicator_params = {
+        {"interval", "1d"},
+        {"period", 30}
+    };
+    tester.backtest_indicator<Indicators::Integral::SMA>(
+        indicator_params,
+        "BTCUSDT",
+        "1d"
     );
 
     return EXIT_SUCCESS;
