@@ -19,6 +19,8 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+// TODO: Group indicators by "trend", "oscillator", "volatility" and "support/resistance"
+
 /**
  * @brief Requests to taapi.io for indicators values
  */
@@ -252,6 +254,13 @@ namespace Indicators::Integral
             }
 
             /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
              * @brief Get the WMA for last passed Candle
              * 
              * @return nlohmann::json 
@@ -349,6 +358,13 @@ namespace Indicators::Integral
             }
 
             /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
              * @brief Get the SMA for last passed Candle
              * 
              * @return nlohmann::json 
@@ -376,6 +392,252 @@ namespace Indicators::Integral
                 this->ret["value"] = this->sma;
                 this->sma = 0;
             }       
+    };
+
+    /**
+     * @brief Running Moving Average/Modified Moving Average/Smoothed Moving Average
+     */
+    class SSMA
+    {
+        private:
+            /**
+             * @brief Description of indicator
+             */
+            nlohmann::json description;
+
+            /**
+             * @brief Period of EMA
+             */
+            int period;
+
+            /**
+             * @brief Last RMA value
+             */
+            double last_ssma;
+
+            /**
+             * @brief Current RMA for Last passed Candle
+             */
+            double ssma = 0.0;
+
+            /**
+             * @brief Last Candles
+             */
+            vector<Candle> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
+
+        public:
+            /**
+             * @brief Construct a new RMA object
+             */
+            SSMA() = default;
+
+            /**
+             * @brief Construct a new RMA object
+             * 
+             * @param indicator_params Params for RMA
+             */
+            SSMA(
+                nlohmann::json &indicator_params
+            ) : description(indicator_params)
+            { 
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Destroy the SSMA object
+             */
+            ~SSMA() = default;
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
+             * @brief Get the EMA for last passed Candle
+             * 
+             * @return nlohmann::json
+             */
+            nlohmann::json get() { return ret; }
+
+            /**
+             * @brief Resolve the RMA Indicator for new Candle
+             * 
+             * @param candle Candle object
+             */
+            void resolve(Candle &candle)
+            {
+                if (this->last_candles.size() < this->period)
+                {
+                    double curr = 0;
+
+                    last_candles.push_back(candle);
+
+                    for (Candle &last_candle : this->last_candles)
+                        curr += last_candle.get_close_price() / this->last_candles.size();
+
+                    this->ssma = curr;
+                    this->last_ssma = curr;
+                } else {
+                    this->ssma = 
+                        ((this->last_ssma * this->period) - this->last_ssma + candle.get_close_price())
+                        / this->period
+                    ;
+                    this->last_ssma = this->ssma;
+                }
+                ret["value"] = this->ssma;
+            }
+    };
+
+    /**
+     * @brief Relative Strength Indicator
+     */
+    class RSI
+    {
+        private:
+            /**
+             * @brief Description of SMA
+             */
+            nlohmann::json description;
+
+            /**
+             * @brief RSI for last passed Candle
+             */
+            double rsi = 0.0;
+
+            /**
+             * @brief Period of SMA
+             */
+            int period;
+
+            /**
+             * @brief Last Candles
+             */
+            vector<Candle> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
+
+            /**
+             * @brief Average of All up moves 
+             */
+            double avgGain = 0.0;
+
+            /**
+             * @brief Average of All down moves
+             */
+            double avgLoss = 0.0;
+
+        public:
+            /**
+             * @brief Construct a new RSI object
+             */
+            RSI() = default;
+
+            /**
+             * @brief Construct a new RSI object
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            RSI(
+                nlohmann::json &indicator_params
+            ) : description(indicator_params)
+            {
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Destroy the RSI object
+             */
+            ~RSI() = default;
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for Indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
+             * @brief Get the SMA for last passed Candle
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get() { return ret; }
+
+            /**
+             * @brief Resolve the RSI
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle& candle)
+            {
+                double rs;
+                
+                if (this->last_candles.size() < period)
+                {
+                    this->last_candles.push_back(candle);
+
+                    for (Candle& candle : this->last_candles)
+                    {
+                        if (candle.is_green()) {
+                            this->avgGain += candle.get_change_abs();
+                        } else {
+                            this->avgLoss += candle.get_change_abs();
+                        }
+                    }
+
+                    this->avgGain /= this->last_candles.size();
+                    this->avgLoss /= this->last_candles.size();
+
+                    ret["value"] = NULL;                    
+                } else {
+                    if (candle.is_green())
+                    {
+                        this->avgGain = (this->avgGain * (this->period - 1) + candle.get_change_abs()) / this->period;
+                        this->avgLoss = (this->avgLoss * (this->period - 1)) / this->period; 
+                    } else {
+                        this->avgLoss = (this->avgLoss * (this->period - 1) + candle.get_change_abs()) / this->period;
+                        this->avgGain = (this->avgGain * (this->period - 1)) / this->period;
+                    }
+                }
+
+                rs = this->avgGain / this->avgLoss;
+
+                ret["value"] = 100 - (100 / (1 + rs));
+            }
     };
 }
 

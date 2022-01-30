@@ -276,28 +276,31 @@ class Tester
                         this->loses_short++;
                 }
 
-                cout << "Position: " << trade.get_position() << endl
-                     << "Absolute profit: " << trade.get_abs_profit() << endl
-                     << "Percentage profit: " << trade.get_per_profit() << endl
-                     << "Open price: " << trade.get_open_price() << endl
-                     << "Close price: " << trade.get_close_price() << endl
-                     << "Stake amount: " << trade.get_stake_amount() << endl
-                     << "Symbol amount: " << trade.get_symbol_amount() << endl
-                     << "Current balance: " << this->balance << endl
-                     << "Current symbol balance: " << this->symbol_balance << endl
-                     << endl
-                ;
+                // cout 
+                //     << "Position: " << trade.get_position() << endl
+                //     << "Absolute profit: " << trade.get_abs_profit() << endl
+                //     << "Percentage profit: " << trade.get_per_profit() << endl
+                //     << "Open price: " << trade.get_open_price() << endl
+                //     << "Close price: " << trade.get_close_price() << endl
+                //     << "Stake amount: " << trade.get_stake_amount() << endl
+                //     << "Symbol amount: " << trade.get_symbol_amount() << endl
+                //     << "Current balance: " << this->balance << endl
+                //     << "Current symbol balance: " << this->symbol_balance << endl
+                //     << endl
+                // ;
             }
 
-            cout << trader.get_name() << endl;
-            cout << trader.get_timeframe() << endl;
-            cout << trader.get_symbol() << endl;
+            // cout 
+            //     << trader.get_name() << endl
+            //     << trader.get_timeframe() << endl
+            //     << trader.get_symbol() << endl
+            //     << "Work: " << trader.is_work() << endl
+            //     << "Sell signal: " << solver.get_sell_signal() << endl
+            //     << "Buy signal: " << solver.get_buy_signal() << endl
+            //     << "Candle close: " << candle.get_close_price() << endl
+            // ;
             for (auto& [key, val] : params.items())
                 cout << key << " : " << val << endl;
-            cout << "Work: " << trader.is_work() << endl;
-            cout << "Sell signal: " << solver.get_sell_signal() << endl;
-            cout << "Buy signal: " << solver.get_buy_signal() << endl;
-            cout << "Candle close: " << candle.get_close_price() << endl;
             cout << endl;
         }
 

@@ -14,8 +14,8 @@
                         "type": "scalping",
                         "stake_amount": "all",
                         "symbol_amount": "all",
-                        "stop-loss": 10,
-                        "target": 7
+                        "stop-loss": 1,
+                        "target": 2
                     }
                 },
                 "strategy_params": {
@@ -23,7 +23,7 @@
                         "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 30,
+                            "period": 50,
                             "interval": "1h"
                         }
                     },
@@ -31,7 +31,7 @@
                         "type": "Indicators::TAAPI",
                         "indicator": "EMA",
                         "indicator_params": {
-                            "period": 50,
+                            "period": 200,
                             "interval": "1h"
                         }
                     }
@@ -90,7 +90,7 @@
                         "indicator": "Normalized_MACD",
                         "indicator_params": {
                             "interval": "1d",
-                            "type": "EMA",
+                            "type": "WMA",
                             "sma": 12,
                             "lma": 21,
                             "tsp": 9,

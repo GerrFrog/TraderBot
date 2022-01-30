@@ -21,6 +21,7 @@ namespace Managers
      */
     class Manager
     {
+        // TODO: Parallel execution
         private:
             /**
              * @brief Strategies in config

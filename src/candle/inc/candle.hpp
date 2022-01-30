@@ -20,6 +20,11 @@ class Candle
         bool set = false;
 
         /**
+         * @brief True - green, False - red
+         */
+        bool green;
+
+        /**
          * @brief Open time 
          */
         double open_time;
@@ -50,6 +55,11 @@ class Candle
         double close_price;
 
         /**
+         * @brief Absolute change of candle
+         */
+        double change_absolute;
+
+        /**
          * @brief Volume
          */
         double volume;
@@ -78,8 +88,7 @@ class Candle
         /**
          * @brief Construct a new Candle object
          */
-        Candle()
-        { }
+        Candle() = default;
 
         /**
          * @brief Construct a new Candle object
@@ -121,12 +130,23 @@ class Candle
             open_time(open_time)
         { 
             this->set = true;
+            if (close_price >= open_price)
+            {
+                this->green = true;
+            } else {
+                this->green = false;
+            }
+            if (this->green) {
+                this->change_absolute = close_price - open_price;
+            } else {
+                this->change_absolute = open_price - close_price;
+            }
         }
 
         /**
          * @brief Destroy the Candle object
          */
-        ~Candle() { }
+        ~Candle() = default;
 
         /**
          * @brief Is Candle set?
@@ -137,11 +157,26 @@ class Candle
         bool is_set() { return this->set; }
 
         /**
+         * @brief Is candle is green?
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool is_green() { return this->green; }
+
+        /**
          * @brief Get the close price 
          * 
          * @return double 
          */
         double get_close_price() { return this->close_price; }
+
+        /**
+         * @brief Get the change absolute
+         * 
+         * @return double 
+         */
+        double get_change_abs() { return this->change_absolute; }
 };
 
 

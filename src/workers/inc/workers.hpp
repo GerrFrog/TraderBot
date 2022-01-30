@@ -545,6 +545,11 @@ namespace Workers
             vector<Indicators::Integral::SMA> smas;
 
             /**
+             * @brief All type of RSI indicators
+             */
+            vector<Indicators::Integral::RSI> rsis;
+
+            /**
              * @brief All type of Normalized MACD indicators
              */
             vector<Indicators::TradingView::Normalized_MACD> normalized_macds;
@@ -656,6 +661,12 @@ namespace Workers
                                             val3["indicator_params"]
                                         )
                                     );
+                                if (val3["indicator"] == "RSI")
+                                    this->rsis.push_back(
+                                        Indicators::Integral::RSI(
+                                            val3["indicator_params"]
+                                        )
+                                    );
                                 // if () // Other indicator
                             }
                         }
@@ -681,6 +692,12 @@ namespace Workers
                                     val["indicator_params"]
                                 )
                             );
+                        if (val["indicator"] == "RSI")
+                            this->rsis.push_back(
+                                Indicators::Integral::RSI(
+                                    val["indicator_params"]
+                                )
+                            );
                         if (val["indicator"] == "Normalized_MACD")
                             this->normalized_macds.push_back(
                                 Indicators::TradingView::Normalized_MACD(
@@ -700,6 +717,12 @@ namespace Workers
             {
                 for (Indicators::Integral::EMA& ema : this->emas)
                     ema.resolve(candle);
+                for (Indicators::Integral::WMA& wma : this->wmas)
+                    wma.resolve(candle);
+                for (Indicators::Integral::SMA& sma : this->smas)
+                    sma.resolve(candle);
+                for (Indicators::Integral::RSI& rsi : this->rsis)
+                    rsi.resolve(candle);
                 for (Indicators::TradingView::Normalized_MACD& n_macd : this->normalized_macds)
                     n_macd.resolve(candle);
             }
@@ -764,6 +787,39 @@ namespace Workers
                                 {
                                     if (ema.get_description() == val["indicator_params"])
                                         params[key] = ema.get();
+                                }
+                            }
+                        }
+                        if (indicator == "WMA")
+                        {
+                            for (auto& [key, val] : strategy_params.items())
+                            {
+                                for (Indicators::Integral::WMA &wma : this->wmas)
+                                {
+                                    if (wma.get_description() == val["indicator_params"])
+                                        params[key] = wma.get();
+                                }
+                            }
+                        }
+                        if (indicator == "SMA")
+                        {
+                            for (auto& [key, val] : strategy_params.items())
+                            {
+                                for (Indicators::Integral::SMA &sma : this->smas)
+                                {
+                                    if (sma.get_description() == val["indicator_params"])
+                                        params[key] = sma.get();
+                                }
+                            }
+                        }
+                        if (indicator == "RSI")
+                        {
+                            for (auto& [key, val] : strategy_params.items())
+                            {
+                                for (Indicators::Integral::RSI &rsi : this->rsis)
+                                {
+                                    if (rsi.get_description() == val["indicator_params"])
+                                        params[key] = rsi.get();
                                 }
                             }
                         }

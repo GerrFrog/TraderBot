@@ -43,24 +43,25 @@ int main(int argc, char *argv[]) {
     // manager.run();
 
     // // STRATEGY BACKTEST
+    nlohmann::json indicator_params = {
+        {"interval", "1d"},
+        {"period", 30}
+    };
     Tester tester(
         "../data/",
         taapi_key
     );
     // tester.backtest_strategy<Strategies::EMA_Cross>(
     //     jf["strategies"]["ema_cross"]["1"],
-    //     10000.0
+    //     10000.0,
+    //     1
     // );
     // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
     //     jf["strategies"]["normalized_macd_cross"]["1"],
     //     10000.0,
     //     1
     // );
-    nlohmann::json indicator_params = {
-        {"interval", "1d"},
-        {"period", 30}
-    };
-    tester.backtest_indicator<Indicators::Integral::SMA>(
+    tester.backtest_indicator<Indicators::Integral::RSI>(
         indicator_params,
         "BTCUSDT",
         "1d"

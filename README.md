@@ -48,7 +48,7 @@ Example: for **Indicators::TradingView**
     Object calculates value of technical indicator by passed candle.<br>
     Implemented technical indicators:
     - [x] Exponential Moving Average (EMA)
-    - [ ] Relative Strength Index (RSI)
+    - [x] Relative Strength Index (RSI)
     - [x] Simple Moving Average (SMA)
     - [x] Weighted Moving Average (WMA)
 - **Indicators::TradingView**<br>
