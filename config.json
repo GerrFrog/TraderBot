@@ -9,7 +9,8 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "1h",
+                    "interval": "1h",
+                    "candle": "Candle",
                     "strategy": {
                         "type": "scalping",
                         "stake_amount": "all",
@@ -22,48 +23,19 @@
                     "short_ema": {
                         "type": "Indicators::TAAPI",
                         "indicator": "EMA",
+                        "candle": "Candle",
                         "indicator_params": {
-                            "period": 50,
-                            "interval": "1h"
+                            "interval": "1h",
+                            "period": 50
                         }
                     },
                     "long_ema": {
                         "type": "Indicators::TAAPI",
                         "indicator": "EMA",
+                        "candle": "Candle",
                         "indicator_params": {
-                            "period": 200,
-                            "interval": "1h"
-                        }
-                    }
-                }
-            },
-            "2": {
-                "trader_params": {
-                    "exchange": "binance",
-                    "symbol": "BTC/USDT",
-                    "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "1m",
-                    "strategy": {
-                        "type": "position",
-                        "stake_amount": "all",
-                        "symbol_amount": "all"
-                    }
-                },
-                "strategy_params": {
-                    "short_ema": {
-                        "type": "Indicators::TAAPI",
-                        "indicator": "EMA",
-                        "indicator_params": {
-                            "period": 50,
-                            "interval": "1d"
-                        }
-                    },
-                    "long_ema": {
-                        "type": "Indicators::TAAPI",
-                        "indicator": "EMA",
-                        "indicator_params": {
-                            "period": 200,
-                            "interval": "1d"
+                            "interval": "1h",
+                            "period": 200
                         }
                     }
                 }
@@ -75,7 +47,8 @@
                     "exchange": "binance",
                     "symbol": "BTC/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "timeframe": "1d",
+                    "interval": "1d",
+                    "candle": "Candle",
                     "strategy": {
                         "type": "position",
                         "stake_amount": "all",
@@ -88,6 +61,7 @@
                     "normalized_macd": {
                         "type": "Indicators::TradingView",
                         "indicator": "Normalized_MACD",
+                        "candle": "Candle",
                         "indicator_params": {
                             "interval": "1d",
                             "type": "WMA",

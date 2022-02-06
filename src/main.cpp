@@ -47,24 +47,49 @@ int main(int argc, char *argv[]) {
         {"interval", "1d"},
         {"period", 30}
     };
+    nlohmann::json indicator_params2 = {
+        {"interval", "1d"},
+        {"type", "WMA"},
+        {"sma", 12},
+        {"lma", 21},
+        {"tsp", 9},
+        {"np", 50}
+    };
+    string symbol = "BTCUSDT";
+    string interval = "1d";
+    string dir = "../data/";
     Tester tester(
         "../data/",
         taapi_key
     );
+    // tester.backtest_candle(
+    //     "BTCUSDT",
+    //     "1d",
+    //     dir
+    // );
+    // tester.backtest_candle_indicator<Indicators::TradingView::Normalized_MACD<Candle>>(
+    //     indicator_params2,
+    //     "BTCUSDT",
+    //     "1d",
+    //     dir 
+    // );
+    // tester.backtest_heikin_ashi_indicator<Indicators::Integral::EMA<Heikin_Ashi>>(
+    //     indicator_params,
+    //     "BTCUSDT",
+    //     "1d",
+    //     dir
+    // );
     // tester.backtest_strategy<Strategies::EMA_Cross>(
     //     jf["strategies"]["ema_cross"]["1"],
     //     10000.0,
-    //     1
+    //     1,
+    //     dir
     // );
-    // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
-    //     jf["strategies"]["normalized_macd_cross"]["1"],
-    //     10000.0,
-    //     1
-    // );
-    tester.backtest_indicator<Indicators::Integral::RSI>(
-        indicator_params,
-        "BTCUSDT",
-        "1d"
+    tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
+        jf["strategies"]["normalized_macd_cross"]["1"],
+        10000.0,
+        1,
+        dir
     );
 
     return EXIT_SUCCESS;

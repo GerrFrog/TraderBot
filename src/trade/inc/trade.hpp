@@ -16,7 +16,6 @@ using std::map, std::cout, std::endl, std::string;
  */
 class Trade
 {
-    // TODO: Long and Short Trade
     // TODO: Get open time
     // TODO: Get close time
     private:

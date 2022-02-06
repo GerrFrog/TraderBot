@@ -1,4 +1,10 @@
 # TraderBot
+## Project logic
+<center><img src="./assets/project_logic.png"></img></center>
+
+## Solver-Trader pair logic
+<center><img src="./assets/solver-trader_pair_logic.png"></img></center>
+
 # Create new Indicator
 1. Specify how config for strategy with this indicator would look like in config.json
     - **type:** from where to take indicator

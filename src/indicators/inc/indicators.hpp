@@ -78,7 +78,10 @@ namespace Indicators::Integral
     // TODO: EMA with different sources (close, low, high...)
     /**
      * @brief Exponential Moving Average
+     * 
+     * @tparam Candle_T Type of Candle
      */
+    template <class Candle_T>
     class EMA
     {
         private:
@@ -105,7 +108,7 @@ namespace Indicators::Integral
             /**
              * @brief Last Candles
              */
-            vector<Candle> last_candles;
+            vector<Candle_T> last_candles;
 
             /**
              * @brief Return JSON
@@ -162,7 +165,7 @@ namespace Indicators::Integral
              * 
              * @param candle Candle object
              */
-            void resolve(Candle &candle)
+            void resolve(Candle_T &candle)
             {
                 if (this->last_candles.size() < this->period)
                 {
@@ -170,7 +173,7 @@ namespace Indicators::Integral
 
                     last_candles.push_back(candle);
 
-                    for (Candle &last_candle : this->last_candles)
+                    for (Candle_T &last_candle : this->last_candles)
                         curr += last_candle.get_close_price() / this->last_candles.size();
 
                     this->ema = curr;
@@ -188,7 +191,10 @@ namespace Indicators::Integral
 
     /**
      * @brief Weighted Moving Average
+     * 
+     * @tparam Candle_T Type of Candle
      */
+    template <class Candle_T>
     class WMA
     {
         // TODO: WMA with different source (close, low, high...)
@@ -211,7 +217,7 @@ namespace Indicators::Integral
             /**
              * @brief Last Candles
              */
-            vector<Candle> last_candles;
+            vector<Candle_T> last_candles;
 
             /**
              * @brief Return JSON
@@ -272,7 +278,7 @@ namespace Indicators::Integral
              * 
              * @param candle Candle
              */
-            void resolve(Candle &candle)
+            void resolve(Candle_T &candle)
             {
                 if (this->last_candles.size() < this->period)
                 {
@@ -292,7 +298,10 @@ namespace Indicators::Integral
 
     /**
      * @brief Simple Moving Average
+     * 
+     * @tparam Candle_T Typeo of Candle
      */
+    template <class Candle_T>
     class SMA
     {
         // TODO: SMA with different source (close, high, low...)
@@ -315,7 +324,7 @@ namespace Indicators::Integral
             /**
              * @brief Last Candles
              */
-            vector<Candle> last_candles;
+            vector<Candle_T> last_candles;
 
             /**
              * @brief Return JSON
@@ -376,7 +385,7 @@ namespace Indicators::Integral
              * 
              * @param candle Candle
              */
-            void resolve(Candle &candle)
+            void resolve(Candle_T &candle)
             {
                 if (this->last_candles.size() < period)
                 {
@@ -386,7 +395,7 @@ namespace Indicators::Integral
                     this->last_candles.erase(this->last_candles.begin());
                 }
                 int length = this->last_candles.size();
-                for (Candle& last_candle : this->last_candles)
+                for (Candle_T& last_candle : this->last_candles)
                     this->sma += last_candle.get_close_price();
                 this->sma /= length;
                 this->ret["value"] = this->sma;
@@ -396,7 +405,10 @@ namespace Indicators::Integral
 
     /**
      * @brief Running Moving Average/Modified Moving Average/Smoothed Moving Average
+     * 
+     * @param Candle_T Type of Candle
      */
+    template <class Candle_T>
     class SSMA
     {
         private:
@@ -423,7 +435,7 @@ namespace Indicators::Integral
             /**
              * @brief Last Candles
              */
-            vector<Candle> last_candles;
+            vector<Candle_T> last_candles;
 
             /**
              * @brief Return JSON
@@ -484,7 +496,7 @@ namespace Indicators::Integral
              * 
              * @param candle Candle object
              */
-            void resolve(Candle &candle)
+            void resolve(Candle_T &candle)
             {
                 if (this->last_candles.size() < this->period)
                 {
@@ -492,7 +504,7 @@ namespace Indicators::Integral
 
                     last_candles.push_back(candle);
 
-                    for (Candle &last_candle : this->last_candles)
+                    for (Candle_T &last_candle : this->last_candles)
                         curr += last_candle.get_close_price() / this->last_candles.size();
 
                     this->ssma = curr;
@@ -510,9 +522,13 @@ namespace Indicators::Integral
 
     /**
      * @brief Relative Strength Indicator
+     * 
+     * @tparam Candle_T Type of Candle
      */
+    template <class Candle_T>
     class RSI
     {
+        // TODO: Remake RSI. Bad for Heikin_Ashi candle
         private:
             /**
              * @brief Description of SMA
@@ -532,7 +548,7 @@ namespace Indicators::Integral
             /**
              * @brief Last Candles
              */
-            vector<Candle> last_candles;
+            vector<Candle_T> last_candles;
 
             /**
              * @brief Return JSON
@@ -602,7 +618,7 @@ namespace Indicators::Integral
              * 
              * @param candle Candle
              */
-            void resolve(Candle& candle)
+            void resolve(Candle_T& candle)
             {
                 double rs;
                 
@@ -610,7 +626,7 @@ namespace Indicators::Integral
                 {
                     this->last_candles.push_back(candle);
 
-                    for (Candle& candle : this->last_candles)
+                    for (Candle_T& candle : this->last_candles)
                     {
                         if (candle.is_green()) {
                             this->avgGain += candle.get_change_abs();
@@ -650,9 +666,13 @@ namespace Indicators::TradingView
      * @brief Normalized MACD Indicator
      * 
      * @note by "glaz"
+     * 
+     * @tparam Candle_T Type of Candle
      */
+    template <class Candle_T>
     class Normalized_MACD
     {
+        // TODO: Problems with Trigger
         private:
             /**
              * @brief Description of Indicator
@@ -712,34 +732,34 @@ namespace Indicators::TradingView
             /**
              * @brief Exponential Moving Average
              */
-            Indicators::Integral::EMA ema_1;
+            Indicators::Integral::EMA<Candle_T> ema_1;
 
             /**
              * @brief Exponential Moving Average
              */
-            Indicators::Integral::EMA ema_2;
+            Indicators::Integral::EMA<Candle_T> ema_2;
 
             /**
              * @brief Weighted Moving Average
              */
-            Indicators::Integral::WMA wma_1;
+            Indicators::Integral::WMA<Candle_T> wma_1;
 
             /**
              * @brief Weighted Moving Average
              */
-            Indicators::Integral::WMA wma_2;
+            Indicators::Integral::WMA<Candle_T> wma_2;
 
             /**
              * @brief Simple Moving Average
              * 
              */
-            Indicators::Integral::SMA sma_1;
+            Indicators::Integral::SMA<Candle_T> sma_1;
 
             /**
              * @brief Simple Moving Average
              * 
              */
-            Indicators::Integral::SMA sma_2;
+            Indicators::Integral::SMA<Candle_T> sma_2;
 
             /**
              * @brief Get minimal value 
@@ -905,7 +925,7 @@ namespace Indicators::TradingView
             /**
              * @brief Resolve the Indicator
              */
-            void resolve(Candle &candle)
+            void resolve(Candle_T &candle)
             {
                 double sh;
                 double lon;

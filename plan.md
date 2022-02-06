@@ -4,12 +4,11 @@
   - [ ] Find Resistance and Support line
   - [ ] Fibonacci Retracement and Extensions
 - Trading
-  - [ ] Scalping trading
-  - [ ] Day trading
-  - [ ] Swing trading
-  - [ ] Position trading
+  - [x] Scalping trading
+  - [x] Position trading
 
 ## Application
+- [ ] Docker image
 - [ ] Bot heartbeat
 - [ ] GUI managment
 - [ ] Telebot managment
