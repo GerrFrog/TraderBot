@@ -382,105 +382,6 @@ namespace Workers
                         this->trades.push_back(trade);
                     }
                 }
-
-
-                // if (this->type == "position")
-                // {
-                //     if (this->work)
-                //     {
-                //         if (sell_signal)
-                //         {
-                //             if (this->trade.get_position() == "long")
-                //             {
-                //                 this->close_trade(price);
-
-                //                 // Do something with old trade
-                //                 ret_trade = this->trade;
-
-                //                 this->open_trade(
-                //                     price,
-                //                     buy_signal,
-                //                     sell_signal
-                //                 );
-                //                 cout << "[+] Long trade is closed" << endl;
-                //                 cout << "[+] Open new short trade" << endl;
-                //                 // this->trade.describe_trade();
-                //                 // cout << endl;                               
-                //             }
-                //             return;
-                //         }
-                //         if (buy_signal)
-                //         {
-                //             if (this->trade.get_position() == "short")
-                //             {
-                //                 this->close_trade(price);
-
-                //                 // Do something with old trade
-                //                 ret_trade = this->trade;
-
-                //                 this->open_trade(
-                //                     price,
-                //                     buy_signal,
-                //                     sell_signal
-                //                 );
-                //                 cout << "[+] Short trade is closed" << endl;
-                //                 cout << "[+] Open new long trade" << endl;
-                //                 // this->trade.describe_trade();
-                //                 // cout << endl;
-                //             }
-                //             return;
-                //         }
-                //         return;
-                //     } else {
-                //         this->open_trade(
-                //             price,
-                //             buy_signal,
-                //             sell_signal
-                //         );
-                //         if (buy_signal)
-                //             cout << "[+] Open new long trade" << endl;
-                //         else if (sell_signal)
-                //             cout << "[+] Open new short trade" << endl;
-                //         // this->trade.describe_trade();
-                //         // cout << endl;
-                //         return;
-                //     }
-                // }
-                // if (
-                //     this->type == "scalping"
-                // )
-                // {
-                //     double current_price = price;
-                //     double opened_price = this->trade.get_open_price();
-                //     double percent = (current_price / opened_price - 1) * 100;
-                //     if (this->work)
-                //     {
-                //         if (
-                //             this->target <= percent || 
-                //             this->stop_loss >= percent
-                //         ) {
-                //             this->close_trade(price);
-                //             // Do something with Trade
-                //             ret_trade = this->trade;
-
-                //             cout << "[+] Trade is closed" << endl;
-                //             this->clear_trade(); // Reset options
-                //         }
-                //         return;
-                //     } else {
-                //         if (buy_signal)
-                //         {
-                //             this->open_trade(
-                //                 price,
-                //                 buy_signal,
-                //                 sell_signal
-                //             );
-                //             // Do something with Trade
-                //             cout << "[+] Trade is opened" << endl;
-                //         }
-                //         return;
-                //     }
-                // }
             }
     };
 
@@ -673,28 +574,6 @@ namespace Workers
              * @param key API Key for taapi.io
              */
             void set_taapi_key(const string &key) { this->taapi_key = key; }
-
-            /**
-             * @brief Describe all configured indicators
-             * 
-             * @tparam Candle_T Type of Candle
-             */
-            // template <class Candle_T>
-            // void describe_indicators()
-            // {
-            //     cout << "EMA indicators:" << endl;
-            //     for (Indicators::Integral::EMA<Candle_T>& ema : this->emas)
-            //     {
-            //         nlohmann::json desc = ema.get_description();
-            //         cout << desc << endl;
-            //     }
-            //     cout << "Normalized MACD indicators:" << endl;
-            //     for (Indicators::TradingView::Normalized_MACD<Candle_T>& n_macd : this->normalized_macds)
-            //     {
-            //         nlohmann::json desc = n_macd.get_description();
-            //         cout << desc << endl;
-            //     }
-            // }
 
             /**
              * @brief Initialize indicators 
