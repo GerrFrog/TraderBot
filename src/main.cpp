@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     string symbol = "BTCUSDT";
     string interval = "1d";
     string dir = "../data/";
-    io::CSVReader<11> data_file("../data/ALGOUSDT_15m.csv");
+    io::CSVReader<11> data_file("../data/BTCUSDT_1d.csv");
 
     Tester tester(
         "../data/",
@@ -76,24 +76,24 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    // tester.backtest_heikin_ashi_indicator<Indicators::Integral::RSI<Heikin_Ashi>>(
-    //     indicator_params,
-    //     "BTCUSDT",
-    //     "1d",
-    //     data_file
-    // );
+    tester.backtest_heikin_ashi_indicator<Indicators::TradingView::Normalized_MACD<Heikin_Ashi>>(
+        indicator_params2,
+        "BTCUSDT",
+        "1d",
+        data_file
+    );
     // tester.backtest_strategy<Strategies::EMA_Cross>(
     //     jf["strategies"]["ema_cross"]["1"],
     //     10000.0,
     //     1,
     //     data_file
     // );
-    tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
-        jf["strategies"]["normalized_macd_cross"]["1"],
-        10000.0,
-        1,
-        data_file
-    );
+    // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
+    //     jf["strategies"]["normalized_macd_cross"]["1"],
+    //     10000.0,
+    //     1,
+    //     data_file
+    // );
 
     return EXIT_SUCCESS;
 }

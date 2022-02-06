@@ -529,7 +529,7 @@ namespace Indicators::Integral
     template <class Candle_T>
     class RSI
     {
-        // TODO: Remake RSI. Bad for Heikin_Ashi candle
+        // TODO: Bad for Heikin_Ashi candle
         private:
             /**
              * @brief Description of SMA
@@ -673,6 +673,7 @@ namespace Indicators::TradingView
     template <class Candle_T>
     class Normalized_MACD
     {
+        // TODO: Bad for Heikin_Ashi candle
         private:
             /**
              * @brief Description of Indicator

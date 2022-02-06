@@ -3,5 +3,5 @@ bin/
 trash/
 try/
 notes/technical_analysis/strategies
-data/*.csv
+data
 notes/*
