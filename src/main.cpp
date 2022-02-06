@@ -70,8 +70,8 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::Integral::RSI<Candle>>(
-        indicator_params,
+    tester.backtest_candle_indicator<Indicators::TradingView::Normalized_MACD<Candle>>(
+        indicator_params2,
         "BTCUSDT",
         "1d",
         data_file

@@ -90,7 +90,7 @@ namespace Indicators
              * 
              * @return nlohmann::json
              */
-            nlohmann::json get() { return ret; }
+            nlohmann::json get() { return this->ret; }
 
             /**
              * @brief Resolve the Indicator for new Candle
@@ -98,6 +98,75 @@ namespace Indicators
              * @param candle Candle object
              */
             virtual void resolve(Candle_T &candle) = 0;
+    };
+
+    /**
+     * @brief Abstract class for TradingView Indicators
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class TradingView_Indicator
+    {
+        protected:
+            /**
+             * @brief Description of indicator
+             */
+            nlohmann::json description;
+
+            /**
+             * @brief Period of Indicator
+             */
+            int period;
+
+            /**
+             * @brief Last Candles
+             */
+            vector<Candle_T> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
+
+        public:
+            /**
+             * @brief Construct a new Integral_Indicator object
+             */
+            TradingView_Indicator() = default;
+
+            /**
+             * @brief Destroy the Integral_Indicator object
+             */
+            virtual ~TradingView_Indicator() = default;
+
+            /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
+             * @brief Get the Indicator for last passed Candle
+             * 
+             * @return nlohmann::json
+             */
+            nlohmann::json get() { return this->ret; }
+
+            /**
+             * @brief Resolve the Indicator for new Candle
+             * 
+             * @param candle Candle object
+             */
+            virtual void resolve(Candle_T &candle) = 0;
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            virtual void set_indicator_params(nlohmann::json &indicator_params) = 0;
     };
 }
 
@@ -579,15 +648,10 @@ namespace Indicators::TradingView
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class Normalized_MACD
+    class Normalized_MACD : public Indicators::TradingView_Indicator<Candle_T>
     {
         // TODO: Bad for Heikin_Ashi candle
         private:
-            /**
-             * @brief Description of Indicator
-             */
-            nlohmann::json description;
-
             /**
              * @brief Fast MA
              */
@@ -751,8 +815,10 @@ namespace Indicators::TradingView
              */
             Normalized_MACD(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
+            )
             {
+                this->description = indicator_params;
+
                 this->sma = indicator_params["sma"];
                 this->lma = indicator_params["lma"];
                 this->tsp = indicator_params["tsp"];
@@ -782,14 +848,7 @@ namespace Indicators::TradingView
             /**
              * @brief Destroy the Normalized_MACD object
              */
-            ~Normalized_MACD() = default;
-
-            /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get_description() { return this->description; }
+            virtual ~Normalized_MACD() = default;
 
             /**
              * @brief Set the indicator params 
@@ -879,19 +938,9 @@ namespace Indicators::TradingView
                 }
 
                 this->trigger = this->wma(this->macnorm2s);
-            }
 
-            /**
-             * @brief Get the Normalized MACD
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get()
-            {
-                nlohmann::json res;
-                res["MacNorm"] = this->macnorm2;
-                res["Trigger"] = this->trigger;
-                return res;
+                this->ret["Trigger"] = this->trigger;
+                this->ret["MacNorm"] = this->macnorm2;
             }
     };
 }
