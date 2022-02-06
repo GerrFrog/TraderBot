@@ -48,7 +48,7 @@
                     "symbol": "ALGO/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
                     "interval": "15m",
-                    "candle": "Heikin_Ashi",
+                    "candle": "Candle",
                     "strategy": {
                         "type": "position",
                         "stake_amount": "all",
@@ -61,7 +61,7 @@
                     "normalized_macd": {
                         "type": "Indicators::TradingView",
                         "indicator": "Normalized_MACD",
-                        "candle": "Heikin_Ashi",
+                        "candle": "Candle",
                         "indicator_params": {
                             "interval": "15m",
                             "type": "WMA",

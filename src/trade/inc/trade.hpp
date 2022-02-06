@@ -127,6 +127,19 @@ class Trade
          */
         ~Trade() = default;
 
+        bool operator ==(const Trade& trade)
+        {
+            if (
+                trade.open_price == this->open_price &&
+                trade.position == this->position &&
+                trade.open_time == this->open_time &&
+                trade.stake_amount == this->stake_amount &&
+                trade.symbol_amount == this->symbol_amount &&
+                trade.symbol == this->symbol 
+            ) return true;
+            return false;
+        }
+
         /**
          * @brief Get the symbol of trade
          * 
@@ -205,13 +218,6 @@ class Trade
         void set_id(unsigned int trade_id) { this->id = trade_id; }
 
         /**
-         * @brief Set the active 
-         * 
-         * @param state Trade state
-         */
-        void set_active(bool state) { this->active = state; }
-
-        /**
          * @brief Set the position 
          * 
          * @param pos Position (long/short)
@@ -249,10 +255,28 @@ class Trade
         /**
          * @brief Set the open time 
          */
-        void set_open_time() 
+        void set_open_time(
+            unsigned int id,
+            const string& symbol,
+            const string& position,
+            const string& interval,
+            double stake_amount,
+            double symbol_amount,
+            double open_p
+        ) 
         { 
-            this->open_time = std::chrono::system_clock::now(); 
+            this->active = true;
             this->completed = false;
+
+            this->open_time = std::chrono::system_clock::now(); 
+
+            this->id = id;
+            this->symbol = symbol,
+            this->position = position;
+            this->interval = interval;
+            this->stake_amount = stake_amount;
+            this->symbol_amount = symbol_amount;
+            this->open_price = open_p;
         }
 
         /**
@@ -269,12 +293,12 @@ class Trade
          */
         void set_close_time(double close_p) 
         { 
+            this->active = false;
+            this->completed = true;
+
             this->close_time = std::chrono::system_clock::now(); 
             this->close_price = close_p;
             this->live_time = (close_time - open_time).count();
-
-            this->active = false;
-            this->completed = true;
 
             double percentage = close_p / this->open_price * 100;
             if (this->position == "long")

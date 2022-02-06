@@ -37,13 +37,11 @@ namespace Workers
      */
     class Trader
     {
-        // TODO: Open several trades
-        // TODO: Short position for scalping type of trade (requires several trades)
         private:
             /**
-             * @brief Active Trade for Worker
+             * @brief All trades
              */
-            Trade trade;
+            vector<Trade> trades;
 
             /**
              * @brief Symbol (pair) to trade
@@ -91,41 +89,25 @@ namespace Workers
             double target = 0.0;
 
             /**
-             * @brief Work Trade Status
-             */
-            bool work = false;
-
-            /**
              * @brief Initialize new Trade
              */
             void initialize_trade(
+                Trade &trade,
                 double price = 0,
                 bool buy_signal = false,
                 bool sell_signal = false
             )
             {
                 // TODO: Unique ID for each Trade
-                this->trade.set_id(1);
-                this->trade.set_active(true);
-                this->trade.set_open_time();
-                this->trade.set_symbol(
-                    this->symbol
-                );
+                string position;
                 if (buy_signal)
-                    this->trade.set_position("long");
+                    position = "long";
                 if (sell_signal)
-                    this->trade.set_position("short");
-                this->trade.set_stake_amount(
-                    this->stake_amount
-                );
-                this->trade.set_symbol_amount(
-                    this->symbol_amount
-                );
-                this->trade.set_open_price(
-                    price
-                );
-                this->trade.set_interval(
-                    this->interval
+                    position = "short";
+                trade.set_open_time(
+                    1, this->symbol, position, 
+                    this->interval, this->stake_amount, 
+                    this->symbol_amount, price 
                 );
             }
 
@@ -141,6 +123,7 @@ namespace Workers
              * @brief Open new Trade
              */
             void open_trade(
+                Trade &trade,
                 double open_price,
                 bool buy_signal = false,
                 bool sell_signal = false
@@ -149,23 +132,25 @@ namespace Workers
                 if (!buy_signal && !sell_signal)
                     return;
                 this->initialize_trade(
+                    trade,
                     open_price, 
                     buy_signal,
                     sell_signal
                 );
-                this->work = true;
                 // TODO: Open trade in binance
             }
 
             /**
              * @brief Close current Trade
              */
-            void close_trade(double close_price)
+            void close_trade(
+                Trade &trade,
+                double close_price
+            )
             {
-                this->trade.set_close_time(
+                trade.set_close_time(
                     close_price
                 );
-                this->work = false;
                 // TODO: Close trade in binance
             }
 
@@ -282,125 +267,220 @@ namespace Workers
             double get_stake_amount() { return this->stake_amount; }
 
             /**
-             * @brief Is Trade working?
-             * 
-             * @return true 
-             * @return false 
-             */
-            bool is_work() { return this->work; }
-
-            /**
              * @brief Decide what to do with trade
              * 
              * @param buy_signal Buy signal
              * @param sell_signal Sell signal
-             * @param ret_trade Trade object to return
+             * @param ret_trades Array of returning trades
              * @param price Current price
              */
             void resolve(
                 bool buy_signal, 
                 bool sell_signal, 
-                Trade &ret_trade,
+                vector<Trade> &ret_trades,
                 double price
             )
             {
                 if (this->type == "position")
                 {
-                    if (this->work)
+                    if (sell_signal)
                     {
-                        if (sell_signal)
-                        {
-                            if (this->trade.get_position() == "long")
+                        for (Trade& trade : this->trades)
+                            if (trade.get_position() == "long")
                             {
-                                this->close_trade(price);
-
-                                // Do something with old trade
-                                ret_trade = this->trade;
-
-                                this->open_trade(
-                                    price,
-                                    buy_signal,
-                                    sell_signal
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
                                 );
-                                cout << "[+] Long trade is closed" << endl;
-                                cout << "[+] Open new short trade" << endl;
-                                // this->trade.describe_trade();
-                                // cout << endl;                               
                             }
-                            return;
-                        }
-                        if (buy_signal)
-                        {
-                            if (this->trade.get_position() == "short")
-                            {
-                                this->close_trade(price);
-
-                                // Do something with old trade
-                                ret_trade = this->trade;
-
-                                this->open_trade(
-                                    price,
-                                    buy_signal,
-                                    sell_signal
-                                );
-                                cout << "[+] Short trade is closed" << endl;
-                                cout << "[+] Open new long trade" << endl;
-                                // this->trade.describe_trade();
-                                // cout << endl;
-                            }
-                            return;
-                        }
-                        return;
-                    } else {
+                        Trade trade;
                         this->open_trade(
-                            price,
-                            buy_signal,
-                            sell_signal
+                            trade, price,
+                            buy_signal, sell_signal
                         );
-                        if (buy_signal)
-                            cout << "[+] Open new long trade" << endl;
-                        else if (sell_signal)
-                            cout << "[+] Open new short trade" << endl;
-                        // this->trade.describe_trade();
-                        // cout << endl;
-                        return;
+                        this->trades.push_back(trade);
                     }
-                }
-                if (
-                    this->type == "scalping"
-                )
-                {
-                    double current_price = price;
-                    double opened_price = this->trade.get_open_price();
-                    double percent = (current_price / opened_price - 1) * 100;
-                    if (this->work)
+                    if (buy_signal)
                     {
-                        if (
-                            this->target <= percent || 
-                            this->stop_loss >= percent
-                        ) {
-                            this->close_trade(price);
-                            // Do something with Trade
-                            ret_trade = this->trade;
-
-                            cout << "[+] Trade is closed" << endl;
-                            this->clear_trade(); // Reset options
-                        }
-                        return;
-                    } else {
-                        if (buy_signal)
+                        for (Trade& trade : this->trades)
+                            if (trade.get_position() == "short")
+                            {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                            }
+                        Trade trade;
+                        this->open_trade(
+                            trade, price,
+                            buy_signal, sell_signal
+                        );
+                        this->trades.push_back(trade);
+                    }
+                } else if (this->type == "scalping") {
+                    double opened_price;
+                    double percent;
+                    for (Trade& trade : this->trades)
+                    {
+                        opened_price = trade.get_open_price();
+                        if (trade.get_position() == "long")
                         {
-                            this->open_trade(
-                                price,
-                                buy_signal,
-                                sell_signal
-                            );
-                            // Do something with Trade
-                            cout << "[+] Trade is opened" << endl;
+                            percent = (price / opened_price - 1) * 100;
+                            if (
+                                this->target <= percent ||
+                                this->stop_loss >= percent
+                            ) {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                            }
+                        } else if (trade.get_position() == "short") {
+                            percent = (opened_price / price - 1) * 100;
+                            if (
+                                this->target <= percent ||
+                                this->stop_loss >= percent
+                            ) {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                            }
                         }
-                        return;
+                    }
+                    if (buy_signal || sell_signal)
+                    {
+                        Trade trade;
+                        this->open_trade(
+                            trade, price,
+                            buy_signal, sell_signal
+                        );
+                        this->trades.push_back(trade);
                     }
                 }
+
+
+                // if (this->type == "position")
+                // {
+                //     if (this->work)
+                //     {
+                //         if (sell_signal)
+                //         {
+                //             if (this->trade.get_position() == "long")
+                //             {
+                //                 this->close_trade(price);
+
+                //                 // Do something with old trade
+                //                 ret_trade = this->trade;
+
+                //                 this->open_trade(
+                //                     price,
+                //                     buy_signal,
+                //                     sell_signal
+                //                 );
+                //                 cout << "[+] Long trade is closed" << endl;
+                //                 cout << "[+] Open new short trade" << endl;
+                //                 // this->trade.describe_trade();
+                //                 // cout << endl;                               
+                //             }
+                //             return;
+                //         }
+                //         if (buy_signal)
+                //         {
+                //             if (this->trade.get_position() == "short")
+                //             {
+                //                 this->close_trade(price);
+
+                //                 // Do something with old trade
+                //                 ret_trade = this->trade;
+
+                //                 this->open_trade(
+                //                     price,
+                //                     buy_signal,
+                //                     sell_signal
+                //                 );
+                //                 cout << "[+] Short trade is closed" << endl;
+                //                 cout << "[+] Open new long trade" << endl;
+                //                 // this->trade.describe_trade();
+                //                 // cout << endl;
+                //             }
+                //             return;
+                //         }
+                //         return;
+                //     } else {
+                //         this->open_trade(
+                //             price,
+                //             buy_signal,
+                //             sell_signal
+                //         );
+                //         if (buy_signal)
+                //             cout << "[+] Open new long trade" << endl;
+                //         else if (sell_signal)
+                //             cout << "[+] Open new short trade" << endl;
+                //         // this->trade.describe_trade();
+                //         // cout << endl;
+                //         return;
+                //     }
+                // }
+                // if (
+                //     this->type == "scalping"
+                // )
+                // {
+                //     double current_price = price;
+                //     double opened_price = this->trade.get_open_price();
+                //     double percent = (current_price / opened_price - 1) * 100;
+                //     if (this->work)
+                //     {
+                //         if (
+                //             this->target <= percent || 
+                //             this->stop_loss >= percent
+                //         ) {
+                //             this->close_trade(price);
+                //             // Do something with Trade
+                //             ret_trade = this->trade;
+
+                //             cout << "[+] Trade is closed" << endl;
+                //             this->clear_trade(); // Reset options
+                //         }
+                //         return;
+                //     } else {
+                //         if (buy_signal)
+                //         {
+                //             this->open_trade(
+                //                 price,
+                //                 buy_signal,
+                //                 sell_signal
+                //             );
+                //             // Do something with Trade
+                //             cout << "[+] Trade is opened" << endl;
+                //         }
+                //         return;
+                //     }
+                // }
             }
     };
 

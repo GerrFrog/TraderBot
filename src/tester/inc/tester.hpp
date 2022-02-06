@@ -189,9 +189,9 @@ class Tester
             Workers::Indicator_Watcher& indicator_watcher
         )
         {
-            Trade trade;
             nlohmann::json params;
             double candle_close_price;
+            vector<Trade> trades;
 
             params = indicator_watcher.get(
                 config["strategy_params"],
@@ -209,91 +209,92 @@ class Tester
             trader.resolve(
                 solver.get_buy_signal(),
                 solver.get_sell_signal(),
-                trade,
+                trades,
                 candle_close_price
             );
 
-            
-            if (trade.is_completed())
+            for (Trade& trade : trades) 
             {
-                if (trade.get_position() == "long")
+                if (trade.is_completed())
                 {
-                    this->balance *= (trade.get_per_profit() + 100) / 100;
+                    if (trade.get_position() == "long")
+                    {
+                        this->balance *= (trade.get_per_profit() + 100) / 100;
 
-                    if (this->best_long_trade == 0.0)
-                        this->best_long_trade = trade.get_per_profit();
-                    else
-                        if (this->best_long_trade <= trade.get_per_profit())
+                        if (this->best_long_trade == 0.0)
                             this->best_long_trade = trade.get_per_profit();
-                    if (this->worst_long_trade == 0.0)
-                        this->worst_long_trade = trade.get_per_profit();
-                    else
-                        if (this->worst_long_trade >= trade.get_per_profit())
+                        else
+                            if (this->best_long_trade <= trade.get_per_profit())
+                                this->best_long_trade = trade.get_per_profit();
+                        if (this->worst_long_trade == 0.0)
                             this->worst_long_trade = trade.get_per_profit();
+                        else
+                            if (this->worst_long_trade >= trade.get_per_profit())
+                                this->worst_long_trade = trade.get_per_profit();
 
-                    if (this->balance > this->maximum_balance)
-                        this->maximum_balance = this->balance;
-                    if (this->balance < this->minimal_balance)
-                        this->minimal_balance = this->balance;
+                        if (this->balance > this->maximum_balance)
+                            this->maximum_balance = this->balance;
+                        if (this->balance < this->minimal_balance)
+                            this->minimal_balance = this->balance;
 
-                    this->average_abs_profit_per_trade_long += trade.get_abs_profit();
-                    this->average_per_profit_per_trade_long += trade.get_per_profit();
+                        this->average_abs_profit_per_trade_long += trade.get_abs_profit();
+                        this->average_per_profit_per_trade_long += trade.get_per_profit();
 
-                    this->total_trades_long++;
+                        this->total_trades_long++;
 
-                    if ((trade.get_per_profit() + 100) / 100 >= 1)
-                        this->wins_long++;
-                    else
-                        this->loses_long++;
-                } else if (trade.get_position() == "short") {
-                    this->symbol_balance +=trade.get_abs_profit();
+                        if ((trade.get_per_profit() + 100) / 100 >= 1)
+                            this->wins_long++;
+                        else
+                            this->loses_long++;
+                    } else if (trade.get_position() == "short") {
+                        this->symbol_balance +=trade.get_abs_profit();
 
-                    if (this->best_short_trade == 0.0)
-                        this->best_short_trade = trade.get_per_profit();
-                    else
-                        if (this->best_short_trade <= trade.get_per_profit())
+                        if (this->best_short_trade == 0.0)
                             this->best_short_trade = trade.get_per_profit();
-                    if (this->worst_short_trade == 0.0)
-                        this->worst_short_trade = trade.get_per_profit();
-                    else
-                        if (this->worst_short_trade >= trade.get_per_profit())
+                        else
+                            if (this->best_short_trade <= trade.get_per_profit())
+                                this->best_short_trade = trade.get_per_profit();
+                        if (this->worst_short_trade == 0.0)
                             this->worst_short_trade = trade.get_per_profit();
+                        else
+                            if (this->worst_short_trade >= trade.get_per_profit())
+                                this->worst_short_trade = trade.get_per_profit();
 
-                    if (this->symbol_balance > this->maximum_symbol_balance)
-                        this->maximum_symbol_balance = this->symbol_balance;
-                    if (this->symbol_balance < this->minimal_symbol_balance)
-                        this->minimal_symbol_balance = this->symbol_balance;
+                        if (this->symbol_balance > this->maximum_symbol_balance)
+                            this->maximum_symbol_balance = this->symbol_balance;
+                        if (this->symbol_balance < this->minimal_symbol_balance)
+                            this->minimal_symbol_balance = this->symbol_balance;
 
-                    this->average_abs_profit_per_trade_short += trade.get_abs_profit();
-                    this->average_per_profit_per_trade_short += trade.get_per_profit();
+                        this->average_abs_profit_per_trade_short += trade.get_abs_profit();
+                        this->average_per_profit_per_trade_short += trade.get_per_profit();
 
-                    this->total_trades_short++;
+                        this->total_trades_short++;
 
-                    if ((trade.get_per_profit() + 100) / 100 >= 1)
-                        this->wins_short++;
-                    else
-                        this->loses_short++;
+                        if ((trade.get_per_profit() + 100) / 100 >= 1)
+                            this->wins_short++;
+                        else
+                            this->loses_short++;
+                    }
+
+                    cout 
+                        << "Position: " << trade.get_position() << endl
+                        << "Absolute profit: " << trade.get_abs_profit() << endl
+                        << "Percentage profit: " << trade.get_per_profit() << endl
+                        << "Open price: " << trade.get_open_price() << endl
+                        << "Close price: " << trade.get_close_price() << endl
+                        << "Stake amount: " << trade.get_stake_amount() << endl
+                        << "Symbol amount: " << trade.get_symbol_amount() << endl
+                        << "Current balance: " << this->balance << endl
+                        << "Current symbol balance: " << this->symbol_balance << endl
+                        << endl
+                    ;
                 }
-
-                cout 
-                    << "Position: " << trade.get_position() << endl
-                    << "Absolute profit: " << trade.get_abs_profit() << endl
-                    << "Percentage profit: " << trade.get_per_profit() << endl
-                    << "Open price: " << trade.get_open_price() << endl
-                    << "Close price: " << trade.get_close_price() << endl
-                    << "Stake amount: " << trade.get_stake_amount() << endl
-                    << "Symbol amount: " << trade.get_symbol_amount() << endl
-                    << "Current balance: " << this->balance << endl
-                    << "Current symbol balance: " << this->symbol_balance << endl
-                    << endl
-                ;
             }
 
             cout 
                 << trader.get_name() << endl
                 << trader.get_interval() << endl
                 << trader.get_symbol() << endl
-                << "Work: " << trader.is_work() << endl
                 << "Sell signal: " << solver.get_sell_signal() << endl
                 << "Buy signal: " << solver.get_buy_signal() << endl
                 << "Candle close: " << candle_close_price << endl
