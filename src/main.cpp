@@ -70,12 +70,12 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    // tester.backtest_candle_indicator<Indicators::Integral::RSI<Candle>>(
-    //     indicator_params,
-    //     "BTCUSDT",
-    //     "1d",
-    //     data_file
-    // );
+    tester.backtest_candle_indicator<Indicators::Integral::RSI<Candle>>(
+        indicator_params,
+        "BTCUSDT",
+        "1d",
+        data_file
+    );
     // tester.backtest_heikin_ashi_indicator<Indicators::TradingView::Normalized_MACD<Heikin_Ashi>>(
     //     indicator_params2,
     //     "BTCUSDT",
@@ -88,12 +88,12 @@ int main(int argc, char *argv[]) {
     //     1,
     //     data_file
     // );
-    tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
-        jf["strategies"]["normalized_macd_cross"]["1"],
-        10000.0,
-        1,
-        data_file
-    );
+    // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
+    //     jf["strategies"]["normalized_macd_cross"]["1"],
+    //     10000.0,
+    //     1,
+    //     data_file
+    // );
 
     return EXIT_SUCCESS;
 }

@@ -23,6 +23,85 @@ using std::vector;
 // TODO: Group indicators by "trend", "oscillator", "volatility" and "support/resistance"
 
 /**
+ * @brief Abstract classes for Indicators
+ */
+namespace Indicators
+{
+    /**
+     * @brief Abstract class for Integral Indicators
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class Integral_Indicator
+    {
+        protected:
+            /**
+             * @brief Description of indicator
+             */
+            nlohmann::json description;
+
+            /**
+             * @brief Period of Indicator
+             */
+            int period;
+
+            /**
+             * @brief Last Candles
+             */
+            vector<Candle_T> last_candles;
+
+            /**
+             * @brief Return JSON
+             */
+            nlohmann::json ret;
+
+        public:
+            /**
+             * @brief Construct a new Integral_Indicator object
+             */
+            Integral_Indicator() = default;
+
+            /**
+             * @brief Destroy the Integral_Indicator object
+             */
+            virtual ~Integral_Indicator() = default;
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Get the description 
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->description; }
+
+            /**
+             * @brief Get the Indicator for last passed Candle
+             * 
+             * @return nlohmann::json
+             */
+            nlohmann::json get() { return ret; }
+
+            /**
+             * @brief Resolve the Indicator for new Candle
+             * 
+             * @param candle Candle object
+             */
+            virtual void resolve(Candle_T &candle) = 0;
+    };
+}
+
+/**
  * @brief Requests to taapi.io for indicators values
  */
 namespace Indicators::TAAPI
@@ -83,19 +162,9 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class EMA
+    class EMA : public Indicators::Integral_Indicator<Candle_T>
     {
         private:
-            /**
-             * @brief Description of indicator
-             */
-            nlohmann::json description;
-
-            /**
-             * @brief Period of EMA
-             */
-            int period;
-
             /**
              * @brief Last EMA value
              */
@@ -106,22 +175,11 @@ namespace Indicators::Integral
              */
             double ema = 0.0;
 
-            /**
-             * @brief Last Candles
-             */
-            vector<Candle_T> last_candles;
-
-            /**
-             * @brief Return JSON
-             */
-            nlohmann::json ret;
-
         public:
             /**
              * @brief Construct a new EMA object
              */
-            EMA()
-            { }
+            EMA() = default;
 
             /**
              * @brief Construct a new EMA object
@@ -130,36 +188,16 @@ namespace Indicators::Integral
              */
             EMA(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
+            )
             { 
-                this->period = indicator_params["period"];
-            }
-
-            /**
-             * @brief Set the indicator params 
-             * 
-             * @param indicator_params Parameters for indicator
-             */
-            void set_indicator_params(nlohmann::json &indicator_params)
-            {
                 this->description = indicator_params;
-
                 this->period = indicator_params["period"];
             }
 
             /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
+             * @brief Destroy the EMA object
              */
-            nlohmann::json get_description() { return this->description; }
-
-            /**
-             * @brief Get the EMA for last passed Candle
-             * 
-             * @return nlohmann::json
-             */
-            nlohmann::json get() { return ret; }
+            virtual ~EMA() = default;
 
             /**
              * @brief Resolve the EMA Indicator for new Candle
@@ -172,7 +210,7 @@ namespace Indicators::Integral
                 {
                     double curr = 0;
 
-                    last_candles.push_back(candle);
+                    this->last_candles.push_back(candle);
 
                     for (Candle_T &last_candle : this->last_candles)
                         curr += last_candle.get_close_price() / this->last_candles.size();
@@ -186,7 +224,7 @@ namespace Indicators::Integral
                     ;
                     this->last_ema = this->ema;
                 }
-                ret["value"] = this->ema;
+                this->ret["value"] = this->ema;
             }
     };
 
@@ -196,34 +234,14 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class WMA
+    class WMA : public Indicators::Integral_Indicator<Candle_T>
     {
         // TODO: WMA with different source (close, low, high...)
         private:
             /**
-             * @brief Description of WMA
-             */
-            nlohmann::json description;
-
-            /**
-             * @brief Period of WMA
-             */
-            int period;
-
-            /**
              * @brief WMA for last passed Candle
              */
             double wma = 0.0;
-
-            /**
-             * @brief Last Candles
-             */
-            vector<Candle_T> last_candles;
-
-            /**
-             * @brief Return JSON
-             */
-            nlohmann::json ret;
 
         public:
             /**
@@ -238,41 +256,16 @@ namespace Indicators::Integral
              */
             WMA(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
+            )
             {
+                this->description = indicator_params;
                 this->period = indicator_params["period"];
             }
 
             /**
              * @brief Destroy the WMA object
              */
-            ~WMA() = default;
-
-            /**
-             * @brief Set the indicator params 
-             * 
-             * @param indicator_params Parameters for Indicator
-             */
-            void set_indicator_params(nlohmann::json &indicator_params)
-            {
-                this->description = indicator_params;
-
-                this->period = indicator_params["period"];
-            }
-
-            /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get_description() { return this->description; }
-
-            /**
-             * @brief Get the WMA for last passed Candle
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get() { return this->ret; }
+            virtual ~WMA() = default;
 
             /**
              * @brief Resolve the WMA
@@ -292,7 +285,7 @@ namespace Indicators::Integral
                 for (int i = 0; i < length; i++)
                     this->wma += this->last_candles[i].get_close_price() * (i + 1);
                 this->wma /= length * (length + 1) / 2;
-                ret["value"] = this->wma;
+                this->ret["value"] = this->wma;
                 this->wma = 0;
             }       
     };
@@ -303,34 +296,14 @@ namespace Indicators::Integral
      * @tparam Candle_T Typeo of Candle
      */
     template <class Candle_T>
-    class SMA
+    class SMA : public Indicators::Integral_Indicator<Candle_T>
     {
         // TODO: SMA with different source (close, high, low...)
         private:
             /**
-             * @brief Description of SMA
-             */
-            nlohmann::json description;
-
-            /**
              * @brief SMA for last passed Candle
              */
             double sma = 0.0;
-
-            /**
-             * @brief Period of SMA
-             */
-            int period;
-
-            /**
-             * @brief Last Candles
-             */
-            vector<Candle_T> last_candles;
-
-            /**
-             * @brief Return JSON
-             */
-            nlohmann::json ret;
 
         public:
             /**
@@ -345,41 +318,16 @@ namespace Indicators::Integral
              */
             SMA(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
+            )
             {
+                this->description = indicator_params;
                 this->period = indicator_params["period"];
             }
 
             /**
              * @brief Destroy the SMA object
              */
-            ~SMA() = default;
-
-            /**
-             * @brief Set the indicator params 
-             * 
-             * @param indicator_params Parameters for Indicator
-             */
-            void set_indicator_params(nlohmann::json &indicator_params)
-            {
-                this->description = indicator_params;
-
-                this->period = indicator_params["period"];
-            }
-
-            /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get_description() { return this->description; }
-
-            /**
-             * @brief Get the SMA for last passed Candle
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get() { return ret; }
+            virtual ~SMA() = default;
 
             /**
              * @brief Resolve the SMA
@@ -388,7 +336,7 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < period)
+                if (this->last_candles.size() < this->period)
                 {
                     this->last_candles.push_back(candle);
                 } else {
@@ -410,19 +358,9 @@ namespace Indicators::Integral
      * @param Candle_T Type of Candle
      */
     template <class Candle_T>
-    class SSMA
+    class SSMA : public Indicators::Integral_Indicator<Candle_T>
     {
         private:
-            /**
-             * @brief Description of indicator
-             */
-            nlohmann::json description;
-
-            /**
-             * @brief Period of EMA
-             */
-            int period;
-
             /**
              * @brief Last RMA value
              */
@@ -432,16 +370,6 @@ namespace Indicators::Integral
              * @brief Current RMA for Last passed Candle
              */
             double ssma = 0.0;
-
-            /**
-             * @brief Last Candles
-             */
-            vector<Candle_T> last_candles;
-
-            /**
-             * @brief Return JSON
-             */
-            nlohmann::json ret;
 
         public:
             /**
@@ -456,44 +384,19 @@ namespace Indicators::Integral
              */
             SSMA(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
+            )
             { 
+                this->description = indicator_params;
                 this->period = indicator_params["period"];
             }
 
             /**
              * @brief Destroy the SSMA object
              */
-            ~SSMA() = default;
+            virtual ~SSMA() = default;
 
             /**
-             * @brief Set the indicator params 
-             * 
-             * @param indicator_params Parameters for indicator
-             */
-            void set_indicator_params(nlohmann::json &indicator_params)
-            {
-                this->description = indicator_params;
-
-                this->period = indicator_params["period"];
-            }
-
-            /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get_description() { return this->description; }
-
-            /**
-             * @brief Get the EMA for last passed Candle
-             * 
-             * @return nlohmann::json
-             */
-            nlohmann::json get() { return ret; }
-
-            /**
-             * @brief Resolve the RMA Indicator for new Candle
+             * @brief Resolve the SSMA Indicator for new Candle
              * 
              * @param candle Candle object
              */
@@ -503,7 +406,7 @@ namespace Indicators::Integral
                 {
                     double curr = 0;
 
-                    last_candles.push_back(candle);
+                    this->last_candles.push_back(candle);
 
                     for (Candle_T &last_candle : this->last_candles)
                         curr += last_candle.get_close_price() / this->last_candles.size();
@@ -517,7 +420,7 @@ namespace Indicators::Integral
                     ;
                     this->last_ssma = this->ssma;
                 }
-                ret["value"] = this->ssma;
+                this->ret["value"] = this->ssma;
             }
     };
 
@@ -527,34 +430,14 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class RSI
+    class RSI : public Indicators::Integral_Indicator<Candle_T>
     {
         // TODO: Bad for Heikin_Ashi candle
         private:
             /**
-             * @brief Description of SMA
-             */
-            nlohmann::json description;
-
-            /**
              * @brief RSI for last passed Candle
              */
             double rsi = 0.0;
-
-            /**
-             * @brief Period of SMA
-             */
-            int period;
-
-            /**
-             * @brief Last Candles
-             */
-            vector<Candle_T> last_candles;
-
-            /**
-             * @brief Return JSON
-             */
-            nlohmann::json ret;
 
             /**
              * @brief Average of All up moves 
@@ -579,40 +462,16 @@ namespace Indicators::Integral
              */
             RSI(
                 nlohmann::json &indicator_params
-            ) : description(indicator_params)
-            {
-                this->period = indicator_params["period"];
-            }
-
-            /**
-             * @brief Destroy the RSI object
-             */
-            ~RSI() = default;
-
-            /**
-             * @brief Set the indicator params 
-             * 
-             * @param indicator_params Parameters for Indicator
-             */
-            void set_indicator_params(nlohmann::json &indicator_params)
+            )
             {
                 this->description = indicator_params;
                 this->period = indicator_params["period"];
             }
 
             /**
-             * @brief Get the description 
-             * 
-             * @return nlohmann::json 
+             * @brief Destroy the RSI object
              */
-            nlohmann::json get_description() { return this->description; }
-
-            /**
-             * @brief Get the SMA for last passed Candle
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get() { return ret; }
+            virtual ~RSI() = default;
 
             /**
              * @brief Resolve the RSI
@@ -623,7 +482,7 @@ namespace Indicators::Integral
             {
                 double rs;
                 
-                if (this->last_candles.size() < period)
+                if (this->last_candles.size() < this->period)
                 {
                     this->last_candles.push_back(candle);
 
@@ -639,7 +498,7 @@ namespace Indicators::Integral
                     this->avgGain /= this->last_candles.size();
                     this->avgLoss /= this->last_candles.size();
 
-                    ret["value"] = NULL;                    
+                    this->ret["value"] = NULL;                    
                 } else {
                     if (candle.is_green())
                     {
@@ -653,7 +512,56 @@ namespace Indicators::Integral
 
                 rs = this->avgGain / this->avgLoss;
 
-                ret["value"] = 100 - (100 / (1 + rs));
+                this->ret["value"] = 100 - (100 / (1 + rs));
+            }
+    };
+
+    /**
+     * @brief Average Directional Index
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class ADX : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief Current ADX value
+             */
+            double adx;
+
+        public:
+            /**
+             * @brief Construct a new ADX object
+             */
+            ADX() = default; 
+
+            /**
+             * @brief Construct a new ADX object
+             * 
+             * @param indicator_params Parameters for Indicator
+             */
+            ADX(
+                nlohmann::json &indicator_params
+            )
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+            
+            /**
+             * @brief Destroy the ADX object
+             */
+            virtual ~ADX() = default;
+
+            /**
+             * @brief Resolve ADX Indicator
+             * 
+             * @param candle Candle object
+             */
+            void resolve(Candle_T &candle)
+            {
+
             }
     };
 }
