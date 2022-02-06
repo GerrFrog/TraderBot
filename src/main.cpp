@@ -55,9 +55,12 @@ int main(int argc, char *argv[]) {
         {"tsp", 9},
         {"np", 50}
     };
+
     string symbol = "BTCUSDT";
     string interval = "1d";
     string dir = "../data/";
+    io::CSVReader<11> data_file("../data/ALGOUSDT_15m.csv");
+
     Tester tester(
         "../data/",
         taapi_key
@@ -65,31 +68,31 @@ int main(int argc, char *argv[]) {
     // tester.backtest_candle(
     //     "BTCUSDT",
     //     "1d",
-    //     dir
+    //     data_file
     // );
-    // tester.backtest_candle_indicator<Indicators::TradingView::Normalized_MACD<Candle>>(
-    //     indicator_params2,
-    //     "BTCUSDT",
-    //     "1d",
-    //     dir 
-    // );
-    // tester.backtest_heikin_ashi_indicator<Indicators::Integral::EMA<Heikin_Ashi>>(
+    // tester.backtest_candle_indicator<Indicators::Integral::RSI<Candle>>(
     //     indicator_params,
     //     "BTCUSDT",
     //     "1d",
-    //     dir
+    //     data_file
+    // );
+    // tester.backtest_heikin_ashi_indicator<Indicators::Integral::RSI<Heikin_Ashi>>(
+    //     indicator_params,
+    //     "BTCUSDT",
+    //     "1d",
+    //     data_file
     // );
     // tester.backtest_strategy<Strategies::EMA_Cross>(
     //     jf["strategies"]["ema_cross"]["1"],
     //     10000.0,
     //     1,
-    //     dir
+    //     data_file
     // );
     tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
         jf["strategies"]["normalized_macd_cross"]["1"],
         10000.0,
         1,
-        dir
+        data_file
     );
 
     return EXIT_SUCCESS;

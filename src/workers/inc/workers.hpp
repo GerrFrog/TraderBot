@@ -987,16 +987,6 @@ namespace Workers
             Heikin_Ashi heikin_ashi;
 
             /**
-             * @brief Pointer to file with candles data
-             */
-            io::CSVReader<11> data_file{"../data/BTCUSDT_1d.csv"};
-
-            /**
-             * @brief Filename with candles data
-             */
-            string filename;
-
-            /**
              * @brief Symbol (pair)
              */
             string symbol;
@@ -1027,18 +1017,12 @@ namespace Workers
              * 
              * @param symbol Symbol (pair)
              * @param interval Interval (timeframe)
-             * @param data_file_root Relative path to directory with data
              */
             Candle_Watcher(
                 const string &symbol,
-                const string &interval,
-                const string &data_file_root
-            ) : symbol(symbol), interval(interval),
-                filename(data_file_root)
-            { 
-                // io::CSVReader<11> file(this->filename);
-                // this->data_file = file;
-            }
+                const string &interval
+            ) : symbol(symbol), interval(interval)
+            { }
 
             /**
              * @brief Destroy the Candle_Watcher object
@@ -1050,35 +1034,30 @@ namespace Workers
              * 
              * @param symbol Symbol (pair)
              * @param interval Interval (timeframe)
-             * @param data_file_root Relative path to directory with data
              */
             void initialize(
                 const string &symbol,
-                const string &interval,
-                const string &data_file_root
+                const string &interval
             )
             {
                 this->symbol = symbol;
                 this->interval = interval;
-
-                this->filename = data_file_root;
-                this->filename += symbol + '_' + interval + ".csv";
-
-                // io::CSVReader<11> file(this->filename);
-                // this->data_file = file;
             }
 
             /**
              * @brief Read file once to update candles
              */
-            bool read_file_once()
+            bool read_file_once(
+                io::CSVReader<11> &data_file
+            )
             {
                 string open_price, high_price, low_price, close_price,
                     volume, quote, trades_count, tbbav, tbqav,
                     open_time, close_time
                 ;
                 if (
-                    this->data_file.read_row(
+                    data_file.read_row(
+                    // this->data_file->read_row(
                         open_time, open_price, high_price, 
                         low_price, close_price, volume, close_time, 
                         quote, trades_count, tbbav, tbqav
@@ -1178,378 +1157,6 @@ namespace Workers
             }
     };
 
-    /**
-     * @brief Responsable for Indicators and Candles
-     */
-    // class Watcher2
-    // {
-    //     private:
-    //         /**
-    //          * @brief Standard Candle object
-    //          */
-    //         Candle candle;
-
-    //         /**
-    //          * @brief Heikin Ashi Candle object
-    //          */
-    //         Heikin_Ashi heikin_ashi;
-
-    //         /**
-    //          * @brief Previous open price for Heikin Ashi Candle
-    //          */
-    //         double previous_open = 0.0;
-
-    //         /**
-    //          * @brief Previous close price for Heikin Ashi Candle
-    //          */
-    //         double previous_close = 0.0;
-
-    //         /**
-    //          * @brief All type of EMA indicators
-    //          */
-    //         vector<Indicators::Integral::EMA> emas;
-
-    //         /**
-    //          * @brief All type of WMA indicators
-    //          */
-    //         vector<Indicators::Integral::WMA> wmas;
-
-    //         /**
-    //          * @brief All type of SMA indicators
-    //          */
-    //         vector<Indicators::Integral::SMA> smas;
-
-    //         /**
-    //          * @brief All type of RSI indicators
-    //          */
-    //         vector<Indicators::Integral::RSI> rsis;
-
-    //         /**
-    //          * @brief All type of Normalized MACD indicators
-    //          */
-    //         vector<Indicators::TradingView::Normalized_MACD> normalized_macds;
-
-    //         /**
-    //          * @brief All strategies in config
-    //          */
-    //         nlohmann::json strategies;
-
-    //         /**
-    //          * @brief Base URL of taapi.io
-    //          */
-    //         string taapi_url = "https://api.taapi.io/";
-
-    //         /**
-    //          * @brief API Key for taapi.io
-    //          */
-    //         string taapi_key;
-
-    //     public:
-    //         /**
-    //          * @brief Construct a new Watcher object
-    //          */
-    //         Watcher() = default;
-
-    //         /**
-    //          * @brief Construct a new Watcher object
-    //          * 
-    //          * @param strategies All strategies in config
-    //          * @param taapi_key API Key for taapi.io
-    //          */
-    //         Watcher(
-    //             nlohmann::json &strategies,
-    //             const string &taapi_key
-    //         ) : taapi_key(taapi_key), strategies(strategies)
-    //         { }
-
-    //         /**
-    //          * @brief Destroy the Watcher object
-    //          */
-    //         ~Watcher() = default;
-
-    //         /**
-    //          * @brief Set the strategies 
-    //          * 
-    //          * @param strat Strategies in config
-    //          */
-    //         void set_strategies(nlohmann::json &strat) { this->strategies = strat; }
-
-    //         /**
-    //          * @brief Set the taapi key 
-    //          * 
-    //          * @param key API Key for taapi.io
-    //          */
-    //         void set_taapi_key(const string &key) { this->taapi_key = key; }
-
-    //         /**
-    //          * @brief Get the candle
-    //          * 
-    //          * @return Candle 
-    //          */
-    //         Candle get_candle() { return this->candle; }
-
-    //         /**
-    //          * @brief Get the Heikin Ashi 
-    //          * 
-    //          * @return Heikin_Ashi 
-    //          */
-    //         Heikin_Ashi get_heikin_ashi() { return this->heikin_ashi; }
-
-    //         /**
-    //          * @brief Describe all configured indicators
-    //          */
-    //         void describe_indicators()
-    //         {
-    //             cout << "EMA indicators:" << endl;
-    //             for (Indicators::Integral::EMA& ema : this->emas)
-    //             {
-    //                 nlohmann::json desc = ema.get_description();
-    //                 cout << desc << endl;
-    //             }
-    //             cout << "Normalized MACD indicators:" << endl;
-    //             for (Indicators::TradingView::Normalized_MACD& n_macd : this->normalized_macds)
-    //             {
-    //                 nlohmann::json desc = n_macd.get_description();
-    //                 cout << desc << endl;
-    //             }
-    //         }
-
-    //         /**
-    //          * @brief Initialize indicators 
-    //          */
-    //         void initialize_indicators()
-    //         {
-    //             // TODO: Remake without try-catch. We pass "strategies" or "strategies.strategy.1.strategy_params" from config
-    //             try {
-    //                 for (auto& [key1, val1] : this->strategies.items())
-    //                     for (auto& [key2, val2] : val1.items())
-    //                     {
-    //                         for (auto& [key3, val3] : val2["strategy_params"].items())
-    //                         {
-    //                             if (val3["indicator"] == "EMA")
-    //                                 this->emas.push_back(
-    //                                     Indicators::Integral::EMA(
-    //                                         val3["indicator_params"]
-    //                                     )
-    //                                 );
-    //                             if (val3["indicator"] == "Normalized_MACD")
-    //                                 this->normalized_macds.push_back(
-    //                                     Indicators::TradingView::Normalized_MACD(
-    //                                         val3["indicator_params"]
-    //                                     )
-    //                                 );
-    //                             if (val3["indicator"] == "WMA")
-    //                                 this->wmas.push_back(
-    //                                     Indicators::Integral::WMA(
-    //                                         val3["indicator_params"]
-    //                                     )
-    //                                 );
-    //                             if (val3["indicator"] == "SMA")
-    //                                 this->smas.push_back(
-    //                                     Indicators::Integral::SMA(
-    //                                         val3["indicator_params"]
-    //                                     )
-    //                                 );
-    //                             if (val3["indicator"] == "RSI")
-    //                                 this->rsis.push_back(
-    //                                     Indicators::Integral::RSI(
-    //                                         val3["indicator_params"]
-    //                                     )
-    //                                 );
-    //                             // if () // Other indicator
-    //                         }
-    //                     }
-    //             } catch(nlohmann::detail::type_error& exp) {
-    //                 cout << exp.what() << endl;
-    //                 for (auto& [key, val] : this->strategies.items())
-    //                 {
-    //                     if (val["indicator"] == "EMA")
-    //                         this->emas.push_back(
-    //                             Indicators::Integral::EMA(
-    //                                 val["indicator_params"]
-    //                             )
-    //                         );
-    //                     if (val["indicator"] == "WMA")
-    //                         this->wmas.push_back(
-    //                             Indicators::Integral::WMA(
-    //                                 val["indicator_params"]
-    //                             )
-    //                         );
-    //                     if (val["indicator"] == "SMA")
-    //                         this->smas.push_back(
-    //                             Indicators::Integral::SMA(
-    //                                 val["indicator_params"]
-    //                             )
-    //                         );
-    //                     if (val["indicator"] == "RSI")
-    //                         this->rsis.push_back(
-    //                             Indicators::Integral::RSI(
-    //                                 val["indicator_params"]
-    //                             )
-    //                         );
-    //                     if (val["indicator"] == "Normalized_MACD")
-    //                         this->normalized_macds.push_back(
-    //                             Indicators::TradingView::Normalized_MACD(
-    //                                 val["indicator_params"]
-    //                             )
-    //                         );
-    //                     // if () // Other indicator
-    //                 }
-    //             }
-    //             this->describe_indicators();
-    //         }
-
-    //         /**
-    //          * @brief When next candle is set Watcher should be resolved
-    //          */
-    //         void resolve(Candle &candle)
-    //         {
-    //             this->candle = candle;
-    //             if (this->previous_close == 0 || this->previous_open == 0)
-    //                 this->heikin_ashi.construct(
-    //                     candle,
-    //                     candle.get_close_price(),
-    //                     candle.get_open_price()
-    //                 );
-    //             else 
-    //                 this->heikin_ashi.construct(
-    //                     candle,
-    //                     this->previous_close,
-    //                     this->previous_open
-    //                 );
-    //             this->previous_close = heikin_ashi.get_close_price();
-    //             this->previous_open = heikin_ashi.get_open_price();
-
-    //             // TODO: If Heikin Ashi Candle?
-
-    //             for (Indicators::Integral::EMA& ema : this->emas)
-    //                 ema.resolve(candle);
-    //             for (Indicators::Integral::WMA& wma : this->wmas)
-    //                 wma.resolve(candle);
-    //             for (Indicators::Integral::SMA& sma : this->smas)
-    //                 sma.resolve(candle);
-    //             for (Indicators::Integral::RSI& rsi : this->rsis)
-    //                 rsi.resolve(candle);
-    //             for (Indicators::TradingView::Normalized_MACD& n_macd : this->normalized_macds)
-    //                 n_macd.resolve(candle);
-    //         }
-
-    //         /**
-    //          * @brief Get values for specified indicators
-    //          * 
-    //          * @param strategy_params strategy_params in config
-    //          * @param symbol Symbol (pair) to trade
-    //          * @param backtest If backtest all Indicators will be calculated as Integral
-    //          * @return nlohmann::json
-    //          */
-    //         nlohmann::json get(
-    //             nlohmann::json &strategy_params, 
-    //             const string &symbol,
-    //             bool backtest = false
-    //         )
-    //         {
-    //             nlohmann::json params;
-
-    //             for (auto& [key, val] : strategy_params.items())
-    //             {
-    //                 string indicator = val["indicator"];
-    //                 string type = val["type"];
-
-    //                 // TODO: Create instance from config. Without if-else
-    //                 if (type == "Indicators::TAAPI" && !backtest)
-    //                 {
-    //                     if (indicator == "EMA")
-    //                     {
-    //                     again:
-    //                         try {
-    //                             Indicators::TAAPI::EMA ema;
-    //                             params[key] = ema.get(
-    //                                 this->taapi_url,
-    //                                 this->taapi_key, symbol,
-    //                                 val["indicator_params"]["interval"], 
-    //                                 val["indicator_params"]
-    //                             );
-    //                         } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-    //                             cout << exp.what() << endl;
-    //                             // TODO: Pass delay from config
-    //                             std::this_thread::sleep_for(
-    //                                 std::chrono::seconds(
-    //                                     15
-    //                                 )
-    //                             );
-    //                             goto again;
-    //                         }
-    //                     }
-    //                 }
-    //                 if (
-    //                     type == "Indicators::Integral" || 
-    //                     backtest
-    //                 )
-    //                 {
-    //                     if (indicator == "EMA")
-    //                     {
-    //                         for (auto& [key, val] : strategy_params.items())
-    //                         {
-    //                             for (Indicators::Integral::EMA &ema : this->emas)
-    //                             {
-    //                                 if (ema.get_description() == val["indicator_params"])
-    //                                     params[key] = ema.get();
-    //                             }
-    //                         }
-    //                     }
-    //                     if (indicator == "WMA")
-    //                     {
-    //                         for (auto& [key, val] : strategy_params.items())
-    //                         {
-    //                             for (Indicators::Integral::WMA &wma : this->wmas)
-    //                             {
-    //                                 if (wma.get_description() == val["indicator_params"])
-    //                                     params[key] = wma.get();
-    //                             }
-    //                         }
-    //                     }
-    //                     if (indicator == "SMA")
-    //                     {
-    //                         for (auto& [key, val] : strategy_params.items())
-    //                         {
-    //                             for (Indicators::Integral::SMA &sma : this->smas)
-    //                             {
-    //                                 if (sma.get_description() == val["indicator_params"])
-    //                                     params[key] = sma.get();
-    //                             }
-    //                         }
-    //                     }
-    //                     if (indicator == "RSI")
-    //                     {
-    //                         for (auto& [key, val] : strategy_params.items())
-    //                         {
-    //                             for (Indicators::Integral::RSI &rsi : this->rsis)
-    //                             {
-    //                                 if (rsi.get_description() == val["indicator_params"])
-    //                                     params[key] = rsi.get();
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //                 if (
-    //                     type == "Indicators::TradingView" || 
-    //                     backtest
-    //                 )
-    //                 {
-    //                     if (indicator == "Normalized_MACD")
-    //                     {
-    //                         for (Indicators::TradingView::Normalized_MACD &n_macd : this->normalized_macds)
-    //                         {
-    //                             if (n_macd.get_description() == val["indicator_params"])
-    //                                 params[key] = n_macd.get();
-    //                         }
-    //                     }
-    //                 }
-    //             }
-
-    //             return params;
-    //         }
-    // };
 }
 
 

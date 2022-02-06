@@ -1,1 +1,0 @@
-# Fundumental Analysis

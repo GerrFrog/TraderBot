@@ -320,30 +320,26 @@ class Tester
         ~Tester() = default;
 
         /**
-         * @brief Backtest for Candle
+         * @brief Backtest for Candles
          * 
-         * @param candle_type Type of candle
          * @param symbol Symbol (pair)
-         * @param timeframe Timeframe (interval)
+         * @param interval Interval (timeframe)
+         * @param data_file CSV Data file object
          */
         void backtest_candle(
             const string &symbol,
             const string &interval,
-            const string &data_file_root
+            io::CSVReader<11> &data_file
         ) {
             auto start_time = std::chrono::high_resolution_clock::now();
 
             Heikin_Ashi heikin_ashi;
             Candle candle;
 
-            Workers::Candle_Watcher candle_watcher(
-                symbol, interval,
-                data_file_root
-            );
+            Workers::Candle_Watcher candle_watcher(symbol, interval);
 
-                cout << "HERE" << endl;
-            candle_watcher.read_file_once();
-            while(candle_watcher.read_file_once())
+            candle_watcher.read_file_once(data_file);
+            while(candle_watcher.read_file_once(data_file))
             {
                 heikin_ashi = candle_watcher.get_heikin_ashi();
                 candle = candle_watcher.get_candle();
@@ -378,21 +374,17 @@ class Tester
          * @param indicator_params Indicator params
          * @param symbol Symbol to test indicator
          * @param interval Interval of candles
-         * @param data_file_root Relative path to data file
+         * @param data_file CSV Data file object
          */
         template <class Indicator>
         void backtest_candle_indicator(
-            // Indicator &indicator,
             nlohmann::json &config,
             const string &symbol,
             const string &interval,
-            const string &data_file_root
+            io::CSVReader<11> &data_file
         )
         {
-            Workers::Candle_Watcher candle_watcher(
-                symbol, interval,
-                data_file_root
-            );
+            Workers::Candle_Watcher candle_watcher(symbol, interval);
 
             Candle candle;
 
@@ -406,8 +398,8 @@ class Tester
 
             indicator.set_indicator_params(config);
 
-            candle_watcher.read_file_once();
-            while(candle_watcher.read_file_once())
+            candle_watcher.read_file_once(data_file);
+            while(candle_watcher.read_file_once(data_file))
             {
                 close_price = candle_watcher.get_candle().get_close_price();
                 candle = candle_watcher.get_candle();
@@ -440,7 +432,7 @@ class Tester
          * @param indicator_params Indicator params
          * @param symbol Symbol to test indicator
          * @param interval Interval of candles
-         * @param data_file_root Relative path to data file
+         * @param data_file CSV Data file object
          */
         template <class Indicator>
         void backtest_heikin_ashi_indicator(
@@ -448,13 +440,10 @@ class Tester
             nlohmann::json &config,
             const string &symbol,
             const string &interval,
-            const string &data_file_root
+            io::CSVReader<11> &data_file
         )
         {
-            Workers::Candle_Watcher candle_watcher(
-                symbol, interval,
-                data_file_root
-            );
+            Workers::Candle_Watcher candle_watcher(symbol, interval);
 
             Heikin_Ashi candle;
 
@@ -468,8 +457,8 @@ class Tester
 
             indicator.set_indicator_params(config);
 
-            candle_watcher.read_file_once();
-            while(candle_watcher.read_file_once())
+            candle_watcher.read_file_once(data_file);
+            while(candle_watcher.read_file_once(data_file))
             {
                 close_price = candle_watcher.get_heikin_ashi().get_close_price();
                 candle = candle_watcher.get_heikin_ashi();
@@ -502,14 +491,14 @@ class Tester
          * @param config Config for strategy
          * @param start_balance Start balance
          * @param start_symbol Start balance of symbols
-         * @param data_file_root Relative path to data file
+         * @param data_file CSV Data file object
          */
         template <class Strategy>
         void backtest_strategy(
             nlohmann::json &config,
             double start_balance,
             double start_symbols,
-            const string &data_file_root
+            io::CSVReader<11> &data_file
         ) 
         {
             string interval = config["trader_params"]["interval"];
@@ -519,11 +508,7 @@ class Tester
             Heikin_Ashi heikin_ashi;
 
             Workers::Indicator_Watcher indicator_watcher;
-            Workers::Candle_Watcher candle_watcher(
-                symbol,
-                interval,
-                data_file_root
-            );
+            Workers::Candle_Watcher candle_watcher(symbol, interval);
             Workers::Trader trader(
                 config["trader_params"]
             );
@@ -548,8 +533,8 @@ class Tester
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
-            candle_watcher.read_file_once();
-            while(candle_watcher.read_file_once())
+            candle_watcher.read_file_once(data_file);
+            while(candle_watcher.read_file_once(data_file))
             {
                 candle = candle_watcher.get_candle();
                 heikin_ashi = candle_watcher.get_heikin_ashi();

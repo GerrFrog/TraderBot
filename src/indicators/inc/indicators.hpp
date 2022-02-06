@@ -8,6 +8,7 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../request/inc/request.hpp"
@@ -672,7 +673,6 @@ namespace Indicators::TradingView
     template <class Candle_T>
     class Normalized_MACD
     {
-        // TODO: Problems with Trigger
         private:
             /**
              * @brief Description of Indicator
@@ -822,16 +822,11 @@ namespace Indicators::TradingView
              */
             double wma(vector<double> &source)
             {
-                double norm = 0.0;
-                double sum = 0.0;
                 int length = source.size();
-                for (int i = 0; i < length - 1; i++)
-                {
-                    double weight = (length - i) * length;
-                    norm += weight;
-                    sum += source[i] * weight;
-                }
-                return sum / norm;
+                double norm = 0.0;
+                for (int i = length - 1; i >= 0; i--)
+                    norm += source[i] * (i + 1);
+                return norm / (length * (length + 1) / 2);
             }
 
         public:
