@@ -889,6 +889,254 @@ namespace Indicators::Integral
     };
 
     /**
+     * @brief Directional Movement Index
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class DMI : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief Type of smoothing for DMI
+             */
+            string smoothed;
+
+            /**
+             * @brief Last value of +DM for smoothing
+             */
+            double last_dm_plus = 0;
+
+            /**
+             * @brief Last value of -DM for smoothing
+             */
+            double last_dm_minus = 0;
+
+            /**
+             * @brief Array of UpMoves
+             */
+            vector<double> upmoves;
+
+            /**
+             * @brief Array of DownMoves
+             */
+            vector<double> downmoves;
+
+            /**
+             * @brief Array of ATRs
+             */
+            vector<double> atrs;
+
+            /**
+             * @brief Average True Range indicator
+             */
+            Indicators::Integral::ATR<Candle_T> atr;
+
+            /**
+             * @brief Calculate EMA
+             * 
+             * @param last_emas Last EMAs values
+             * @param last_ema Last EMA value
+             * @param param Parameter
+             * @return double 
+             */
+            double ema(vector<double> &last_emas, double &last_ema, double param)
+            {
+                double curr = 0;
+
+                if (last_emas.size() < this->period)
+                {
+                    for (double &last_val : last_emas)
+                        curr += last_val / last_emas.size();
+
+                    last_ema = curr;
+                    
+                    return curr;
+                } else {
+                    curr = 
+                        (param - last_ema) * 2.0
+                        / (this->period + 1.0) + last_ema
+                    ;
+                    last_ema = curr;
+
+                    return curr;
+                }
+            }
+
+            /**
+             * @brief Calculate Smoothed
+             * 
+             * @param values Array of values
+             * @param param Parameter
+             * @return double 
+             */
+            double smooth(vector<double> &values, double param)
+            {
+                double smoothed = 0;
+                for (double& val : values)
+                    smoothed += val;
+                return (smoothed - smoothed / values.size() + param);
+            }
+        
+            /**
+             * @brief Calculate RMA
+             * 
+             * @param param Parameter
+             * @return double 
+             */
+            double rma(vector<double> &last_rmas, double &last_rma, double param)
+            {
+                double curr = 0;
+                if (last_rmas.size() < this->period)
+                {
+                    last_rmas.push_back(param);
+
+                    for (double &par : last_rmas)
+                        curr += par / last_rmas.size();
+
+                    last_rma = curr;
+                    return curr;
+                } else {
+                    curr = 
+                        ((last_rma * this->period) - last_rma + param)
+                        / this->period
+                    ;
+                    last_rma = curr;
+                    return curr;
+                }
+            } 
+
+        public:
+            /**
+             * @brief Construct a new DMI object
+             */
+            DMI() = default;
+
+            /**
+             * @brief Construct a new DMI object
+             * 
+             * @param indicator_params 
+             */
+            DMI(
+                nlohmann::json &indicator_params
+            )
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+                this->smoothed = indicator_params["smoothed"];
+
+                nlohmann::json atr_params = {
+                    {"period", indicator_params["period"]},
+                    {"interval", indicator_params["interval"]},
+                    {"smoothed", "RMA"}
+                };
+                this->atr.set_indicator_params(atr_params);
+            }
+
+            /**
+             * @brief Destroy the DM object
+             */
+            ~DMI() = default;
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+                this->smoothed = indicator_params["smoothed"];
+
+                nlohmann::json atr_params = {
+                    {"period", indicator_params["period"]},
+                    {"interval", indicator_params["interval"]},
+                    {"smoothed", "RMA"}
+                };
+                this->atr.set_indicator_params(atr_params);
+            }
+
+            /**
+             * @brief Resolve DMI Indicator
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle_T &candle)
+            {
+                double upmove;
+                double downmove;
+                double atr_value;
+
+                if (this->last_candles.size() == 0)
+                {
+                    this->last_candles.push_back(candle);
+                    this->ret["+DI"] = NULL;
+                    this->ret["-DI"] = NULL;
+                    return;
+                }
+
+                this->atr.resolve(candle);
+                atr_value = atr.get()["ATR"];
+
+                upmove = candle.get_high_price() - this->last_candles.back().get_high_price();
+                downmove = this->last_candles.back().get_low_price() - candle.get_low_price();
+
+                if (upmove < 0 && downmove < 0)
+                {
+                    upmove = 0;
+                    downmove = 0;
+                } else if (upmove > downmove) {
+                    upmove = upmove;
+                    downmove = 0;
+                } else if (downmove > upmove) {
+                    downmove = downmove;
+                    upmove = 0;
+                }
+
+                if (this->upmoves.size() < this->period)
+                {
+                    this->upmoves.push_back(upmove);
+                    this->downmoves.push_back(downmove);
+                    this->atrs.push_back(atr_value);
+                } else {
+                    this->upmoves.push_back(upmove);
+                    this->downmoves.push_back(downmove);
+                    this->atrs.push_back(atr_value);
+                    
+                    this->upmoves.erase(this->upmoves.begin());
+                    this->downmoves.erase(this->downmoves.begin());
+                    this->atrs.erase(this->atrs.begin());
+                }
+
+                // TODO: Remake with function pointer
+                if (this->smoothed == "RMA")
+                {
+                    this->ret["+DI"] = this->rma(this->upmoves, this->last_dm_plus, upmove) / 
+                        atr_value * 100;
+                    this->ret["-DI"] = this->rma(this->downmoves, this->last_dm_minus, downmove) / 
+                        atr_value * 100;
+                } else if (this->smoothed == "EMA") {
+                    this->ret["+DI"] = this->ema(this->upmoves, this->last_dm_plus, upmove) / 
+                        atr_value * 100;
+                    this->ret["-DI"] = this->ema(this->downmoves, this->last_dm_minus, downmove) / 
+                        atr_value * 100;
+                } else if (this->smoothed == "Smooth") {
+                    this->ret["+DI"] = this->smooth(this->upmoves, upmove) / 
+                        atr_value * 100;
+                    this->ret["-DI"] = this->smooth(this->downmoves, downmove) / 
+                        atr_value * 100;
+                }
+
+                this->last_candles.push_back(candle);
+
+                this->last_candles.erase(
+                    this->last_candles.begin()
+                );
+            }
+    };
+
+    /**
      * @brief Average Directional Index
      * 
      * @tparam Candle_T Type of Candle
@@ -954,6 +1202,8 @@ namespace Indicators::Integral
                     - this->last_candles.pop_back().get_high_price();
                 this->dm_minus = this->last_candles.pop_back().get_low_price()
                     - candle.get_low_price();
+                this->dm_plus = (this->dm_plus > this->dm_minus) ?
+                    this->dm_plus : 0;
 
                 if (this->last_candles.size() < this->period)
                 {

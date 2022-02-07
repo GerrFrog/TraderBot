@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::Integral::ATR<Candle>>(
+    tester.backtest_candle_indicator<Indicators::Integral::DMI<Candle>>(
         indicator_params,
         "BTCUSDT",
         "1d",
