@@ -586,6 +586,309 @@ namespace Indicators::Integral
     };
 
     /**
+     * @brief True Range indicator
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class TR : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief True Range
+             */
+            double tr = 0.0;
+
+            /**
+             * @brief Find Maximum 3 number
+             * 
+             * @param param1 Number 1
+             * @param param2 Number 2
+             * @param param3 Number 3
+             * @return double 
+             */
+            double max(double param1, double param2, double param3)
+            {
+                return (param1 > param2) ? 
+                       ((param1 > param3) ? param1 : param3) :
+                       ((param2 > param3) ? param2 : param3);
+
+            }
+
+        public:
+            /**
+             * @brief Construct a new TR object
+             */
+            TR() = default;
+
+            /**
+             * @brief Construct a new TR object
+             * 
+             * @param indicator_params Parameters for Indicator
+             */
+            TR(
+                nlohmann::json &indicator_params
+            )
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Destroy the TR object
+             */
+            virtual ~TR() = default;
+
+            /**
+             * @brief Resolve True Range indicator
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle_T &candle)
+            {
+                this->tr = this->max(
+                    candle.get_high_price() - candle.get_low_price(),
+                    abs(candle.get_high_price() - candle.get_close_price()),
+                    abs(candle.get_low_price() - candle.get_close_price())
+                );
+                this->ret["TR"] = this->tr;
+            }
+    };
+
+    /**
+     * @brief Average True Range
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class ATR : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief Average True Range
+             */
+            double atr = 0.0;
+
+            /**
+             * @brief Last RMA
+             */
+            double last_rma;
+
+            /**
+             * @brief Last EMA
+             */
+            double last_ema;
+
+            /**
+             * @brief Last RMA values
+             */
+            vector<double> last_rmas;
+
+            /**
+             * @brief Last EMAs values
+             */
+            vector<double> last_emas;
+
+            /**
+             * @brief Last SMAs values
+             */
+            vector<double> last_smas;
+
+            /**
+             * @brief Last WMAs values
+             */
+            vector<double> last_wmas;
+
+            /**
+             * @brief Smoothing type for ATR
+             */
+            string smoothed;
+
+            /**
+             * @brief True Range indicator
+             */
+            Indicators::Integral::TR<Candle_T> tr_ind;
+
+            /**
+             * @brief Calculate RMA
+             * 
+             * @param param Parameter
+             * @return double 
+             */
+            void rma(double param)
+            {
+                if (this->last_rmas.size() < this->period)
+                {
+                    double curr = 0;
+
+                    this->last_rmas.push_back(param);
+
+                    for (double &par : this->last_rmas)
+                        curr += par / this->last_rmas.size();
+
+                    this->atr = curr;
+                    this->last_rma = curr;
+                } else {
+                    this->atr = 
+                        ((this->last_rma * this->period) - this->last_rma + param)
+                        / this->period
+                    ;
+                    this->last_rma = this->atr;
+                }
+            }
+
+            /**
+             * @brief Calculate EMA
+             * 
+             * @param param Parameter
+             * @return double 
+             */
+            void ema(double param)
+            {
+                this->last_emas.push_back(param);
+
+                if (this->last_emas.size() < this->period)
+                {
+                    double curr = 0;
+
+                    for (double &last_val : this->last_emas)
+                        curr += last_val / this->last_emas.size();
+
+                    this->atr = curr;
+                    this->last_ema = curr;
+                } else {
+                    this->atr = 
+                        (param - this->last_ema) * 2.0
+                        / (this->period + 1.0) + this->last_ema
+                    ;
+                    this->last_ema = this->atr;
+                }
+            }
+
+            /**
+             * @brief Calculate SMA
+             * 
+             * @param param Parameter
+             * @return double 
+             */
+            void sma(double param)
+            {
+                double calc = 0.0;
+
+                this->last_smas.push_back(param);
+                if (this->last_smas.size() > this->period)
+                    this->last_smas.erase(this->last_smas.begin());
+
+                for (double& sma : this->last_smas)
+                    calc += sma / this->last_smas.size();
+                
+                this->atr = calc;
+            }
+
+            /**
+             * @brief Calculate WMA
+             * 
+             * @param param 
+             * @return double 
+             */
+            void wma(double param)
+            {
+                double calc = 0.0;
+                int length = this->last_wmas.size();
+
+                this->last_wmas.push_back(param);
+                if (this->last_wmas.size() > this->period)
+                    this->last_wmas.erase(this->last_wmas.begin());
+
+                for (int i = length - 1; i >= 0; i--) 
+                    calc += this->last_wmas[i] * (i + 1);
+                this->atr = calc / (length * (length + 1) / 2);
+            }
+
+        public:
+            /**
+             * @brief Construct a new ATR object
+             */
+            ATR() = default;
+
+            /**
+             * @brief Construct a new ATR object
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            ATR(
+                nlohmann::json &indicator_params
+            )
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+                this->smoothed = indicator_params["smoothed"];
+            }
+
+            /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+                this->smoothed = indicator_params["smoothed"];
+            }
+
+            /**
+             * @brief Resolve Average True Range indicator
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle_T &candle)
+            {
+                // TODO: Remake with function pointer
+                this->tr_ind.set_indicator_params(this->description);
+                double curr_tr;
+
+                this->last_candles.push_back(candle);
+                if (this->last_candles.size() > this->period)
+                    this->last_candles.erase(
+                        this->last_candles.begin()
+                    );
+
+                if (this->smoothed == "SMA")
+                    for (Candle_T& can : this->last_candles)
+                    {
+                        this->tr_ind.resolve(can);
+                        curr_tr = tr_ind.get()["TR"];
+                        this->sma(curr_tr);
+                    }
+                if (this->smoothed == "WMA")
+                    for (Candle_T& can : this->last_candles)
+                    {
+                        this->tr_ind.resolve(can);
+                        curr_tr = tr_ind.get()["TR"];
+                        this->wma(curr_tr);
+                    }
+                if (this->smoothed == "EMA")
+                {
+                    this->tr_ind.resolve(candle);
+                    curr_tr = tr_ind.get()["TR"];
+                    this->ema(curr_tr);
+                }
+
+                if (this->smoothed == "RMA")
+                {
+                    this->tr_ind.resolve(candle);
+                    curr_tr = tr_ind.get()["TR"];
+                    this->rma(curr_tr);
+                }
+
+
+                this->ret["ATR"] = this->atr;
+                this->atr = 0.0;
+            }
+    };
+
+    /**
      * @brief Average Directional Index
      * 
      * @tparam Candle_T Type of Candle
@@ -597,7 +900,17 @@ namespace Indicators::Integral
             /**
              * @brief Current ADX value
              */
-            double adx;
+            double adx = 0.0;
+
+            /**
+             * @brief Directional Movement plus
+             */
+            double dm_plus = 0.0;
+
+            /**
+             * @brief Directional Movement minus
+             */
+            double dm_minus = 0.0;
 
         public:
             /**
@@ -630,7 +943,24 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
+                if (this->last_candles.size() == 0)
+                {
+                    this->last_candles.push_back(candle);
+                    this->ret["ADX"] = NULL;
+                }
 
+                // NOTE: pop_back() removes last element
+                this->dm_plus = candle.get_high_price()
+                    - this->last_candles.pop_back().get_high_price();
+                this->dm_minus = this->last_candles.pop_back().get_low_price()
+                    - candle.get_low_price();
+
+                if (this->last_candles.size() < this->period)
+                {
+
+                } else {
+
+                }
             }
     };
 }
@@ -651,6 +981,7 @@ namespace Indicators::TradingView
     class Normalized_MACD : public Indicators::TradingView_Indicator<Candle_T>
     {
         // TODO: Bad for Heikin_Ashi candle
+        // TODO: Rewrite with pointer function
         private:
             /**
              * @brief Fast MA

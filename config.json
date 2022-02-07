@@ -47,7 +47,7 @@
                     "exchange": "binance",
                     "symbol": "ALGO/USDT",
                     "name": "Normalized MACD Cross Strategy #1",
-                    "interval": "15m",
+                    "interval": "1d",
                     "candle": "Candle",
                     "strategy": {
                         "type": "position",
@@ -63,7 +63,7 @@
                         "indicator": "Normalized_MACD",
                         "candle": "Candle",
                         "indicator_params": {
-                            "interval": "15m",
+                            "interval": "1d",
                             "type": "WMA",
                             "sma": 12,
                             "lma": 21,

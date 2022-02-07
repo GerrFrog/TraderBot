@@ -45,7 +45,8 @@ int main(int argc, char *argv[]) {
     // // STRATEGY BACKTEST
     nlohmann::json indicator_params = {
         {"interval", "1d"},
-        {"period", 30}
+        {"period", 30},
+        {"smoothed", "RMA"}
     };
     nlohmann::json indicator_params2 = {
         {"interval", "1d"},
@@ -59,7 +60,7 @@ int main(int argc, char *argv[]) {
     string symbol = "BTCUSDT";
     string interval = "1d";
     string dir = "../data/";
-    io::CSVReader<11> data_file("../data/ALGOUSDT_15m.csv");
+    io::CSVReader<11> data_file("../data/BTCUSDT_1d.csv");
 
     Tester tester(
         "../data/",
@@ -70,8 +71,8 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::TradingView::Normalized_MACD<Candle>>(
-        indicator_params2,
+    tester.backtest_candle_indicator<Indicators::Integral::ATR<Candle>>(
+        indicator_params,
         "BTCUSDT",
         "1d",
         data_file
