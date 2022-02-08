@@ -1328,11 +1328,6 @@ namespace Indicators::TradingView
             string type;
 
             /**
-             * @brief Interval
-             */
-            string interval;
-
-            /**
              * @brief Macs array
              */
             vector<double> macs;
@@ -1464,15 +1459,14 @@ namespace Indicators::TradingView
                 this->tsp = indicator_params["tsp"];
                 this->np = indicator_params["np"];
                 this->type = (string)indicator_params["type"];
-                this->interval = (string)indicator_params["interval"];
 
                 nlohmann::json conf_1 = {
                     {"period", this->sma},
-                    {"interval", this->interval}
+                    {"interval", indicator_params["interval"]}
                 };
                 nlohmann::json conf_2 = {
                     {"period", this->lma},
-                    {"interval", this->interval}
+                    {"interval", indicator_params["interval"]}
                 };
 
                 this->ema_1.set_indicator_params(conf_1);
@@ -1504,15 +1498,14 @@ namespace Indicators::TradingView
                 this->tsp = indicator_params["tsp"];
                 this->np = indicator_params["np"];
                 this->type = (string)indicator_params["type"];
-                this->interval = (string)indicator_params["interval"];
 
                 nlohmann::json conf_1 = {
                     {"period", this->sma},
-                    {"interval", this->interval}
+                    {"interval", indicator_params["interval"]}
                 };
                 nlohmann::json conf_2 = {
                     {"period", this->lma},
-                    {"interval", this->interval}
+                    {"interval", indicator_params["interval"]}
                 };
 
                 this->ema_1.set_indicator_params(conf_1);
@@ -1581,6 +1574,241 @@ namespace Indicators::TradingView
 
                 this->ret["Trigger"] = this->trigger;
                 this->ret["MacNorm"] = this->macnorm2;
+            }
+    };
+
+    /**
+     * @brief JMA RSX Clone
+     * 
+     * @note by "LazyBear"
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class RSXL_LB : public Indicators::TradingView_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief First candle status (for initializing paramters)
+             */
+            bool first = true;
+
+            /**
+             * @brief Length (Period)
+             */
+            int length;
+
+            /**
+             * @brief Source value of candle (close, high...)
+             */
+            string src;
+
+            double last_f90_ = 0.0;
+
+            double last_f88 = 0.0;
+
+            double last_f8 = 0.0;;
+
+            double last_f28 = 0.0;
+
+            double last_f30 = 0.0;
+
+            double last_f38 = 0.0;
+
+            double last_f40 = 0.0;
+
+            double last_f48 = 0.0;
+
+            double last_f50 = 0.0;
+
+            double last_f58 = 0.0;
+
+            double last_f60 = 0.0;
+
+            double last_f68 = 0.0;
+
+            double last_f70 = 0.0;
+
+            double last_f78 = 0.0;
+
+            double last_f80 = 0.0;
+
+        public:
+            /**
+             * @brief Construct a new rsxl lb object
+             */
+            RSXL_LB() = default;
+
+            /**
+             * @brief Construct a new rsxl lb object
+             * 
+             * @param indicator_params Paramters of indicator
+             */
+            RSXL_LB(
+                nlohmann::json &indicator_params
+            )
+            {
+                this->description = indicator_params;
+
+                this->length = indicator_params["length"];
+                this->src = indicator_params["src"];
+            }
+
+            /**
+             * @brief Destroy the rsxl lb object
+             */
+            virtual ~RSXL_LB() = default;
+
+            /**
+             * @brief Set the indicator params object
+             * 
+             * @param indicator_params Parameters of indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+
+                this->length = indicator_params["length"];
+                this->src = indicator_params["src"];
+            }
+
+            /**
+             * @brief Resolve RSXL_LB indicator
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle_T &candle)
+            {
+                double f8, f18, f20, f10, f90_, f88,
+                       v8, f28, f30, vC, f38, f40, v10,
+                       f48, f50, v14, f58, f60, v18,
+                       f68, f70, v1C, f78, f80, v20,
+                       f0, f90, v4_, rsx
+                ;
+
+                if (first) {
+                    this->last_f90_ = this->last_f90_ == 0.0 ? 
+                        1.0 : this->last_f88 <= this->last_f90_ ? 
+                        this->last_f88 + 1 : this->last_f90_ + 1;
+
+                    this->last_f88 = (this->last_f90_ == 0.0) && 
+                        (this->length - 1 >= 5) ?
+                        this->length - 1.0 : 5.0;
+                    
+                    if (this->src == "Close")
+                        this->last_f8 = 100 * candle.get_close_price();
+                    if (this->src == "Open")
+                        this->last_f8 = 100 * candle.get_open_price();
+                    if (this->src == "High")
+                        this->last_f8 = 100 * candle.get_high_price();
+                    if (this->src == "Low")
+                        this->last_f8 = 100 * candle.get_low_price();
+
+                    f18 = 3.0 / (this->length + 2.0);
+                    f20 = 1.0 - f18;
+                    f10 = this->last_f8;
+                    v8 = this->last_f8 - f10;                   
+
+                    this->last_f28 = f20 * this->last_f28 + f18 * v8;
+                    this->last_f30 = f18 * this->last_f28 + f20 * this->last_f30;
+
+                    vC = f28 * 1.5 - f30 * 0.5;
+
+                    this->last_f38 = f20 * this->last_f38 + f18 * vC;
+                    this->last_f40 = f18 * this->last_f38 + f20 * this->last_f40;
+
+                    v10 = this->last_f38 * 1.5 - this->last_f40 * 0.5;
+
+                    this->last_f48 = f20 * this->last_f48 + f18 * v10;
+                    this->last_f50 = f18 * this->last_f48 +f18 * v10;
+                    v14 = f48 * 1.5 - f50 * 0.5;
+
+                    this->last_f58 = f20 * this->last_f58 + f18 * abs(v8);
+                    this->last_f60 = f18 * this->last_f58 + f20 * this->last_f60;
+                    v18 = this->last_f58 * 1.5 - f60 * 0.5;
+
+                    this->last_f68 = f20 * this->last_f68 + f18 * v18;
+                    this->last_f70 = f18 * this->last_f68 + f20 * this->last_f70;
+                    v1C = this->last_f68 * 1.5 - this->last_f70 * 0.5;
+
+                    this->last_f78 = f20 * this->last_f78 + f18 * v1C;
+                    this->last_f80 = f18 * this->last_f78 + f20 * this->last_f80;
+
+                    this->ret["RSXL_LB"] = NULL;
+                    this->first = false;
+                    return;
+                }
+                f90_ = this->last_f90_ == 0.0 ? 
+                    1.0 : this->last_f88 <= this->last_f90_ ? 
+                    this->last_f88 + 1 : this->last_f90_ + 1;
+
+                f88 = (this->last_f90_ == 0.0) && 
+                    (this->length - 1 >= 5) ?
+                    this->length - 1.0 : 5.0;
+
+                if (this->src == "Close")
+                    f8 = 100 * candle.get_close_price();
+                if (this->src == "Open")
+                    f8 = 100 * candle.get_open_price();
+                if (this->src == "High")
+                    f8 = 100 * candle.get_high_price();
+                if (this->src == "Low")
+                    f8 = 100 * candle.get_low_price();
+
+                f18 = 3.0 / (this->length + 2.0);
+                f20 = 1.0 - f18;
+                f10 = this->last_f8;
+                v8 = f8 - f10;
+
+                f28 = f20 * this->last_f28 + f18 * v8;
+                f30 = f18 * f28 + f20 * this->last_f30;
+                vC = f28 * 1.5 - f30 * 0.5;
+
+                f38 = f20 * this->last_f38 + f18 * vC;
+                f40 = f18 * f38 + f20 * this->last_f40;
+                v10 = f38 * 1.5 - f40 * 0.5;
+
+                f48 = f20 * this->last_f48 + f18 * v10;
+                f50 = f18 * f48 + f20 * this->last_f50;
+                v14 = f48 * 1.5 - f50 * 0.5;
+
+                f58 = f20 * this->last_f58 + f18 * abs(v8);
+                f60 = f18 * f58 + f20 * this->last_f60;
+                v18 = f58 * 1.5 - f60 * 0.5;
+
+                f68 = f20 * this->last_f68 + f18 * v18;
+                f70 = f18 * f68 + f20 * this->last_f70;
+                v1C = f68 * 1.5 - f70 * 0.5;
+
+                f78 = f20 * this->last_f78 + f18 * v1C;
+                f80 = f18 * f78 + f20 * this->last_f80;
+                v20 = f78 * 1.5 - f80 * 0.5;
+
+                f0 = ((f88 >= f90) && (f8 != f10)) ? 1.0 : 0.0;
+                f90 = ((f88 == f90) && (f0 == 0.0)) ? 0.0 : f90_;
+
+                v4_ = ((f88 < f90) && (v20 > 0.0000000001)) ? 
+                    (v14 / v20 + 1.0) * 50.0 : 50.0;
+                
+                rsx = (v4_ > 100.0) ? 100.0 : (v4_ < 0.0) ? 0.0 : v4_;
+
+                this->ret["RSXL_LB"] = rsx;
+
+                this->last_f8 = f8;
+                this->last_f90_ = f90_;
+                this->last_f88 = f88;
+                this->last_f28 = f28;
+                this->last_f30 = f30;
+                this->last_f38 = f38;
+                this->last_f40 = f40;
+                this->last_f48 = f48;
+                this->last_f50 = f50;
+                this->last_f58 = f58;
+                this->last_f60 = f60;
+                this->last_f68 = f68;
+                this->last_f70 = f70;
+                this->last_f78 = f78;
+                this->last_f80 = f80;
             }
     };
 }
