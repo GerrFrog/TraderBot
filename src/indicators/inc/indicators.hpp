@@ -224,7 +224,6 @@ namespace Indicators::TAAPI
  */
 namespace Indicators::Integral
 {
-    // TODO: EMA with different sources (close, low, high...)
     /**
      * @brief Exponential Moving Average
      * 
@@ -233,6 +232,7 @@ namespace Indicators::Integral
     template <class Candle_T>
     class EMA : public Indicators::Integral_Indicator<Candle_T>
     {
+        // TODO: EMA with different sources (close, low, high...)
         private:
             /**
              * @brief Last EMA value
@@ -1026,7 +1026,7 @@ namespace Indicators::Integral
                 this->smoothed = indicator_params["smoothed"];
 
                 nlohmann::json atr_params = {
-                    {"period", indicator_params["period"]},
+                    {"period", indicator_params["atr_period"]},
                     {"smoothed", indicator_params["atr_smoothed"]}
                 };
                 this->atr.set_indicator_params(atr_params);
