@@ -45,8 +45,11 @@ int main(int argc, char *argv[]) {
     // // STRATEGY BACKTEST
     nlohmann::json indicator_params = {
         {"interval", "1d"},
-        {"period", 30},
-        {"smoothed", "RMA"}
+        {"period", 14},
+        {"smoothed", "RMA"},
+        {"dmi_period", 14},
+        {"dmi_smoothed", "RMA"},
+        {"dmi_atr_smoothed", "RMA"}
     };
     nlohmann::json indicator_params2 = {
         {"interval", "1d"},
@@ -71,7 +74,7 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::Integral::DMI<Candle>>(
+    tester.backtest_candle_indicator<Indicators::Integral::ADX<Candle>>(
         indicator_params,
         "BTCUSDT",
         "1d",

@@ -1027,8 +1027,7 @@ namespace Indicators::Integral
 
                 nlohmann::json atr_params = {
                     {"period", indicator_params["period"]},
-                    {"interval", indicator_params["interval"]},
-                    {"smoothed", "RMA"}
+                    {"smoothed", indicator_params["atr_smoothed"]}
                 };
                 this->atr.set_indicator_params(atr_params);
             }
@@ -1051,8 +1050,7 @@ namespace Indicators::Integral
 
                 nlohmann::json atr_params = {
                     {"period", indicator_params["period"]},
-                    {"interval", indicator_params["interval"]},
-                    {"smoothed", "RMA"}
+                    {"smoothed", indicator_params["atr_smoothed"]}
                 };
                 this->atr.set_indicator_params(atr_params);
             }
@@ -1151,14 +1149,47 @@ namespace Indicators::Integral
             double adx = 0.0;
 
             /**
-             * @brief Directional Movement plus
+             * @brief DMI Indicator
              */
-            double dm_plus = 0.0;
+            Indicators::Integral::DMI<Candle_T> dmi;
 
             /**
-             * @brief Directional Movement minus
+             * @brief Last RMAs values
              */
-            double dm_minus = 0.0;
+            vector<double> last_rmas;
+
+            /**
+             * @brief Last RMA value
+             */
+            double last_rma = 0.0;
+
+            /**
+             * @brief Calculate RMA
+             * 
+             * @param param Parameter
+             * @return double 
+             */
+            double rma(vector<double> &last_rmas, double &last_rma, double param)
+            {
+                double curr = 0;
+                if (last_rmas.size() < this->period)
+                {
+                    last_rmas.push_back(param);
+
+                    for (double &par : last_rmas)
+                        curr += par / last_rmas.size();
+
+                    last_rma = curr;
+                    return curr;
+                } else {
+                    curr = 
+                        ((last_rma * this->period) - last_rma + param)
+                        / this->period
+                    ;
+                    last_rma = curr;
+                    return curr;
+                }
+            }
 
         public:
             /**
@@ -1177,6 +1208,13 @@ namespace Indicators::Integral
             {
                 this->description = indicator_params;
                 this->period = indicator_params["period"];
+
+                nlohmann::json dmi_params = {
+                    {"period", indicator_params["dmi_period"]},
+                    {"smoothed", indicator_params["dmi_smoothed"]},
+                    {"atr_smoothed", indicator_params["dmi_atr_smoothed"]}
+                };
+                this->dmi.set_indicator_params(dmi_params);
             }
             
             /**
@@ -1185,32 +1223,53 @@ namespace Indicators::Integral
             virtual ~ADX() = default;
 
             /**
+             * @brief Set the indicator params 
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            void set_indicator_params(nlohmann::json &indicator_params)
+            {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+
+                nlohmann::json dmi_params = {
+                    {"period", indicator_params["dmi_period"]},
+                    {"smoothed", indicator_params["dmi_smoothed"]},
+                    {"atr_smoothed", indicator_params["dmi_atr_smoothed"]}
+                };
+                this->dmi.set_indicator_params(dmi_params);
+            }
+
+            /**
              * @brief Resolve ADX Indicator
              * 
              * @param candle Candle object
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() == 0)
+                this->dmi.resolve(candle);
+                nlohmann::json dmi_ret = dmi.get();
+                double di_plus = dmi_ret["+DI"];
+                double di_minus = dmi_ret["-DI"];
+                if (di_plus == NULL || di_minus == NULL)
                 {
-                    this->last_candles.push_back(candle);
                     this->ret["ADX"] = NULL;
+                    return;
                 }
 
-                // NOTE: pop_back() removes last element
-                this->dm_plus = candle.get_high_price()
-                    - this->last_candles.pop_back().get_high_price();
-                this->dm_minus = this->last_candles.pop_back().get_low_price()
-                    - candle.get_low_price();
-                this->dm_plus = (this->dm_plus > this->dm_minus) ?
-                    this->dm_plus : 0;
+                double sum = di_plus + di_minus;
+                sum = sum == 0.0 ? 1 : sum;
 
-                if (this->last_candles.size() < this->period)
-                {
+                double param = abs(di_plus - di_minus) / sum;
+                this->last_rmas.push_back(param);
+                if (this->last_rmas.size() > this->period)
+                    this->last_rmas.erase(
+                        this->last_rmas.begin()
+                    );
 
-                } else {
+                this->adx = 100 * this->rma(this->last_rmas, this->last_rma, param);
 
-                }
+                this->ret["ADX"] = this->adx;
             }
     };
 }
