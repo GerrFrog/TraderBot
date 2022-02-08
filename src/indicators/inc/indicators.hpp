@@ -1585,7 +1585,7 @@ namespace Indicators::TradingView
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class RSXL_LB : public Indicators::TradingView_Indicator<Candle_T>
+    class RSXC_LB : public Indicators::TradingView_Indicator<Candle_T>
     {
         private:
             /**
@@ -1637,14 +1637,14 @@ namespace Indicators::TradingView
             /**
              * @brief Construct a new rsxl lb object
              */
-            RSXL_LB() = default;
+            RSXC_LB() = default;
 
             /**
              * @brief Construct a new rsxl lb object
              * 
              * @param indicator_params Paramters of indicator
              */
-            RSXL_LB(
+            RSXC_LB(
                 nlohmann::json &indicator_params
             )
             {
@@ -1657,7 +1657,7 @@ namespace Indicators::TradingView
             /**
              * @brief Destroy the rsxl lb object
              */
-            virtual ~RSXL_LB() = default;
+            virtual ~RSXC_LB() = default;
 
             /**
              * @brief Set the indicator params object

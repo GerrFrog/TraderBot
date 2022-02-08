@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::TradingView::RSXL_LB<Candle>>(
+    tester.backtest_candle_indicator<Indicators::TradingView::RSXC_LB<Candle>>(
         indicator_params,
         "BTCUSDT",
         "1d",

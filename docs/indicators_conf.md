@@ -124,6 +124,17 @@
 - **lma:** Period of Slow Moving Average
 - **tsp:** Period of Trigger
 - **np:** Period of MacNorm
+### JMA RSX Clone (RSXC_LB)
+```JSON
+{
+    "interval": "1d",
+    "length": 14,
+    "src": "Close"
+}
+```
+- **interval:** Interval (candle timeframe).
+- **length:** Period.
+- **src:** Source from candle (Open, Close, Low, High).
 
 
 
