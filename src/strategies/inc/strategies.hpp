@@ -135,13 +135,21 @@ namespace Strategies
              */
             void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
             {
-                signals["buy"] = false;
-                signals["sell"] = false;
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
 
                 if (this->cross_above(params["short_ema"]["value"], params["long_ema"]["value"])) 
-                    signals["buy"] = true;
+                {
+                    signals["long_open"] = true;
+                    signals["short_close"] = true;
+                }
                 if (this->cross_below(params["short_ema"]["value"], params["long_ema"]["value"]))
-                    signals["sell"] = true;
+                {
+                    signals["long_close"] = true;
+                    signals["short_open"] = true;
+                }
             }
     };
 
@@ -262,13 +270,88 @@ namespace Strategies
              */
             void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
             {
-                signals["buy"] = false;
-                signals["sell"] = false;
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
 
                 if (this->cross_above((double)params["normalized_macd"]["Trigger"], (double)params["normalized_macd"]["MacNorm"])) 
-                    signals["buy"] = true;
+                {
+                    signals["long_open"] = true;
+                    signals["short_close"] = true;
+                }
                 if (this->cross_below(params["normalized_macd"]["Trigger"], params["normalized_macd"]["MacNorm"]))
-                    signals["sell"] = true;
+                {
+                    signals["long_close"] = true;
+                    signals["short_open"] = true;
+                }
+            }
+    };
+
+    /**
+     * @brief RSXC_ADX
+     */
+    class RSXC_ADX 
+    {
+        private:
+            /**
+             * @brief ADX line
+             */
+            double adx_line = 22.0;
+
+            /**
+             * @brief RSXC_LB low line
+             */
+            double rsxc_lb_low_line = 30.0;
+
+            /**
+             * @brief RSXC_LB high line
+             */
+            double rsxc_lb_high_line = 70.0;
+
+        public:
+            /**
+             * @brief Construct a new rsx adx object
+             */
+            RSXC_ADX() = default;
+
+            /**
+             * @brief Destroy the rsx adx object
+             * 
+             */
+            ~RSXC_ADX() = default;
+
+             /**
+             * @brief Resolve Strategy
+             * 
+             * @param params Parameters for strategy (indicators value)
+             * @param signals Signals of resolving (sell or buy)
+             */
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)           
+            {
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
+
+                if (
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_low_line &&
+                    params["adx"]["value"] >= this->adx_line
+                )
+                    signals["long_open"] = true;
+                if (
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line
+                )
+                    signals["long_close"] = true;
+                if (
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line &&
+                    params["adx"]["value"] >= this->adx_line
+                )
+                    signals["short_open"] = true;
+                if (
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_low_line
+                )
+                    signals["short_close"] = true;
             }
     };
 }

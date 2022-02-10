@@ -69,6 +69,21 @@ namespace Workers
             string type;
 
             /**
+             * @brief What positions are traded
+             */
+            string positions;
+
+            /**
+             * @brief Goal of short trade (USDT or symbol)
+             */
+            string short_goal;
+
+            /**
+             * @brief Maximum opened trades
+             */
+            double max_open_trade;
+
+            /**
              * @brief Stake amount to "long" trade
              */
             double stake_amount = 0.0;
@@ -93,17 +108,11 @@ namespace Workers
              */
             void initialize_trade(
                 Trade &trade,
-                double price = 0,
-                bool buy_signal = false,
-                bool sell_signal = false
+                const string& position,
+                double price = 0
             )
             {
                 // TODO: Unique ID for each Trade
-                string position;
-                if (buy_signal)
-                    position = "long";
-                if (sell_signal)
-                    position = "short";
                 trade.set_open_time(
                     1, this->symbol, position, 
                     this->interval, this->stake_amount, 
@@ -124,18 +133,14 @@ namespace Workers
              */
             void open_trade(
                 Trade &trade,
-                double open_price,
-                bool buy_signal = false,
-                bool sell_signal = false
+                const string& position,
+                double open_price
             )
             {
-                if (!buy_signal && !sell_signal)
-                    return;
                 this->initialize_trade(
                     trade,
-                    open_price, 
-                    buy_signal,
-                    sell_signal
+                    position,
+                    open_price
                 );
                 // TODO: Open trade in binance
             }
@@ -148,9 +153,19 @@ namespace Workers
                 double close_price
             )
             {
-                trade.set_close_time(
-                    close_price
-                );
+                if (trade.get_position() == "short")
+                {
+                    trade.set_close_time(
+                        close_price,
+                        this->short_goal
+                    );
+                } else if (trade.get_position() == "long")
+                {
+                    trade.set_close_time(
+                        close_price
+                    );
+                }
+
                 // TODO: Close trade in binance
             }
 
@@ -171,17 +186,20 @@ namespace Workers
             { 
                 this->symbol = (string)trader_params["symbol"];
                 this->interval = (string)trader_params["interval"];
-                if ((string)trader_params["strategy"]["stake_amount"] != "all")
-                    this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
-                if ((string)trader_params["strategy"]["symbol_amount"] != "all")
-                    this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
                 this->name = (string)trader_params["name"];
                 this->exchange = (string)trader_params["exchange"];
+                this->positions = (string)trader_params["strategy"]["positions"];
+                this->short_goal = (string)trader_params["strategy"]["short_goal"];
+
+                this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
+                this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
+                this->max_open_trade = (double)trader_params["strategy"]["max_open_trade"];
+
                 if ((string)trader_params["strategy"]["type"] == "scalping")
                 {
+                    this->type = (string)trader_params["strategy"]["type"];
                     this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
                     this->target = (double)trader_params["strategy"]["target"];
-                    this->type = (string)trader_params["strategy"]["type"];
                 } else if ((string)trader_params["strategy"]["type"] == "position") {
                     this->type = (string)trader_params["strategy"]["type"];
                 }
@@ -199,21 +217,24 @@ namespace Workers
              */
             void set_trader_params(nlohmann::json &trader_params) 
             { 
-                this->symbol = trader_params["symbol"];
-                this->interval = trader_params["interval"];
-                if ((string)trader_params["strategy"]["stake_amount"] != "all")
-                    this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
-                if ((string)trader_params["strategy"]["symbol_amount"] != "all")
-                    this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
-                this->name = trader_params["name"];
-                this->exchange = trader_params["exchange"];
+                this->symbol = (string)trader_params["symbol"];
+                this->interval = (string)trader_params["interval"];
+                this->name = (string)trader_params["name"];
+                this->exchange = (string)trader_params["exchange"];
+                this->positions = (string)trader_params["strategy"]["positions"];
+                this->short_goal = (string)trader_params["strategy"]["short_goal"];
+
+                this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
+                this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
+                this->max_open_trade = (double)trader_params["strategy"]["max_open_trade"];
+
                 if ((string)trader_params["strategy"]["type"] == "scalping")
                 {
+                    this->type = (string)trader_params["strategy"]["type"];
                     this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
                     this->target = (double)trader_params["strategy"]["target"];
-                    this->name = (string)trader_params["strategy"]["type"];
                 } else if ((string)trader_params["strategy"]["type"] == "position") {
-                    this->name = (string)trader_params["strategy"]["type"];
+                    this->type = (string)trader_params["strategy"]["type"];
                 }
             }
 
@@ -269,21 +290,40 @@ namespace Workers
             /**
              * @brief Decide what to do with trade
              * 
-             * @param buy_signal Buy signal
-             * @param sell_signal Sell signal
+             * @param signals 
              * @param ret_trades Array of returning trades
              * @param price Current price
              */
             void resolve(
-                bool buy_signal, 
-                bool sell_signal, 
+                map<string, bool> &signals,
                 vector<Trade> &ret_trades,
                 double price
             )
             {
                 if (this->type == "position")
                 {
-                    if (sell_signal)
+                    if (
+                        signals["long_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "long"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade, 
+                                (string)"long",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened short trade" << endl;
+                        }
+                    }
+                    if (signals["long_close"])
                     {
                         for (Trade& trade : this->trades)
                             if (trade.get_position() == "long")
@@ -298,15 +338,31 @@ namespace Workers
                                     ),
                                     this->trades.end()
                                 );
+                                cout << "[+] Closed long trade" << endl;
                             }
-                        Trade trade;
-                        this->open_trade(
-                            trade, price,
-                            buy_signal, sell_signal
-                        );
-                        this->trades.push_back(trade);
                     }
-                    if (buy_signal)
+                    if (
+                        signals["short_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "short"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade,
+                                (string)"short",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened long trade" << endl;
+                        }
+                    }
+                    if (signals["short_close"])
                     {
                         for (Trade& trade : this->trades)
                             if (trade.get_position() == "short")
@@ -321,13 +377,8 @@ namespace Workers
                                     ),
                                     this->trades.end()
                                 );
+                                cout << "[+] Closed short trade" << endl;
                             }
-                        Trade trade;
-                        this->open_trade(
-                            trade, price,
-                            buy_signal, sell_signal
-                        );
-                        this->trades.push_back(trade);
                     }
                 } else if (this->type == "scalping") {
                     double opened_price;
@@ -352,6 +403,7 @@ namespace Workers
                                     ),
                                     this->trades.end()
                                 );
+                                cout << "[+] Closed long trade" << endl;
                             }
                         } else if (trade.get_position() == "short") {
                             percent = (opened_price / price - 1) * 100;
@@ -369,17 +421,51 @@ namespace Workers
                                     ),
                                     this->trades.end()
                                 );
+                                cout << "[+] Closed short trade" << endl;
                             }
                         }
                     }
-                    if (buy_signal || sell_signal)
-                    {
-                        Trade trade;
-                        this->open_trade(
-                            trade, price,
-                            buy_signal, sell_signal
-                        );
-                        this->trades.push_back(trade);
+                    if (
+                        signals["long_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "long"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade,
+                                (string)"long",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened long trade" << endl;
+                        }
+                    }
+                    if (
+                        signals["short_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "short"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade, 
+                                (string)"short",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened short trade" << endl;
+                        }
                     }
                 }
             }
@@ -401,7 +487,10 @@ namespace Workers
              * @brief Data container for resolved signals
              */
             map<string, bool> signals{
-                {"buy", false}, {"sell", false}
+                {"long_open", false}, 
+                {"long_close", false},
+                {"short_open", false},
+                {"short_close", false}
             };
 
             /**
@@ -438,20 +527,11 @@ namespace Workers
             nlohmann::json get_strategy_params() { return this->strategy_params; }
 
             /**
-             * @brief Get the buy signal 
+             * @brief Get the signals object
              * 
-             * @return true 
-             * @return false 
+             * @return map<string, bool> 
              */
-            bool get_buy_signal() { return signals["buy"]; }
-
-            /**
-             * @brief Get the sell signal 
-             * 
-             * @return true 
-             * @return false 
-             */
-            bool get_sell_signal() { return signals["sell"]; }
+            map<string, bool> get_signals() { return this->signals; }
 
             /**
              * @brief Resolve the strategy in worker
@@ -470,59 +550,10 @@ namespace Workers
      * 
      * @tparam Candle_T Type of Candle
      */
+    template <class Candle_T>
     class Indicator_Watcher
     {
         private:
-            /**
-             * @brief All type of EMA indicators (Candle)
-             */
-            vector<Indicators::Integral::EMA<Candle>> emas_cd;
-
-            /**
-             * @brief All type of EMA indicators (Heikin Ashi)
-             */
-            vector<Indicators::Integral::EMA<Heikin_Ashi>> emas_ha;
-
-            /**
-             * @brief All type of WMA indicators (Candle)
-             */
-            vector<Indicators::Integral::WMA<Candle>> wmas_cd;
-
-            /**
-             * @brief All type of WMA indicators (Heikin Ashi)
-             */
-            vector<Indicators::Integral::WMA<Heikin_Ashi>> wmas_ha;
-
-            /**
-             * @brief All type of SMA indicators (Candle)
-             */
-            vector<Indicators::Integral::SMA<Candle>> smas_cd;
-
-            /**
-             * @brief All type of SMA indicators (Heikin Ashi)
-             */
-            vector<Indicators::Integral::SMA<Heikin_Ashi>> smas_ha;
-
-            /**
-             * @brief All type of RSI indicators (Candle)
-             */
-            vector<Indicators::Integral::RSI<Candle>> rsis_cd;
-
-            /**
-             * @brief All type of RSI indicators (Heikin Ashi)
-             */
-            vector<Indicators::Integral::RSI<Heikin_Ashi>> rsis_ha;
-
-            /**
-             * @brief All type of Normalized MACD indicators (Candle)
-             */
-            vector<Indicators::TradingView::Normalized_MACD<Candle>> normalized_macds_cd;
-
-            /**
-             * @brief All type of Normalized MACD indicators (Heikin Ashi)
-             */
-            vector<Indicators::TradingView::Normalized_MACD<Heikin_Ashi>> normalized_macds_ha;
-
             /**
              * @brief All strategies in config
              */
@@ -537,6 +568,140 @@ namespace Workers
              * @brief API Key for taapi.io
              */
             string taapi_key;
+
+            /**
+             * @brief All EMA indicators
+             */
+            vector<Indicators::Integral::EMA<Candle_T>> all_ema;
+
+            /**
+             * @brief All WMA indicators
+             */
+            vector<Indicators::Integral::WMA<Candle_T>> all_wma;
+
+            /**
+             * @brief All SMA indicators
+             */
+            vector<Indicators::Integral::SMA<Candle_T>> all_sma;
+
+            /**
+             * @brief All SSMA indicators
+             */
+            vector<Indicators::Integral::SSMA<Candle_T>> all_ssma;
+
+            /**
+             * @brief All RSI indicators
+             */
+            vector<Indicators::Integral::RSI<Candle_T>> all_rsi;
+
+            /**
+             * @brief All TR indicators
+             */
+            vector<Indicators::Integral::TR<Candle_T>> all_tr;
+
+            /**
+             * @brief All ATR indicators
+             */
+            vector<Indicators::Integral::ATR<Candle_T>> all_atr;
+
+            /**
+             * @brief All DMI indicators
+             */
+            vector<Indicators::Integral::DMI<Candle_T>> all_dmi;
+
+            /**
+             * @brief All ADX indicators
+             */
+            vector<Indicators::Integral::ADX<Candle_T>> all_adx;
+
+            /**
+             * @brief All Normalized_MACD indicators
+             */
+            vector<Indicators::TradingView::Normalized_MACD<Candle_T>> all_normalized_macd;
+
+            /**
+             * @brief All RSXC_LB indicators
+             */
+            vector<Indicators::TradingView::RSXC_LB<Candle_T>> all_rsxc_lb;
+
+            /**
+             * @brief Initialize indicator
+             * 
+             * @param strategy_params Parameters of indicator
+             */
+            void initialize_indicator(nlohmann::json &strategy_params)
+            {
+                // TODO: Create instance from config. Without if-else
+                for (auto& [key, val] : strategy_params.items())
+                {
+                    if (val["indicator"] == "EMA")
+                        this->all_ema.push_back(
+                            Indicators::Integral::EMA<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "WMA")
+                        this->all_wma.push_back(
+                            Indicators::Integral::WMA<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "SMA")
+                        this->all_sma.push_back(
+                            Indicators::Integral::SMA<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "SSMA")
+                        this->all_ssma.push_back(
+                            Indicators::Integral::SSMA<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "RSI")
+                        this->all_rsi.push_back(
+                            Indicators::Integral::RSI<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "TR")
+                        this->all_tr.push_back(
+                            Indicators::Integral::TR<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "ATR")
+                        this->all_atr.push_back(
+                            Indicators::Integral::ATR<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "DMI")
+                        this->all_dmi.push_back(
+                            Indicators::Integral::DMI<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "ADX")
+                        this->all_adx.push_back(
+                            Indicators::Integral::ADX<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "Normalized_MACD")
+                        this->all_normalized_macd.push_back(
+                            Indicators::TradingView::Normalized_MACD<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                    if (val["indicator"] == "RSXC_LB")
+                        this->all_rsxc_lb.push_back(
+                            Indicators::TradingView::RSXC_LB<Candle_T>(
+                                val["indicator_params"]
+                            )
+                        );
+                }
+            }
 
         public:
             /**
@@ -584,168 +749,10 @@ namespace Workers
                 try {
                     for (auto& [key1, val1] : this->strategies.items())
                         for (auto& [key2, val2] : val1.items())
-                        {
-                            for (auto& [key3, val3] : val2["strategy_params"].items())
-                            {
-                                if (val3["indicator"] == "EMA")
-                                {
-                                    if (val3["candle"] == "Candle")
-                                        this->emas_cd.push_back(
-                                            Indicators::Integral::EMA<Candle>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                    if (val3["candle"] == "Heikin_Ashi")
-                                        this->emas_ha.push_back(
-                                            Indicators::Integral::EMA<Heikin_Ashi>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                }
-                                if (val3["indicator"] == "Normalized_MACD")
-                                {
-                                    if (val3["candle"] == "Candle")
-                                        this->normalized_macds_cd.push_back(
-                                            Indicators::TradingView::Normalized_MACD<Candle>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                    if (val3["candle"] == "Heikin_Ashi")
-                                        this->normalized_macds_ha.push_back(
-                                            Indicators::TradingView::Normalized_MACD<Heikin_Ashi>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                }
-                                if (val3["indicator"] == "WMA")
-                                {
-                                    if (val3["candle"] == "Candle")
-                                        this->wmas_cd.push_back(
-                                            Indicators::Integral::WMA<Candle>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                    if (val3["candle"] == "Heikin_Ashi")
-                                        this->wmas_ha.push_back(
-                                            Indicators::Integral::WMA<Heikin_Ashi>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                }
-                                if (val3["indicator"] == "SMA")
-                                {
-                                    if (val3["candle"] == "Candle")
-                                        this->smas_cd.push_back(
-                                            Indicators::Integral::SMA<Candle>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                    if (val3["candle"] == "Heikin_Ashi")
-                                        this->smas_ha.push_back(
-                                            Indicators::Integral::SMA<Heikin_Ashi>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                }
-                                if (val3["indicator"] == "RSI")
-                                {
-                                    if (val3["candle"] == "Candle")
-                                        this->rsis_cd.push_back(
-                                            Indicators::Integral::RSI<Candle>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                    if (val3["candle"] == "Heikin_Ashi")
-                                        this->rsis_ha.push_back(
-                                            Indicators::Integral::RSI<Heikin_Ashi>(
-                                                val3["indicator_params"]
-                                            )
-                                        );
-                                }
-                                // if () // Other indicator
-                            }
-                        }
+                            this->initialize_indicator(val2["strategy_params"]);
                 } catch(nlohmann::detail::type_error& exp) {
                     cout << exp.what() << endl;
-                    for (auto& [key, val] : this->strategies.items())
-                    {
-                        if (val["indicator"] == "EMA")
-                        {
-                            if (val["candle"] == "Candle")
-                                this->emas_cd.push_back(
-                                    Indicators::Integral::EMA<Candle>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                            if (val["candle"] == "Heikin_Ashi")
-                                this->emas_ha.push_back(
-                                    Indicators::Integral::EMA<Heikin_Ashi>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                        }
-                        if (val["indicator"] == "WMA")
-                        {
-                            if (val["candle"] == "Candle")
-                                this->wmas_cd.push_back(
-                                    Indicators::Integral::WMA<Candle>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                            if (val["candle"] == "Heikin_Ashi")
-                                this->wmas_ha.push_back(
-                                    Indicators::Integral::WMA<Heikin_Ashi>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                        }
-                        if (val["indicator"] == "SMA")
-                        {
-                            if (val["candle"] == "Candle")
-                                this->smas_cd.push_back(
-                                    Indicators::Integral::SMA<Candle>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                            if (val["candle"] == "Heikin_Ashi")
-                                this->smas_ha.push_back(
-                                    Indicators::Integral::SMA<Heikin_Ashi>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                        }
-                        if (val["indicator"] == "RSI")
-                        {
-                            if (val["candle"] == "Candle")
-                                this->rsis_cd.push_back(
-                                    Indicators::Integral::RSI<Candle>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                            if (val["candle"] == "Heikin_Ashi")
-                                this->rsis_ha.push_back(
-                                    Indicators::Integral::RSI<Heikin_Ashi>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                        }
-                        if (val["indicator"] == "Normalized_MACD")
-                        {
-                            if (val["candle"] == "Candle")
-                                this->normalized_macds_cd.push_back(
-                                    Indicators::TradingView::Normalized_MACD<Candle>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                            if (val["candle"] == "Heikin_Ashi")
-                                this->normalized_macds_ha.push_back(
-                                    Indicators::TradingView::Normalized_MACD<Heikin_Ashi>(
-                                        val["indicator_params"]
-                                    )
-                                );
-                        }
-                        // if () // Other indicator
-                    }
+                    this->initialize_indicator(this->strategies);
                 }
             }
 
@@ -753,31 +760,31 @@ namespace Workers
              * @brief When next candle is set Watcher should be resolved
              * 
              * @param candle Candle object
-             * @param heikin_ashi Heikin Ashi candle object
              */
-            void resolve(Candle &candle, Heikin_Ashi &heikin_ashi)
+            void resolve(Candle_T& candle)
             {
-                for (auto& ema : this->emas_cd)
+                for (auto& ema : this->all_ema)
                     ema.resolve(candle);
-                for (auto& wma : this->wmas_cd)
-                    wma.resolve(candle);
-                for (auto& sma : this->smas_cd)
+                for (auto& sma : this->all_sma)
                     sma.resolve(candle);
-                for (auto& rsi : this->rsis_cd)
+                for (auto& ssma : this->all_ssma)
+                    ssma.resolve(candle);
+                for (auto& wma : this->all_wma)
+                    wma.resolve(candle);
+                for (auto& rsi : this->all_rsi) 
                     rsi.resolve(candle);
-                for (auto& n_macd : this->normalized_macds_cd)
+                for (auto& tr : this->all_tr)
+                    tr.resolve(candle);
+                for (auto& atr : this->all_atr)
+                    atr.resolve(candle);
+                for (auto& dmi : this->all_dmi)
+                    dmi.resolve(candle);
+                for (auto& adx : this->all_adx)
+                    adx.resolve(candle);
+                for (auto& n_macd : this->all_normalized_macd)
                     n_macd.resolve(candle);
-
-                for (auto& ema : this->emas_ha)
-                    ema.resolve(heikin_ashi);
-                for (auto& wma : this->wmas_ha)
-                    wma.resolve(heikin_ashi);
-                for (auto& sma : this->smas_ha)
-                    sma.resolve(heikin_ashi);
-                for (auto& rsi : this->rsis_ha)
-                    rsi.resolve(heikin_ashi);
-                for (auto& n_macd : this->normalized_macds_ha)
-                    n_macd.resolve(heikin_ashi);
+                for (auto& rsx : this->all_rsxc_lb)
+                    rsx.resolve(candle);    
             }
 
             /**
@@ -801,7 +808,6 @@ namespace Workers
                     string indicator = val["indicator"];
                     string type = val["type"];
 
-                    // TODO: Create instance from config. Without if-else
                     if (type == "Indicators::TAAPI" && !backtest)
                     {
                         if (indicator == "EMA")
@@ -833,98 +839,65 @@ namespace Workers
                     )
                     {
                         if (indicator == "EMA")
-                        {
                             for (auto& [key, val] : strategy_params.items())
-                            {
-                                if (val["candle"] == "Candle")
-                                    for (auto &ema : this->emas_cd)
-                                    {
-                                        if (ema.get_description() == val["indicator_params"])
-                                            params[key] = ema.get();
-                                    }
-                                if (val["candle"] == "Heikin_Ashi")
-                                    for (auto &ema : this->emas_ha)
-                                    {
-                                        if (ema.get_description() == val["indicator_params"])
-                                            params[key] = ema.get();
-                                    }
-                            }
-                        }
-                        if (indicator == "WMA")
-                        {
-                            for (auto& [key, val] : strategy_params.items())
-                            {
-                                if (val["candle"] == "Candle")
-                                    for (auto &wma : this->wmas_cd)
-                                    {
-                                        if (wma.get_description() == val["indicator_params"])
-                                            params[key] = wma.get();
-                                    }
-                                if (val["candle"] == "Heikin_Ashi")
-                                    for (auto &wma : this->wmas_ha)
-                                    {
-                                        if (wma.get_description() == val["indicator_params"])
-                                            params[key] = wma.get();
-                                    }
-                            }
-                        }
+                                for (auto &ema : this->all_ema)
+                                    if (ema.get_description() == val["indicator_params"])
+                                        params[key] = ema.get();
                         if (indicator == "SMA")
-                        {
                             for (auto& [key, val] : strategy_params.items())
-                            {
-                                if (val["candle"] == "Candle")
-                                    for (auto &sma : this->smas_cd)
-                                    {
-                                        if (sma.get_description() == val["indicator_params"])
-                                            params[key] = sma.get();
-                                    }
-                                if (val["candle"] == "Heikin_Ashi")
-                                    for (auto &sma : this->smas_ha)
-                                    {
-                                        if (sma.get_description() == val["indicator_params"])
-                                            params[key] = sma.get();
-                                    }
-                            }
-                        }
+                                for (auto &sma : this->all_sma)
+                                    if (sma.get_description() == val["indicator_params"])
+                                        params[key] = sma.get();
+                        if (indicator == "SSMA")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &ssma : this->all_ssma)
+                                    if (ssma.get_description() == val["indicator_params"])
+                                        params[key] = ssma.get();
+                        if (indicator == "WMA")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &wma : this->all_wma)
+                                    if (wma.get_description() == val["indicator_params"])
+                                        params[key] = wma.get();
                         if (indicator == "RSI")
-                        {
                             for (auto& [key, val] : strategy_params.items())
-                            {
-                                if (val["candle"] == "Candle")
-                                    for (auto &rsi : this->rsis_cd)
-                                    {
-                                        if (rsi.get_description() == val["indicator_params"])
-                                            params[key] = rsi.get();
-                                    }
-                                if (val["candle"] == "Heikin_Ashi")
-                                    for (auto &rsi : this->rsis_ha)
-                                    {
-                                        if (rsi.get_description() == val["indicator_params"])
-                                            params[key] = rsi.get();
-                                    }
-                            }
-                        }
+                                for (auto &rsi : this->all_rsi)
+                                    if (rsi.get_description() == val["indicator_params"])
+                                        params[key] = rsi.get();
+                        if (indicator == "TR")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &tr : this->all_tr)
+                                    if (tr.get_description() == val["indicator_params"])
+                                        params[key] = tr.get();
+                        if (indicator == "ATR")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &atr : this->all_atr)
+                                    if (atr.get_description() == val["indicator_params"])
+                                        params[key] = atr.get();
+                        if (indicator == "DMI")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &dmi : this->all_dmi)
+                                    if (dmi.get_description() == val["indicator_params"])
+                                        params[key] = dmi.get();
+                        if (indicator == "ADX")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &adx : this->all_adx)
+                                    if (adx.get_description() == val["indicator_params"])
+                                        params[key] = adx.get();
                     }
                     if (type == "Indicators::TradingView" || backtest)
                     {
                         if (indicator == "Normalized_MACD")
-                        {
-                            if (val["candle"] == "Candle")
-                                for (auto &n_macd : this->normalized_macds_cd)
-                                {
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &n_macd : this->all_normalized_macd)
                                     if (n_macd.get_description() == val["indicator_params"])
                                         params[key] = n_macd.get();
-                                }
-                            if (val["candle"] == "Heikin_Ashi")
-                                for (auto &n_macd : this->normalized_macds_ha)
-                                {
-                                    if (n_macd.get_description() == val["indicator_params"])
-                                        params[key] = n_macd.get();
-                                }
-                        }
+                        if (indicator == "RSXC_LB")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &rsx : this->all_rsxc_lb)
+                                    if (rsx.get_description() == val["indicator_params"])
+                                        params[key] = rsx.get();
                     }
                 }
-
                 return params;
             }
     };

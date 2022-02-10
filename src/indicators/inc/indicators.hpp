@@ -651,7 +651,7 @@ namespace Indicators::Integral
                     abs(candle.get_high_price() - candle.get_close_price()),
                     abs(candle.get_low_price() - candle.get_close_price())
                 );
-                this->ret["TR"] = this->tr;
+                this->ret["value"] = this->tr;
             }
     };
 
@@ -858,32 +858,32 @@ namespace Indicators::Integral
                     for (Candle_T& can : this->last_candles)
                     {
                         this->tr_ind.resolve(can);
-                        curr_tr = tr_ind.get()["TR"];
+                        curr_tr = tr_ind.get()["value"];
                         this->sma(curr_tr);
                     }
                 if (this->smoothed == "WMA")
                     for (Candle_T& can : this->last_candles)
                     {
                         this->tr_ind.resolve(can);
-                        curr_tr = tr_ind.get()["TR"];
+                        curr_tr = tr_ind.get()["value"];
                         this->wma(curr_tr);
                     }
                 if (this->smoothed == "EMA")
                 {
                     this->tr_ind.resolve(candle);
-                    curr_tr = tr_ind.get()["TR"];
+                    curr_tr = tr_ind.get()["value"];
                     this->ema(curr_tr);
                 }
 
                 if (this->smoothed == "RMA")
                 {
                     this->tr_ind.resolve(candle);
-                    curr_tr = tr_ind.get()["TR"];
+                    curr_tr = tr_ind.get()["value"];
                     this->rma(curr_tr);
                 }
 
 
-                this->ret["ATR"] = this->atr;
+                this->ret["value"] = this->atr;
                 this->atr = 0.0;
             }
     };
@@ -1075,7 +1075,7 @@ namespace Indicators::Integral
                 }
 
                 this->atr.resolve(candle);
-                atr_value = atr.get()["ATR"];
+                atr_value = atr.get()["value"];
 
                 upmove = candle.get_high_price() - this->last_candles.back().get_high_price();
                 downmove = this->last_candles.back().get_low_price() - candle.get_low_price();
@@ -1253,7 +1253,7 @@ namespace Indicators::Integral
                 double di_minus = dmi_ret["-DI"];
                 if (di_plus == NULL || di_minus == NULL)
                 {
-                    this->ret["ADX"] = NULL;
+                    this->ret["value"] = NULL;
                     return;
                 }
 
@@ -1269,7 +1269,7 @@ namespace Indicators::Integral
 
                 this->adx = 100 * this->rma(this->last_rmas, this->last_rma, param);
 
-                this->ret["ADX"] = this->adx;
+                this->ret["value"] = this->adx;
             }
     };
 }
@@ -1734,7 +1734,7 @@ namespace Indicators::TradingView
                     this->last_f78 = f20 * this->last_f78 + f18 * v1C;
                     this->last_f80 = f18 * this->last_f78 + f20 * this->last_f80;
 
-                    this->ret["RSXL_LB"] = NULL;
+                    this->ret["value"] = NULL;
                     this->first = false;
                     return;
                 }
@@ -1792,7 +1792,7 @@ namespace Indicators::TradingView
                 
                 rsx = (v4_ > 100.0) ? 100.0 : (v4_ < 0.0) ? 0.0 : v4_;
 
-                this->ret["RSXL_LB"] = rsx;
+                this->ret["value"] = rsx;
 
                 this->last_f8 = f8;
                 this->last_f90_ = f90_;

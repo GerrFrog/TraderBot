@@ -3,7 +3,7 @@
     "fiat_display_currency": "USD",
     "test_mode": true,
     "strategies": {
-        "ema_cross": {
+        "EMA_Cross": {
             "1": {
                 "trader_params": {
                     "exchange": "binance",
@@ -13,8 +13,11 @@
                     "candle": "Candle",
                     "strategy": {
                         "type": "scalping",
-                        "stake_amount": "all",
-                        "symbol_amount": "all",
+                        "positions": "both",
+                        "short_goal": "usdt",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 10,
                         "stop-loss": 1,
                         "target": 2
                     }
@@ -41,7 +44,7 @@
                 }
             }
         },
-        "normalized_macd_cross": {
+        "Normalized_MACD_Cross": {
             "1": {
                 "trader_params": {
                     "exchange": "binance",
@@ -51,8 +54,11 @@
                     "candle": "Candle",
                     "strategy": {
                         "type": "position",
-                        "stake_amount": "all",
-                        "symbol_amount": "all",
+                        "positions": "both",
+                        "short_goal": "usdt",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 20,
                         "stop-loss": 0.2,
                         "target": 0.15
                     }
@@ -69,6 +75,51 @@
                             "lma": 21,
                             "tsp": 9,
                             "np": 50
+                        }
+                    }
+                }
+            }
+        },
+        "RSXC_ADX": {
+            "1": {
+                "trader_params": {
+                    "exchange": "binance",
+                    "symbol": "BTC/USDT",
+                    "name": "RSXC_LB and ADX signals #1",
+                    "interval": "1d",
+                    "candle": "Candle",
+                    "strategy": {
+                        "type": "position",
+                        "positions": "both",
+                        "short_goal": "symbol",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 20,
+                        "stop-loss": 0.2,
+                        "target": 0.15
+                    }
+                },
+                "strategy_params": {
+                    "rsxc_lb": {
+                        "type": "Indicators::TradingView",
+                        "indicator": "RSXC_LB",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "5m",
+                            "src": "Close",
+                            "length": 14
+                        }
+                    },
+                    "adx": {
+                        "type": "Indicators::Integral",
+                        "indicator": "ADX",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "5m",
+                            "period": 14,
+                            "dmi_period": 14,
+                            "dmi_smoothed": "RMA",
+                            "dmi_atr_smoothed": "RMA"
                         }
                     }
                 }

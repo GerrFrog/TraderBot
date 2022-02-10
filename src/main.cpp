@@ -62,13 +62,27 @@ int main(int argc, char *argv[]) {
         {"np", 50}
     };
 
-    string symbol = "BTCUSDT";
-    string interval = "1d";
+    nlohmann::json strategy_params = jf["strategies"]["RSXC_ADX"]["1"];
+
+    string sym = strategy_params["trader_params"]["symbol"];
+    string symbol;
+    string interval = strategy_params["trader_params"]["interval"];
     string dir = "../data/";
-    io::CSVReader<11> data_file("../data/BTCUSDT_1d.csv");
+
+    std::remove_copy(
+        sym.begin(),
+        sym.end(),
+        std::back_inserter(symbol),
+        '/'
+    );
+
+    double usdt_balance = 10000.0;
+    double symbol_balance = 20.0;
+
+    io::CSVReader<11> data_file(dir + symbol + '_' + interval +".csv");
 
     Tester tester(
-        "../data/",
+        dir,
         taapi_key
     );
     // tester.backtest_candle(
@@ -76,24 +90,24 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_candle_indicator<Indicators::TradingView::RSXC_LB<Candle>>(
-        indicator_params,
-        "BTCUSDT",
-        "1d",
-        data_file
-    );
+    // tester.backtest_candle_indicator<Indicators::TradingView::RSXC_LB<Candle>>(
+    //     indicator_params,
+    //     "BTCUSDT",
+    //     "1d",
+    //     data_file
+    // );
     // tester.backtest_heikin_ashi_indicator<Indicators::TradingView::Normalized_MACD<Heikin_Ashi>>(
     //     indicator_params2,
     //     "BTCUSDT",
     //     "1d",
     //     data_file
     // );
-    // tester.backtest_strategy<Strategies::EMA_Cross>(
-    //     jf["strategies"]["ema_cross"]["1"],
-    //     10000.0,
-    //     1,
-    //     data_file
-    // );
+    tester.backtest_strategy<Strategies::RSXC_ADX>(
+        strategy_params,
+        usdt_balance,
+        symbol_balance,
+        data_file
+    );
     // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
     //     jf["strategies"]["normalized_macd_cross"]["1"],
     //     10000.0,
