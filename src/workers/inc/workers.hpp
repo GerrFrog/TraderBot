@@ -15,7 +15,7 @@
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
-#include "../../candle/inc/candle.hpp"
+#include "../../candles/inc/candles.hpp"
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../trade/inc/trade.hpp"
 #include "../../request/inc/request.hpp"
@@ -757,6 +757,35 @@ namespace Workers
             }
 
             /**
+             * @brief Describe indicators
+             */
+            void describe_indicators()
+            {
+                for (auto& ema : this->all_ema)
+                    cout << "EMA: " << ema.get_description() << endl;
+                for (auto& sma : this->all_sma)
+                    cout << "SMA: " << sma.get_description() << endl;
+                for (auto& ssma : this->all_ssma)
+                    cout << "SSMA: " << ssma.get_description() << endl;
+                for (auto& wma : this->all_wma)
+                    cout << "WMA: " << wma.get_description() << endl;
+                for (auto& rsi : this->all_rsi) 
+                    cout << "RSI: " << rsi.get_description() << endl;
+                for (auto& tr : this->all_tr)
+                    cout << "TR: " << tr.get_description() << endl;
+                for (auto& atr : this->all_atr)
+                    cout << "ATR: " << atr.get_description() << endl;
+                for (auto& dmi : this->all_dmi)
+                    cout << "DMI: " << dmi.get_description() << endl;
+                for (auto& adx : this->all_adx)
+                    cout << "ADX: " << adx.get_description() << endl;
+                for (auto& n_macd : this->all_normalized_macd)
+                    cout << "Normalized MACD: " << n_macd.get_description() << endl;
+                for (auto& rsx : this->all_rsxc_lb)
+                    cout << "RSXC_LB:" << rsx.get_description() << endl;
+            }
+
+            /**
              * @brief When next candle is set Watcher should be resolved
              * 
              * @param candle Candle object
@@ -911,12 +940,12 @@ namespace Workers
             /**
              * @brief Standard Candle
              */
-            Candle candle;
+            Candles::Candle candle;
 
             /**
              * @brief Heikin Ashi Candle
              */
-            Heikin_Ashi heikin_ashi;
+            Candles::Heikin_Ashi heikin_ashi;
 
             /**
              * @brief Symbol (pair)
@@ -960,6 +989,23 @@ namespace Workers
              * @brief Destroy the Candle_Watcher object
              */
             ~Candle_Watcher() = default;
+
+            /**
+             * @brief Overload "==" operator
+             * 
+             * @param cw Candle Watcher to compare
+             * @return true 
+             * @return false 
+             */
+            bool operator ==(const Workers::Candle_Watcher& cw)
+            {
+                if (
+                    cw.symbol == this->symbol && 
+                    cw.interval == this->interval
+                )
+                    return true;
+                return false;
+            }
 
             /**
              * @brief Initialize Candle Watcher
@@ -1038,19 +1084,33 @@ namespace Workers
             // }
 
             /**
+             * @brief Get the symbol object
+             * 
+             * @return string 
+             */
+            string get_symbol() { return this->symbol; }
+
+            /**
+             * @brief Get the interval object
+             * 
+             * @return string 
+             */
+            string get_interval() { return this->interval; }
+
+            /**
              * @brief Get the candle object
              * 
              * @param candle_type Type of Candle
              * @return Candle_T 
              */
-            Candle get_candle() { return this->candle; }
+            Candles::Candle get_candle() { return this->candle; }
 
             /**
              * @brief Get the heikin ashi object
              * 
              * @return Heikin_Ashi 
              */
-            Heikin_Ashi get_heikin_ashi() { return this->heikin_ashi; }
+            Candles::Heikin_Ashi get_heikin_ashi() { return this->heikin_ashi; }
 
             /**
              * @brief Get the current price of cryptocurrency

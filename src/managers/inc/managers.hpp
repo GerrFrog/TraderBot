@@ -17,145 +17,174 @@ using std::vector;
 namespace Managers
 {
     /**
-     * @brief Manager for workers
+     * @brief Manager for Workers
      */
     class Manager
     {
-        // // TODO: Parallel execution
-        // private:
-        //     /**
-        //      * @brief Strategies in config
-        //      */
-        //     nlohmann::json strategies;
+        private:
+            /**
+             * @brief JSON Configuration of Manager
+             */
+            nlohmann::json configuration;
 
-        //     /**
-        //      * @brief Watcher for indicators
-        //      */
-        //     Workers::Watcher watcher;
+            /**
+             * @brief Array of Candle Watcher objects
+             */
+            vector<Workers::Candle_Watcher> candle_watchers;
 
-        //     /**
-        //      * @brief EMA Cross Strategy Traders
-        //      */
-        //     vector<Workers::Trader> ema_cross_traders;
+            /**
+             * @brief Indicator Watcher object fo Candle type
+             */
+            Workers::Indicator_Watcher<Candles::Candle> indicator_watcher_cd;
 
-        //     /**
-        //      * @brief EMA Cross Strategy Solvers
-        //      */
-        //     vector<Workers::Solver<Strategies::EMA_Cross>> ema_cross_solvers;
+            /**
+             * @brief Indicator Watcher object for Heikin Ashi type
+             */
+            Workers::Indicator_Watcher<Candles::Heikin_Ashi> indicator_watcher_ha;
 
-        //     /**
-        //      * @brief Normalized MACD Cross Strategy Traders
-        //      */
-        //     vector<Workers::Trader> normalized_macd_cross_traders;
+            /**
+             * @brief Get the klines object
+             * 
+             * @param symbol Symbol (pair)
+             * @param interval Interval (candle timeframe)
+             * @param startTime Start time
+             * @param endTime End time
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_klines(
+                const string& symbol,
+                const string& interval,
+                double startTime,
+                double endTime
+            ) {
 
-        //     /**
-        //      * @brief Normalized MACD Cross Strategy Solvers
-        //      */
-        //     vector<Workers::Solver<Strategies::EMA_Cross>> normalized_macd_cross_solvers;
+            }
 
-        //     /**
-        //      * @brief Work for pair
-        //      * 
-        //      * @tparam Strategy Strategy to work
-        //      * @param trader Trader
-        //      * @param solver Solver
-        //      */
-        //     template <class Strategy>
-        //     void work(
-        //         Workers::Trader &trader,
-        //         Workers::Solver<Strategy> &solver
-        //     )
-        //     {
-        //         Trade trade;
+        public:
+            /**
+             * @brief Construct a new Manager object
+             */
+            Manager() = default;
 
-        //         nlohmann::json strategy_params = solver.get_strategy_params();
+            /**
+             * @brief Destroy the Manager object
+             * 
+             * @param config JSON Configuration of Manager
+             */
+            Manager(
+                nlohmann::json &config
+            ) : configuration(config)
+            { }
 
-        //         // TODO: Pass Candle for watcher
-        //         // TODO: Request to taapi for indicator when it's time (check timeframe in strategy)
-        //         nlohmann::json params = this->watcher.get(
-        //             strategy_params,
-        //             trader.get_symbol()
-        //         );
+            /**
+             * @brief Destroy the Manager object
+             */
+            ~Manager() = default;
 
-        //         solver.resolve(params);
-        //         trader.resolve(
-        //             solver.get_buy_signal(),
-        //             solver.get_sell_signal(),
-        //             trade
-        //         );
+            /**
+             * @brief Set the configuration object
+             * 
+             * @param config JSON Configuration
+             */
+            void set_configuration(nlohmann::json &config) { this->configuration = config; }
 
-        //         cout << trader.get_name() << endl;
-        //         cout << trader.get_timeframe() << endl;
-        //         cout << trader.get_symbol() << endl;
-        //         cout << "Work: " << trader.is_work() << endl;
-        //         cout << "Sell signal: " << solver.get_sell_signal() << endl;
-        //         cout << "Buy signal: " << solver.get_buy_signal() << endl;
-        //     }
+            void initialize(io::CSVReader<11> &data_file)
+            {
+                nlohmann::json strategies = this->configuration["strategies"];
+                nlohmann::json strategy_params;
 
-        // public:
-        //     /**
-        //      * @brief Construct a new Manager object
-        //      * 
-        //      * @param strategies Strategies in config
-        //      * @param taapi_key API Key for taapi.io
-        //      */
-        //     Manager(
-        //         nlohmann::json &strategies,
-        //         const string &taapi_key
-        //     ) : strategies(strategies)
-        //     { 
-        //         this->watcher.set_strategies(
-        //             strategies
-        //         );
-        //         this->watcher.set_taapi_key(
-        //             taapi_key
-        //         );
-        //         this->watcher.initialize_indicators();
+                string symbol;
+                string interval;
 
-        //         for (auto& [key1, val1] : strategies.items())
-        //         {
-        //             for (auto& [key2, val2] : val1.items())
-        //             {
-        //                 this->ema_cross_traders.push_back(
-        //                     Workers::Trader(
-        //                         val2["trader_params"]
-        //                     )
-        //                 );
-        //                 this->ema_cross_solvers.push_back(
-        //                     Workers::Solver<Strategies::EMA_Cross>(
-        //                         val2["strategy_params"]
-        //                     )
-        //                 );
-        //             }
-        //         }
-        //     }
+                /* Initialize Candle Watchers */
+                // from trader_params
+                for (auto& [key, val] : strategies.items())
+                    for (auto& [k, v] : val.items())
+                    {
+                        symbol = v["trader_params"]["symbol"];
+                        interval = v["trader_params"]["interval"];
+                        Workers::Candle_Watcher new_cw(symbol, interval);
+                        if (
+                            std::find(
+                                this->candle_watchers.begin(), 
+                                this->candle_watchers.end(), 
+                                new_cw
+                            ) != this->candle_watchers.end())
+                        {
+                            continue;
+                        } else {
+                            this->candle_watchers.push_back(new_cw);
+                        }
+                    }
+                
+                // from strategy_params
+                for (auto& [key1, val1] : strategies.items())
+                    for (auto& [key2, val2] : val1.items())
+                    {
+                        strategy_params = val2["strategy_params"];
+                        symbol = val2["trader_params"]["symbol"];
+                        for (auto& [key3, val3] : strategy_params.items())
+                        {
+                            interval = val3["indicator_params"]["interval"];
+                            Workers::Candle_Watcher new_cw(symbol, interval);
+                            if (
+                                std::find(
+                                    this->candle_watchers.begin(), 
+                                    this->candle_watchers.end(), 
+                                    new_cw
+                                ) != this->candle_watchers.end())
+                            {
+                                continue;
+                            } else {
+                                this->candle_watchers.push_back(new_cw);
+                            }
+                        }
+                    }
+                
+                cout << "Candle Watchers:" << endl;
+                for (Workers::Candle_Watcher& cw : this->candle_watchers)
+                    cout << cw.get_symbol() << " : " << cw.get_interval() << endl;
+                cout << endl;
+                
+                /* Initialize Indicators */
+                this->indicator_watcher_cd.set_strategies(
+                    this->configuration["strategies"]
+                );
+                this->indicator_watcher_ha.set_strategies(
+                    this->configuration["strategies"]
+                );
 
-        //     /**
-        //      * @brief Destroy the Manager object
-        //      */
-        //     ~Manager() = default;
+                this->indicator_watcher_cd.set_taapi_key(
+                    this->configuration["taapi"]["key"]
+                );
+                this->indicator_watcher_ha.set_taapi_key(
+                    this->configuration["taapi"]["key"]
+                );
 
-        //     /**
-        //      * @brief 
-        //      */
-        //     void run()
-        //     {
-        //         cout << "[+] Start working" << endl;
+                this->indicator_watcher_cd.initialize_indicators();
+                this->indicator_watcher_ha.initialize_indicators();
 
-        //         while (true)
-        //         {
-        //             for (int i = 0; i < this->ema_cross_solvers.size(); i++)
-        //                 this->work<Strategies::EMA_Cross>(
-        //                     this->ema_cross_traders[i],
-        //                     this->ema_cross_solvers[i]
-        //                 );
-        //             for (int i = 0; i < this->normalized_macd_cross_solvers.size(); i++)
-        //                 this->work<Strategies::EMA_Cross>(
-        //                     this->normalized_macd_cross_traders[i],
-        //                     this->normalized_macd_cross_solvers[i]
-        //                 );
-        //         }
-        //     }
+                cout << "Candle:" << endl;
+                this->indicator_watcher_cd.describe_indicators();
+                cout << endl;
+                cout << "Heikin Ashi:" << endl;
+                this->indicator_watcher_ha.describe_indicators();
+                cout << endl;
+
+                for (Workers::Candle_Watcher& cw : this->candle_watchers)
+                {
+                    cw.read_file_once(data_file);
+                    while(cw.read_file_once(data_file))
+                    {
+
+                    }
+                }
+
+                for (Workers::Candle_Watcher& cw : this->candle_watchers)
+                {
+
+                }
+            }
     };
 }
 

@@ -85,6 +85,13 @@ int main(int argc, char *argv[]) {
         dir,
         taapi_key
     );
+
+    Managers::Manager manager(
+        jf
+    );
+
+    manager.initialize(data_file);
+
     // tester.backtest_candle(
     //     "BTCUSDT",
     //     "1d",
@@ -102,12 +109,12 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     data_file
     // );
-    tester.backtest_strategy<Strategies::RSXC_ADX>(
-        strategy_params,
-        usdt_balance,
-        symbol_balance,
-        data_file
-    );
+    // tester.backtest_strategy<Strategies::RSXC_ADX>(
+    //     strategy_params,
+    //     usdt_balance,
+    //     symbol_balance,
+    //     data_file
+    // );
     // tester.backtest_strategy<Strategies::Normalized_MACD_Cross>(
     //     jf["strategies"]["normalized_macd_cross"]["1"],
     //     10000.0,

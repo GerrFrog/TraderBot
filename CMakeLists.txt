@@ -18,7 +18,7 @@ set( TRADE_FILES src/trade )
 set( WORKERS_FILES src/workers )
 set( EXCEPTIONS_FILES src/exceptions )
 set( TESTER_FILES src/tester )
-set( CANDLE_FILES src/candle )
+set( CANDLES_FILES src/candles )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -34,7 +34,7 @@ set(
     ${WORKERS_FILES}/inc/workers.hpp
     ${EXCEPTIONS_FILES}/inc/exceptions.hpp
     ${TESTER_FILES}/inc/tester.hpp
-    ${CANDLE_FILES}/inc/candle.hpp
+    ${CANDLES_FILES}/inc/candles.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -47,7 +47,7 @@ set(
     ${WORKERS_FILES}/src/workers.cpp
     ${EXCEPTIONS_FILES}/src/exceptions.cpp
     ${TESTER_FILES}/src/tester.cpp
-    ${CANDLE_FILES}/src/candle.cpp
+    ${CANDLES_FILES}/src/candles.cpp
 )
 
 set(

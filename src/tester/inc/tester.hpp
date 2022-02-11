@@ -377,8 +377,8 @@ class Tester
         ) {
             auto start_time = std::chrono::high_resolution_clock::now();
 
-            Heikin_Ashi heikin_ashi;
-            Candle candle;
+            Candles::Heikin_Ashi heikin_ashi;
+            Candles::Candle candle;
 
             Workers::Candle_Watcher candle_watcher(symbol, interval);
 
@@ -430,7 +430,7 @@ class Tester
         {
             Workers::Candle_Watcher candle_watcher(symbol, interval);
 
-            Candle candle;
+            Candles::Candle candle;
 
             Indicator indicator;
 
@@ -489,7 +489,7 @@ class Tester
         {
             Workers::Candle_Watcher candle_watcher(symbol, interval);
 
-            Heikin_Ashi candle;
+            Candles::Heikin_Ashi candle;
 
             Indicator indicator;
 
@@ -552,11 +552,11 @@ class Tester
             string symbol = config["trader_params"]["symbol"];
             string candle_type = config["trader_params"]["candle"];
 
-            Candle candle;
-            Heikin_Ashi heikin_ashi;
+            Candles::Candle candle;
+            Candles::Heikin_Ashi heikin_ashi;
 
-            Workers::Indicator_Watcher<Candle>indicator_watcher_cd;
-            Workers::Indicator_Watcher<Heikin_Ashi> indicator_watcher_ha;
+            Workers::Indicator_Watcher<Candles::Candle>indicator_watcher_cd;
+            Workers::Indicator_Watcher<Candles::Heikin_Ashi> indicator_watcher_ha;
             Workers::Candle_Watcher candle_watcher(symbol, interval);
             Workers::Trader trader(
                 config["trader_params"]
@@ -605,7 +605,7 @@ class Tester
                     indicator_watcher_cd.resolve(
                         candle
                     );
-                    this->work<Strategy, Candle>(
+                    this->work<Strategy, Candles::Candle>(
                         config,
                         trader,
                         solver,
@@ -619,7 +619,7 @@ class Tester
                     indicator_watcher_ha.resolve(
                         heikin_ashi
                     );
-                    this->work<Strategy, Heikin_Ashi>(
+                    this->work<Strategy, Candles::Heikin_Ashi>(
                         config,
                         trader,
                         solver,

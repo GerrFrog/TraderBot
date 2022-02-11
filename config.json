@@ -84,9 +84,9 @@
             "1": {
                 "trader_params": {
                     "exchange": "binance",
-                    "symbol": "BTC/USDT",
+                    "symbol": "ALGO/USDT",
                     "name": "RSXC_LB and ADX signals #1",
-                    "interval": "1d",
+                    "interval": "30m",
                     "candle": "Candle",
                     "strategy": {
                         "type": "position",
@@ -105,7 +105,7 @@
                         "indicator": "RSXC_LB",
                         "candle": "Candle",
                         "indicator_params": {
-                            "interval": "5m",
+                            "interval": "30m",
                             "src": "Close",
                             "length": 14
                         }
@@ -115,7 +115,7 @@
                         "indicator": "ADX",
                         "candle": "Candle",
                         "indicator_params": {
-                            "interval": "5m",
+                            "interval": "30m",
                             "period": 14,
                             "dmi_period": 14,
                             "dmi_smoothed": "RMA",

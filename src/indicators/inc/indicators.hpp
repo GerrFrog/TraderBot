@@ -12,7 +12,7 @@
 
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../request/inc/request.hpp"
-#include "../../candle/inc/candle.hpp"
+#include "../../candles/inc/candles.hpp"
 
 using std::string; 
 using std::map; 
