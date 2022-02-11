@@ -109,12 +109,8 @@ namespace Managers
                                 this->candle_watchers.begin(), 
                                 this->candle_watchers.end(), 
                                 new_cw
-                            ) != this->candle_watchers.end())
-                        {
-                            continue;
-                        } else {
+                        ) == this->candle_watchers.end())
                             this->candle_watchers.push_back(new_cw);
-                        }
                     }
                 
                 // from strategy_params
@@ -132,12 +128,8 @@ namespace Managers
                                     this->candle_watchers.begin(), 
                                     this->candle_watchers.end(), 
                                     new_cw
-                                ) != this->candle_watchers.end())
-                            {
-                                continue;
-                            } else {
+                            ) == this->candle_watchers.end())
                                 this->candle_watchers.push_back(new_cw);
-                            }
                         }
                     }
                 
