@@ -1,0 +1,157 @@
+{
+    "bot_name": "Super trading bot",
+    "fiat_display_currency": "USD",
+    "test_mode": true,
+    "strategies": {
+        "EMA_Cross": {
+            "1": {
+                "strategy": "EMA_Cross",
+                "trader_params": {
+                    "exchange": "binance",
+                    "symbol": "BTC/USDT",
+                    "name": "Normalized MACD Cross Strategy #1",
+                    "interval": "1h",
+                    "candle": "Candle",
+                    "strategy": {
+                        "type": "scalping",
+                        "positions": "both",
+                        "short_goal": "usdt",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 10,
+                        "stop-loss": 1,
+                        "target": 2
+                    }
+                },
+                "strategy_params": {
+                    "short_ema": {
+                        "type": "Indicators::TAAPI",
+                        "indicator": "EMA",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "6h",
+                            "period": 50
+                        }
+                    },
+                    "long_ema": {
+                        "type": "Indicators::TAAPI",
+                        "indicator": "EMA",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "8h",
+                            "period": 200
+                        }
+                    }
+                }
+            }
+        },
+        "Normalized_MACD_Cross": {
+            "1": {
+                "strategy": "Normalized_MACD_Cross",
+                "trader_params": {
+                    "exchange": "binance",
+                    "symbol": "ETH/USDT",
+                    "name": "Normalized MACD Cross Strategy #1",
+                    "interval": "1d",
+                    "candle": "Candle",
+                    "strategy": {
+                        "type": "position",
+                        "positions": "both",
+                        "short_goal": "usdt",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 20,
+                        "stop-loss": 0.2,
+                        "target": 0.15
+                    }
+                },
+                "strategy_params": {
+                    "normalized_macd": {
+                        "type": "Indicators::TradingView",
+                        "indicator": "Normalized_MACD",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "1d",
+                            "type": "WMA",
+                            "sma": 12,
+                            "lma": 21,
+                            "tsp": 9,
+                            "np": 50
+                        }
+                    }
+                }
+            }
+        },
+        "RSXC_ADX": {
+            "1": {
+                "strategy": "RSXC_ADX",
+                "trader_params": {
+                    "exchange": "binance",
+                    "symbol": "ALGO/USDT",
+                    "name": "RSXC_LB and ADX signals #1",
+                    "interval": "30m",
+                    "candle": "Candle",
+                    "strategy": {
+                        "type": "position",
+                        "positions": "both",
+                        "short_goal": "symbol",
+                        "stake_amount": -1.0,
+                        "symbol_amount": -1.0,
+                        "max_open_trade": 20,
+                        "stop-loss": 0.2,
+                        "target": 0.15
+                    }
+                },
+                "strategy_params": {
+                    "rsxc_lb": {
+                        "type": "Indicators::TradingView",
+                        "indicator": "RSXC_LB",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "30m",
+                            "src": "Close",
+                            "length": 14
+                        }
+                    },
+                    "adx": {
+                        "type": "Indicators::Integral",
+                        "indicator": "ADX",
+                        "candle": "Candle",
+                        "indicator_params": {
+                            "interval": "30m",
+                            "period": 14,
+                            "dmi_period": 14,
+                            "dmi_smoothed": "RMA",
+                            "dmi_atr_smoothed": "RMA"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "taapi": {
+        "plan": "free",
+        "key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImdoYWdoYWw5M0BnbWFpbC5jb20iLCJpYXQiOjE2NDEwMzQ2NjAsImV4cCI6Nzk0ODIzNDY2MH0.RQt0ocdRR_RwF5V3NbxxafvTSHactzx2MJ_qBWSq_fY"
+    },
+    "telegram": {
+        "enabled": false,
+        "token": "",
+        "chat_id": ""
+    },
+    "api_server": {
+        "enabled": false,
+        "ip_address": "127.0.0.1",
+        "port": 8080,
+        "username": "username",
+        "password": "password"
+    },
+    "exchange": {
+        "binance": {
+            "private_key": "KSAeI8O7FNNHoYiJEbhCB2Rm1e7E05SZ7uQkj3dzl90orQDyfpN1f6W2DDWhXqhd",
+            "secret_key": "gNYSVslNacipFRitkP75puJCkxd9VeWwssVRLbe4Ca7n5dUaSo9Sn0oky2nS1iEl",
+            "tradable_pairs": [
+                "BTCUSDT"
+            ]
+        }
+    }
+}

@@ -158,6 +158,41 @@ namespace Candles
              * @return double 
              */
             double get_change_abs() { return this->change_absolute; }
+
+            /**
+             * @brief Get the volume object
+             * 
+             * @return double 
+             */
+            double get_volume() { return this->volume; }
+
+            /**
+             * @brief Get the quote asset volume
+             * 
+             * @return double 
+             */
+            double get_qav() { return this->quote_asset_volume; }
+
+            /**
+             * @brief Get the trades count
+             * 
+             * @return double 
+             */
+            double get_trades() { return this->trades_count; }
+
+            /**
+             * @brief Get the taker buy base asset volume
+             * 
+             * @return double 
+             */
+            double get_tbbav() { return this->taker_buy_base_asset_volume; }
+
+            /**
+             * @brief Get the taker buy quote asset volume
+             * 
+             * @return double 
+             */
+            double get_tbqav() { return this->taker_buy_quote_asset_volume; }
     };
 
     /**
@@ -299,8 +334,12 @@ namespace Candles
             Heikin_Ashi() = default;
 
             /**
-             * @brief Construct a new Heikin Ashi object
+             * @brief Construct new Heikin Ashi Candle
              * 
+             * @param candle Candle
+             * @param interval Candle interval (timeframe)
+             * @param close_prev Previous Heikin Ashi close price
+             * @param open_prev Previous Heikin Ashi open price
              */
             Heikin_Ashi(
                 Candles::Candle &candle,
@@ -308,6 +347,14 @@ namespace Candles
                 double open_prev
             )
             { 
+                this->open_time = candle.get_open_time();
+                this->close_time = candle.get_close_time();
+                this->volume = candle.get_volume();
+                this->quote_asset_volume = candle.get_qav();
+                this->trades_count = candle.get_trades();
+                this->taker_buy_base_asset_volume = candle.get_tbbav();
+                this->taker_buy_quote_asset_volume = candle.get_tbqav();
+
                 this->set = true;
 
                 this->open_price = (open_prev + close_prev) / 2;
@@ -352,6 +399,14 @@ namespace Candles
                 double open_prev
             ) 
             {
+                this->open_time = candle.get_open_time();
+                this->close_time = candle.get_close_time();
+                this->volume = candle.get_volume();
+                this->quote_asset_volume = candle.get_qav();
+                this->trades_count = candle.get_trades();
+                this->taker_buy_base_asset_volume = candle.get_tbbav();
+                this->taker_buy_quote_asset_volume = candle.get_tbqav();
+
                 this->set = true;
 
                 this->open_price = (open_prev + close_prev) / 2;

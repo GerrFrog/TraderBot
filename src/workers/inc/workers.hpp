@@ -28,523 +28,10 @@ using std::map;
 using std::vector;
 
 /**
- * @brief All Workers which create Trader
+ * @brief All Watchers
  */
-namespace Workers
+namespace Workers::Watchers
 {
-    /**
-     * @brief Trader decides when open and close order
-     */
-    class Trader
-    {
-        private:
-            /**
-             * @brief All trades
-             */
-            vector<Trade> trades;
-
-            /**
-             * @brief Symbol (pair) to trade
-             */
-            string symbol;
-
-            /**
-             * @brief Interval of candles
-             */
-            string interval;
-
-            /**
-             * @brief Name of Trader
-             */
-            string name;
-
-            /**
-             * @brief Exchange
-             */
-            string exchange;
-
-            /**
-             * @brief Trader type
-             */
-            string type;
-
-            /**
-             * @brief What positions are traded
-             */
-            string positions;
-
-            /**
-             * @brief Goal of short trade (USDT or symbol)
-             */
-            string short_goal;
-
-            /**
-             * @brief Maximum opened trades
-             */
-            double max_open_trade;
-
-            /**
-             * @brief Stake amount to "long" trade
-             */
-            double stake_amount = 0.0;
-
-            /**
-             * @brief Stake amount to "short" trade
-             */
-            double symbol_amount = 0.0;
-
-            /**
-             * @brief Stop-loss percent
-             */
-            double stop_loss = 0.0;
-
-            /**
-             * @brief Target percent
-             */
-            double target = 0.0;
-
-            /**
-             * @brief Initialize new Trade
-             */
-            void initialize_trade(
-                Trade &trade,
-                const string& position,
-                double price = 0
-            )
-            {
-                // TODO: Unique ID for each Trade
-                trade.set_open_time(
-                    1, this->symbol, position, 
-                    this->interval, this->stake_amount, 
-                    this->symbol_amount, price 
-                );
-            }
-
-            /**
-             * @brief Clear current Trade to open new one
-             */
-            void clear_trade()
-            {
-                // TODO: Clear Trade object
-            }
-
-            /**
-             * @brief Open new Trade
-             */
-            void open_trade(
-                Trade &trade,
-                const string& position,
-                double open_price
-            )
-            {
-                this->initialize_trade(
-                    trade,
-                    position,
-                    open_price
-                );
-                // TODO: Open trade in binance
-            }
-
-            /**
-             * @brief Close current Trade
-             */
-            void close_trade(
-                Trade &trade,
-                double close_price
-            )
-            {
-                if (trade.get_position() == "short")
-                {
-                    trade.set_close_time(
-                        close_price,
-                        this->short_goal
-                    );
-                } else if (trade.get_position() == "long")
-                {
-                    trade.set_close_time(
-                        close_price
-                    );
-                }
-
-                // TODO: Close trade in binance
-            }
-
-        public:
-            /**
-             * @brief Construct a new Trader object
-             */
-            Trader() = default;
-
-            /**
-             * @brief Construct a new ema cross trader object
-             * 
-             * @param trader_params Parameters for Trader
-             */
-            Trader(
-                nlohmann::json &trader_params
-            )
-            { 
-                this->symbol = (string)trader_params["symbol"];
-                this->interval = (string)trader_params["interval"];
-                this->name = (string)trader_params["name"];
-                this->exchange = (string)trader_params["exchange"];
-                this->positions = (string)trader_params["strategy"]["positions"];
-                this->short_goal = (string)trader_params["strategy"]["short_goal"];
-
-                this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
-                this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
-                this->max_open_trade = (double)trader_params["strategy"]["max_open_trade"];
-
-                if ((string)trader_params["strategy"]["type"] == "scalping")
-                {
-                    this->type = (string)trader_params["strategy"]["type"];
-                    this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
-                    this->target = (double)trader_params["strategy"]["target"];
-                } else if ((string)trader_params["strategy"]["type"] == "position") {
-                    this->type = (string)trader_params["strategy"]["type"];
-                }
-            }
-
-            /**
-             * @brief Destroy the Trader object
-             */
-            ~Trader() = default;
-
-            /**
-             * @brief Set the trader params via JSON Object
-             * 
-             * @param trader_params Params for Trader
-             */
-            void set_trader_params(nlohmann::json &trader_params) 
-            { 
-                this->symbol = (string)trader_params["symbol"];
-                this->interval = (string)trader_params["interval"];
-                this->name = (string)trader_params["name"];
-                this->exchange = (string)trader_params["exchange"];
-                this->positions = (string)trader_params["strategy"]["positions"];
-                this->short_goal = (string)trader_params["strategy"]["short_goal"];
-
-                this->stake_amount = (double)trader_params["strategy"]["stake_amount"];
-                this->symbol_amount = (double)trader_params["strategy"]["symbol_amount"];
-                this->max_open_trade = (double)trader_params["strategy"]["max_open_trade"];
-
-                if ((string)trader_params["strategy"]["type"] == "scalping")
-                {
-                    this->type = (string)trader_params["strategy"]["type"];
-                    this->stop_loss = (double)trader_params["strategy"]["stop-loss"];
-                    this->target = (double)trader_params["strategy"]["target"];
-                } else if ((string)trader_params["strategy"]["type"] == "position") {
-                    this->type = (string)trader_params["strategy"]["type"];
-                }
-            }
-
-            /**
-             * @brief Set the stake amount 
-             * 
-             * @param amount Stake amount
-             */
-            void set_stake_amount(double amount) { this->stake_amount = amount; }
-
-            /**
-             * @brief Set the symbol abount object
-             * 
-             * @param amount Stake amount
-             */
-            void set_symbol_abount(double amount) { this->symbol_amount = amount; }
-
-            /**
-             * @brief Get the symbol
-             * 
-             * @return string 
-             */
-            string get_symbol() { return this->symbol; }
-
-            /**
-             * @brief Get the interval 
-             * 
-             * @return string 
-             */
-            string get_interval() { return this->interval; }
-
-            /**
-             * @brief Get the name of Trader
-             * 
-             * @return string 
-             */
-            string get_name() { return this->name; }
-
-            /**
-             * @brief Get the exchange 
-             * 
-             * @return string 
-             */
-            string get_exchange() { return this->exchange; }
-
-            /**
-             * @brief Get the stake amount
-             * 
-             * @return double 
-             */
-            double get_stake_amount() { return this->stake_amount; }
-
-            /**
-             * @brief Decide what to do with trade
-             * 
-             * @param signals 
-             * @param ret_trades Array of returning trades
-             * @param price Current price
-             */
-            void resolve(
-                map<string, bool> &signals,
-                vector<Trade> &ret_trades,
-                double price
-            )
-            {
-                if (this->type == "position")
-                {
-                    if (
-                        signals["long_open"] &&
-                        (
-                            this->positions == "both" ||
-                            this->positions == "long"
-                        )
-                    ) {
-                        if (
-                            this->trades.size() <= this->max_open_trade ||
-                            this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade, 
-                                (string)"long",
-                                price
-                            );
-                            this->trades.push_back(trade);
-                            cout << "[+] Opened short trade" << endl;
-                        }
-                    }
-                    if (signals["long_close"])
-                    {
-                        for (Trade& trade : this->trades)
-                            if (trade.get_position() == "long")
-                            {
-                                this->close_trade(trade, price);
-                                ret_trades.push_back(trade);
-                                this->trades.erase(
-                                    std::remove(
-                                        this->trades.begin(),
-                                        this->trades.end(),
-                                        trade
-                                    ),
-                                    this->trades.end()
-                                );
-                                cout << "[+] Closed long trade" << endl;
-                            }
-                    }
-                    if (
-                        signals["short_open"] &&
-                        (
-                            this->positions == "both" ||
-                            this->positions == "short"
-                        )
-                    ) {
-                        if (
-                            this->trades.size() <= this->max_open_trade ||
-                            this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade,
-                                (string)"short",
-                                price
-                            );
-                            this->trades.push_back(trade);
-                            cout << "[+] Opened long trade" << endl;
-                        }
-                    }
-                    if (signals["short_close"])
-                    {
-                        for (Trade& trade : this->trades)
-                            if (trade.get_position() == "short")
-                            {
-                                this->close_trade(trade, price);
-                                ret_trades.push_back(trade);
-                                this->trades.erase(
-                                    std::remove(
-                                        this->trades.begin(),
-                                        this->trades.end(),
-                                        trade
-                                    ),
-                                    this->trades.end()
-                                );
-                                cout << "[+] Closed short trade" << endl;
-                            }
-                    }
-                } else if (this->type == "scalping") {
-                    double opened_price;
-                    double percent;
-                    for (Trade& trade : this->trades)
-                    {
-                        opened_price = trade.get_open_price();
-                        if (trade.get_position() == "long")
-                        {
-                            percent = (price / opened_price - 1) * 100;
-                            if (
-                                this->target <= percent ||
-                                this->stop_loss >= percent
-                            ) {
-                                this->close_trade(trade, price);
-                                ret_trades.push_back(trade);
-                                this->trades.erase(
-                                    std::remove(
-                                        this->trades.begin(),
-                                        this->trades.end(),
-                                        trade
-                                    ),
-                                    this->trades.end()
-                                );
-                                cout << "[+] Closed long trade" << endl;
-                            }
-                        } else if (trade.get_position() == "short") {
-                            percent = (opened_price / price - 1) * 100;
-                            if (
-                                this->target <= percent ||
-                                this->stop_loss >= percent
-                            ) {
-                                this->close_trade(trade, price);
-                                ret_trades.push_back(trade);
-                                this->trades.erase(
-                                    std::remove(
-                                        this->trades.begin(),
-                                        this->trades.end(),
-                                        trade
-                                    ),
-                                    this->trades.end()
-                                );
-                                cout << "[+] Closed short trade" << endl;
-                            }
-                        }
-                    }
-                    if (
-                        signals["long_open"] &&
-                        (
-                            this->positions == "both" ||
-                            this->positions == "long"
-                        )
-                    ) {
-                        if (
-                            this->trades.size() <= this->max_open_trade ||
-                            this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade,
-                                (string)"long",
-                                price
-                            );
-                            this->trades.push_back(trade);
-                            cout << "[+] Opened long trade" << endl;
-                        }
-                    }
-                    if (
-                        signals["short_open"] &&
-                        (
-                            this->positions == "both" ||
-                            this->positions == "short"
-                        )
-                    ) {
-                        if (
-                            this->trades.size() <= this->max_open_trade ||
-                            this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade, 
-                                (string)"short",
-                                price
-                            );
-                            this->trades.push_back(trade);
-                            cout << "[+] Opened short trade" << endl;
-                        }
-                    }
-                }
-            }
-    };
-
-    /**
-     * @brief Solves the Strategy
-     */
-    template <class Strategy>
-    class Solver
-    {
-        private:
-            /**
-             * @brief Params for Strategy
-             */
-            nlohmann::json strategy_params;
-
-            /**
-             * @brief Data container for resolved signals
-             */
-            map<string, bool> signals{
-                {"long_open", false}, 
-                {"long_close", false},
-                {"short_open", false},
-                {"short_close", false}
-            };
-
-            /**
-             * @brief EMA Cross Strategy object
-             */
-            Strategy strategy;
-
-        public:
-            /**
-             * @brief Construct a new Solver 
-             */
-            Solver() = default;
-
-            /**
-             * @brief Construct a new Solver object
-             * 
-             * @param strategy_params Params for Strategy
-             */
-            Solver(
-                nlohmann::json &strategy_params
-            ) : strategy_params(strategy_params)
-            { }
-
-            /**
-             * @brief Destroy the ema cross 15m object
-             */
-            ~Solver() = default;
-
-            /**
-             * @brief Get the strategy params object
-             * 
-             * @return nlohmann::json 
-             */
-            nlohmann::json get_strategy_params() { return this->strategy_params; }
-
-            /**
-             * @brief Get the signals object
-             * 
-             * @return map<string, bool> 
-             */
-            map<string, bool> get_signals() { return this->signals; }
-
-            /**
-             * @brief Resolve the strategy in worker
-             */
-            void resolve(nlohmann::json &params)
-            {
-                this->strategy.resolve(
-                    params,
-                    this->signals
-                );
-            }
-    };
-
     /**
      * @brief Responsable for Indicators
      * 
@@ -557,7 +44,7 @@ namespace Workers
             /**
              * @brief All strategies in config
              */
-            nlohmann::json strategies;
+            nlohmann::json strategy_params;
 
             /**
              * @brief Base URL of taapi.io
@@ -624,85 +111,6 @@ namespace Workers
              */
             vector<Indicators::TradingView::RSXC_LB<Candle_T>> all_rsxc_lb;
 
-            /**
-             * @brief Initialize indicator
-             * 
-             * @param strategy_params Parameters of indicator
-             */
-            void initialize_indicator(nlohmann::json &strategy_params)
-            {
-                // TODO: Create instance from config. Without if-else
-                for (auto& [key, val] : strategy_params.items())
-                {
-                    if (val["indicator"] == "EMA")
-                        this->all_ema.push_back(
-                            Indicators::Integral::EMA<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "WMA")
-                        this->all_wma.push_back(
-                            Indicators::Integral::WMA<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "SMA")
-                        this->all_sma.push_back(
-                            Indicators::Integral::SMA<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "SSMA")
-                        this->all_ssma.push_back(
-                            Indicators::Integral::SSMA<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "RSI")
-                        this->all_rsi.push_back(
-                            Indicators::Integral::RSI<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "TR")
-                        this->all_tr.push_back(
-                            Indicators::Integral::TR<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "ATR")
-                        this->all_atr.push_back(
-                            Indicators::Integral::ATR<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "DMI")
-                        this->all_dmi.push_back(
-                            Indicators::Integral::DMI<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "ADX")
-                        this->all_adx.push_back(
-                            Indicators::Integral::ADX<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "Normalized_MACD")
-                        this->all_normalized_macd.push_back(
-                            Indicators::TradingView::Normalized_MACD<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                    if (val["indicator"] == "RSXC_LB")
-                        this->all_rsxc_lb.push_back(
-                            Indicators::TradingView::RSXC_LB<Candle_T>(
-                                val["indicator_params"]
-                            )
-                        );
-                }
-            }
-
         public:
             /**
              * @brief Construct a new Indicator_Watcher object
@@ -716,9 +124,9 @@ namespace Workers
              * @param taapi_key API Key for taapi.io
              */
             Indicator_Watcher(
-                nlohmann::json &strategies,
+                nlohmann::json &strategy_params,
                 const string &taapi_key
-            ) : taapi_key(taapi_key), strategies(strategies)
+            ) : taapi_key(taapi_key), strategy_params(strategy_params)
             { }
 
             /**
@@ -731,7 +139,7 @@ namespace Workers
              * 
              * @param strat Strategies in config
              */
-            void set_strategies(nlohmann::json &strat) { this->strategies = strat; }
+            void set_strategy_params(nlohmann::json &strat) { this->strategy_params = strat; }
 
             /**
              * @brief Set the taapi key 
@@ -745,14 +153,75 @@ namespace Workers
              */
             void initialize_indicators()
             {
-                // TODO: Remake without try-catch. We pass "strategies" or "strategies.strategy.1.strategy_params" from config
-                try {
-                    for (auto& [key1, val1] : this->strategies.items())
-                        for (auto& [key2, val2] : val1.items())
-                            this->initialize_indicator(val2["strategy_params"]);
-                } catch(nlohmann::detail::type_error& exp) {
-                    cout << exp.what() << endl;
-                    this->initialize_indicator(this->strategies);
+                // TODO: Create instance from config. Without if-else
+                for (auto& [key, val] : this->strategy_params.items())
+                {
+                    if (val["indicator"] == "EMA")
+                        this->all_ema.push_back(
+                            Indicators::Integral::EMA<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "WMA")
+                        this->all_wma.push_back(
+                            Indicators::Integral::WMA<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "SMA")
+                        this->all_sma.push_back(
+                            Indicators::Integral::SMA<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "SSMA")
+                        this->all_ssma.push_back(
+                            Indicators::Integral::SSMA<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "RSI")
+                        this->all_rsi.push_back(
+                            Indicators::Integral::RSI<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "TR")
+                        this->all_tr.push_back(
+                            Indicators::Integral::TR<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "ATR")
+                        this->all_atr.push_back(
+                            Indicators::Integral::ATR<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "DMI")
+                        this->all_dmi.push_back(
+                            Indicators::Integral::DMI<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "ADX")
+                        this->all_adx.push_back(
+                            Indicators::Integral::ADX<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "Normalized_MACD")
+                        this->all_normalized_macd.push_back(
+                            Indicators::TradingView::Normalized_MACD<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "RSXC_LB")
+                        this->all_rsxc_lb.push_back(
+                            Indicators::TradingView::RSXC_LB<Candle_T>(
+                                val
+                            )
+                        );
                 }
             }
 
@@ -837,31 +306,32 @@ namespace Workers
                     string indicator = val["indicator"];
                     string type = val["type"];
 
-                    if (type == "Indicators::TAAPI" && !backtest)
-                    {
-                        if (indicator == "EMA")
-                        {
-                        again:
-                            try {
-                                Indicators::TAAPI::EMA ema;
-                                params[key] = ema.get(
-                                    this->taapi_url,
-                                    this->taapi_key, symbol,
-                                    val["indicator_params"]["interval"], 
-                                    val["indicator_params"]
-                                );
-                            } catch (Exceptions::TAAPI::Rate_Limit& exp) {
-                                cout << exp.what() << endl;
-                                // TODO: Pass delay from config
-                                std::this_thread::sleep_for(
-                                    std::chrono::seconds(
-                                        15
-                                    )
-                                );
-                                goto again;
-                            }
-                        }
-                    }
+                    // TODO: For TAAPI indicators
+                    // if (type == "Indicators::TAAPI" && !backtest)
+                    // {
+                    //     if (indicator == "EMA")
+                    //     {
+                    //     again:
+                    //         try {
+                    //             Indicators::TAAPI::EMA ema;
+                    //             params[key] = ema.get(
+                    //                 this->taapi_url,
+                    //                 this->taapi_key, symbol,
+                    //                 val["indicator_params"]["interval"], 
+                    //                 val["indicator_params"]
+                    //             );
+                    //         } catch (Exceptions::TAAPI::Rate_Limit& exp) {
+                    //             cout << exp.what() << endl;
+                    //             // TODO: Pass delay from config
+                    //             std::this_thread::sleep_for(
+                    //                 std::chrono::seconds(
+                    //                     15
+                    //                 )
+                    //             );
+                    //             goto again;
+                    //         }
+                    //     }
+                    // }
                     if (
                         type == "Indicators::Integral" || 
                         backtest
@@ -870,60 +340,61 @@ namespace Workers
                         if (indicator == "EMA")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &ema : this->all_ema)
-                                    if (ema.get_description() == val["indicator_params"])
+                                    if (ema.get_description() == val)
                                         params[key] = ema.get();
                         if (indicator == "SMA")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &sma : this->all_sma)
-                                    if (sma.get_description() == val["indicator_params"])
+                                    if (sma.get_description() == val)
                                         params[key] = sma.get();
                         if (indicator == "SSMA")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &ssma : this->all_ssma)
-                                    if (ssma.get_description() == val["indicator_params"])
+                                    if (ssma.get_description() == val)
                                         params[key] = ssma.get();
                         if (indicator == "WMA")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &wma : this->all_wma)
-                                    if (wma.get_description() == val["indicator_params"])
+                                    if (wma.get_description() == val)
                                         params[key] = wma.get();
                         if (indicator == "RSI")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &rsi : this->all_rsi)
-                                    if (rsi.get_description() == val["indicator_params"])
+                                    if (rsi.get_description() == val)
                                         params[key] = rsi.get();
                         if (indicator == "TR")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &tr : this->all_tr)
-                                    if (tr.get_description() == val["indicator_params"])
+                                    if (tr.get_description() == val)
                                         params[key] = tr.get();
                         if (indicator == "ATR")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &atr : this->all_atr)
-                                    if (atr.get_description() == val["indicator_params"])
+                                    if (atr.get_description() == val)
                                         params[key] = atr.get();
                         if (indicator == "DMI")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &dmi : this->all_dmi)
-                                    if (dmi.get_description() == val["indicator_params"])
+                                    if (dmi.get_description() == val)
                                         params[key] = dmi.get();
                         if (indicator == "ADX")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &adx : this->all_adx)
-                                    if (adx.get_description() == val["indicator_params"])
+                                    if (adx.get_description() == val)
                                         params[key] = adx.get();
+
                     }
                     if (type == "Indicators::TradingView" || backtest)
                     {
                         if (indicator == "Normalized_MACD")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &n_macd : this->all_normalized_macd)
-                                    if (n_macd.get_description() == val["indicator_params"])
+                                    if (n_macd.get_description() == val)
                                         params[key] = n_macd.get();
                         if (indicator == "RSXC_LB")
                             for (auto& [key, val] : strategy_params.items())
                                 for (auto &rsx : this->all_rsxc_lb)
-                                    if (rsx.get_description() == val["indicator_params"])
+                                    if (rsx.get_description() == val)
                                         params[key] = rsx.get();
                     }
                 }
@@ -997,7 +468,7 @@ namespace Workers
              * @return true 
              * @return false 
              */
-            bool operator ==(const Workers::Candle_Watcher& cw)
+            bool operator ==(const Workers::Watchers::Candle_Watcher& cw)
             {
                 if (
                     cw.symbol == this->symbol && 
@@ -1148,9 +619,1182 @@ namespace Workers
                 throw Exceptions::Panic::Panic_Exception("Something went wront in trader!", 1, 0);
             }
     };
-
 }
 
+namespace Workers::Solvers
+{
+    /**
+     * @brief Trader decides when open and close order
+     */
+    class Trader
+    {
+        private:
+            nlohmann::json trader_params;
+
+            /**
+             * @brief All trades
+             */
+            vector<Trade> trades;
+
+            /**
+             * @brief Symbol (pair) to trade
+             */
+            string symbol;
+
+            /**
+             * @brief Exchange
+             */
+            string exchange;
+
+            /**
+             * @brief Trader type
+             */
+            string type;
+
+            /**
+             * @brief What positions are traded
+             */
+            string positions;
+
+            /**
+             * @brief Goal of short trade (USDT or symbol)
+             */
+            string short_goal;
+
+            /**
+             * @brief Maximum opened trades
+             */
+            double max_open_trade;
+
+            /**
+             * @brief Stake amount to "long" trade
+             */
+            double stake_amount = 0.0;
+
+            /**
+             * @brief Stake amount to "short" trade
+             */
+            double symbol_amount = 0.0;
+
+            /**
+             * @brief Stop-loss percent
+             */
+            double stop_loss = 0.0;
+
+            /**
+             * @brief Target percent
+             */
+            double target = 0.0;
+
+            /**
+             * @brief Initialize new Trade
+             */
+            void initialize_trade(
+                Trade &trade,
+                const string& position,
+                double price = 0
+            )
+            {
+                // TODO: Unique ID for each Trade
+                trade.set_open_time(
+                    1, this->symbol, position, 
+                    this->stake_amount, 
+                    this->symbol_amount, price 
+                );
+            }
+
+            /**
+             * @brief Clear current Trade to open new one
+             */
+            void clear_trade()
+            {
+                // TODO: Clear Trade object
+            }
+
+            /**
+             * @brief Open new Trade
+             */
+            void open_trade(
+                Trade &trade,
+                const string& position,
+                double open_price
+            )
+            {
+                this->initialize_trade(
+                    trade,
+                    position,
+                    open_price
+                );
+                // TODO: Open trade in binance
+            }
+
+            /**
+             * @brief Close current Trade
+             */
+            void close_trade(
+                Trade &trade,
+                double close_price
+            )
+            {
+                if (trade.get_position() == "short")
+                {
+                    trade.set_close_time(
+                        close_price,
+                        this->short_goal
+                    );
+                } else if (trade.get_position() == "long")
+                {
+                    trade.set_close_time(
+                        close_price
+                    );
+                }
+
+                // TODO: Close trade in binance
+            }
+
+        public:
+            /**
+             * @brief Construct a new Trader object
+             */
+            Trader() = default;
+
+            /**
+             * @brief Construct a new ema cross trader object
+             * 
+             * @param trader_params Parameters for Trader
+             */
+            Trader(
+                nlohmann::json &trader_params
+            ) : trader_params(trader_params)
+            { 
+                this->symbol = (string)trader_params["symbol"];
+                this->exchange = (string)trader_params["exchange"];
+                this->positions = (string)trader_params["positions"];
+                this->short_goal = (string)trader_params["short_goal"];
+
+                this->stake_amount = (double)trader_params["stake_amount"];
+                this->symbol_amount = (double)trader_params["symbol_amount"];
+                this->max_open_trade = (double)trader_params["max_open_trade"];
+
+                if ((string)trader_params["type"] == "scalping")
+                {
+                    this->type = (string)trader_params["type"];
+                    this->stop_loss = (double)trader_params["stop-loss"];
+                    this->target = (double)trader_params["target"];
+                } else if ((string)trader_params["type"] == "position") {
+                    this->type = (string)trader_params["type"];
+                }
+            }
+
+            /**
+             * @brief Destroy the Trader object
+             */
+            ~Trader() = default;
+
+            /**
+             * @brief Set the trader params via JSON Object
+             * 
+             * @param trader_params Params for Trader
+             */
+            void set_trader_params(nlohmann::json &trader_params) 
+            { 
+                this->trader_params = trader_params;
+
+                this->symbol = (string)trader_params["symbol"];
+                this->exchange = (string)trader_params["exchange"];
+                this->positions = (string)trader_params["positions"];
+                this->short_goal = (string)trader_params["short_goal"];
+
+                this->stake_amount = (double)trader_params["stake_amount"];
+                this->symbol_amount = (double)trader_params["symbol_amount"];
+                this->max_open_trade = (double)trader_params["max_open_trade"];
+
+                if ((string)trader_params["type"] == "scalping")
+                {
+                    this->type = (string)trader_params["type"];
+                    this->stop_loss = (double)trader_params["stop-loss"];
+                    this->target = (double)trader_params["target"];
+                } else if ((string)trader_params["type"] == "position") {
+                    this->type = (string)trader_params["type"];
+                }
+            }
+
+            /**
+             * @brief Set the stake amount 
+             * 
+             * @param amount Stake amount
+             */
+            void set_stake_amount(double amount) { this->stake_amount = amount; }
+
+            /**
+             * @brief Set the symbol abount object
+             * 
+             * @param amount Stake amount
+             */
+            void set_symbol_abount(double amount) { this->symbol_amount = amount; }
+
+            /**
+             * @brief Get the description object
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_description() { return this->trader_params; }
+
+            /**
+             * @brief Get the symbol
+             * 
+             * @return string 
+             */
+            string get_symbol() { return this->symbol; }
+
+            /**
+             * @brief Get the exchange 
+             * 
+             * @return string 
+             */
+            string get_exchange() { return this->exchange; }
+
+            /**
+             * @brief Get the stake amount
+             * 
+             * @return double 
+             */
+            double get_stake_amount() { return this->stake_amount; }
+
+            /**
+             * @brief Decide what to do with trade
+             * 
+             * @param signals 
+             * @param ret_trades Array of returning trades
+             * @param price Current price
+             */
+            void resolve(
+                map<string, bool> &signals,
+                vector<Trade> &ret_trades,
+                double price
+            )
+            {
+                if (this->type == "position")
+                {
+                    if (
+                        signals["long_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "long"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade, 
+                                (string)"long",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened long trade" << endl;
+                        }
+                    }
+                    if (signals["long_close"])
+                    {
+                        for (Trade& trade : this->trades)
+                            if (trade.get_position() == "long")
+                            {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                                cout << "[+] Closed long trade" << endl;
+                            }
+                    }
+                    if (
+                        signals["short_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "short"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade,
+                                (string)"short",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened short trade" << endl;
+                        }
+                    }
+                    if (signals["short_close"])
+                    {
+                        for (Trade& trade : this->trades)
+                            if (trade.get_position() == "short")
+                            {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                                cout << "[+] Closed short trade" << endl;
+                            }
+                    }
+                } else if (this->type == "scalping") {
+                    double opened_price;
+                    double percent;
+                    for (Trade& trade : this->trades)
+                    {
+                        opened_price = trade.get_open_price();
+                        if (trade.get_position() == "long")
+                        {
+                            percent = (price / opened_price - 1) * 100;
+                            if (
+                                this->target <= percent ||
+                                this->stop_loss >= percent
+                            ) {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                                cout << "[+] Closed long trade" << endl;
+                            }
+                        } else if (trade.get_position() == "short") {
+                            percent = (opened_price / price - 1) * 100;
+                            if (
+                                this->target <= percent ||
+                                this->stop_loss >= percent
+                            ) {
+                                this->close_trade(trade, price);
+                                ret_trades.push_back(trade);
+                                this->trades.erase(
+                                    std::remove(
+                                        this->trades.begin(),
+                                        this->trades.end(),
+                                        trade
+                                    ),
+                                    this->trades.end()
+                                );
+                                cout << "[+] Closed short trade" << endl;
+                            }
+                        }
+                    }
+                    if (
+                        signals["long_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "long"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade,
+                                (string)"long",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened long trade" << endl;
+                        }
+                    }
+                    if (
+                        signals["short_open"] &&
+                        (
+                            this->positions == "both" ||
+                            this->positions == "short"
+                        )
+                    ) {
+                        if (
+                            this->trades.size() <= this->max_open_trade ||
+                            this->max_open_trade == -1.0
+                        ) {
+                            Trade trade;
+                            this->open_trade(
+                                trade, 
+                                (string)"short",
+                                price
+                            );
+                            this->trades.push_back(trade);
+                            cout << "[+] Opened short trade" << endl;
+                        }
+                    }
+                }
+            }
+    };
+
+    /**
+     * @brief Solves the Strategy
+     */
+    template <class Strategy, class Candle_T>
+    class Strateger
+    {
+        private:
+            /**
+             * @brief Strategy
+             */
+            Strategy strategy;
+
+            /**
+             * @brief Params for Strategy
+             */
+            nlohmann::json strategy_params;
+
+            /**
+             * @brief Data container for resolved signals
+             */
+            map<string, bool> signals{
+                {"long_open", false}, 
+                {"long_close", false},
+                {"short_open", false},
+                {"short_close", false}
+            };
+
+            /**
+             * @brief Indicators for strategy
+             */
+            Workers::Watchers::Indicator_Watcher<Candle_T> indicator_watcher;
+
+        public:
+            /**
+             * @brief Construct a new Solver 
+             */
+            Strateger() = default;
+
+            /**
+             * @brief Construct a new Solver object
+             * 
+             * @param strategy_params Params for Strategy
+             */
+            Strateger(
+                nlohmann::json &strategy_params
+            ) : strategy_params(strategy_params)
+            { 
+                this->indicator_watcher.set_strategy_params(strategy_params);
+            }
+
+            /**
+             * @brief Destroy the ema cross 15m object
+             */
+            ~Strateger() = default;
+
+            /**
+             * @brief Get the strategy params object
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_strategy_params() { return this->strategy_params; }
+
+            /**
+             * @brief Get the signals object
+             * 
+             * @return map<string, bool> 
+             */
+            map<string, bool> get_signals() { return this->signals; }
+
+            /**
+             * @brief Set strategy parameters
+             * 
+             * @param strategy_params Strategy parameters
+             */
+            void set_strategy_params(nlohmann::json &strategy_params)
+            {
+                this->strategy_params = strategy_params;
+                this->indicator_watcher.set_strategy_params(strategy_params);
+            }
+
+            /**
+             * @brief Initialize Strateger
+             */
+            void initialize()
+            {
+                this->indicator_watcher.initialize_indicators();
+            }
+
+            /**
+             * @brief Resolve the strategy in worker
+             */
+            void resolve(Candle_T &candle)
+            {
+                this->indicator_watcher.resolve(candle);
+                nlohmann::json params = this->indicator_watcher.get(
+                    this->strategy_params,
+                    ""
+                );
+                cout << "Params: " << params << endl;
+                this->strategy.resolve(
+                    params,
+                    this->signals
+                );
+            }
+    };
+}
+
+/**
+ * @brief All Workers
+ */
+namespace Workers
+{
+    /**
+     * @brief Trading Worker
+     * 
+     * @tparam Strategy Strategy type
+     * @tparam Candle_T Candle type
+     */
+    template <class Strategy, class Candle_T>
+    class Worker
+    {
+        private:
+            /**
+             * @brief JSON Worker configuration
+             */
+            nlohmann::json worker_configuration;
+
+            /**
+             * @brief Trader object
+             */
+            Workers::Solvers::Trader trader;
+
+            /**
+             * @brief Strateger object
+             */
+            Workers::Solvers::Strateger<Strategy, Candle_T> strateger;
+
+            /**
+             * @brief Candle Watcher object
+             */
+            Workers::Watchers::Candle_Watcher candle_watcher;
+
+        public:
+            /**
+             * @brief Construct a new Worker object
+             * 
+             * @param worker_configuration JSON Worker Configuration
+             */
+            Worker(
+                nlohmann::json &worker_configuration
+            ) : worker_configuration(worker_configuration)
+            { }
+
+            /**
+             * @brief Destroy the Worker object
+             */
+            ~Worker() = default;
+
+            /**
+             * @brief Initialize Worker
+             */
+            void initialize()
+            {
+                this->trader.set_trader_params(
+                    this->worker_configuration["trader_params"]
+                );
+                cout << this->trader.get_description() << endl;
+
+                this->strateger.set_strategy_params(
+                    this->worker_configuration["strategy_params"]
+                );
+                this->strateger.initialize();
+
+                this->candle_watcher.initialize(
+                    this->worker_configuration["trader_params"]["symbol"],
+                    this->worker_configuration["interval"]
+                );
+            }
+
+            /**
+             * @brief Backtest Worker by Candle type
+             * 
+             * @param data_dir Root path to data directory
+             * @param start_balance Start USDT balance (for long trades)
+             * @param start_symbols Start Symbol balance (for short trades)
+             */
+            void backtest_candle(
+                const string& data_dir,
+                double start_balance,
+                double start_symbols 
+            ) {
+                double max_open_trades = this->worker_configuration["trader_params"]["max_open_trade"];
+
+                string symbol = this->worker_configuration["trader_params"]["symbol"];
+                string interval = this->worker_configuration["interval"];
+                string candle_type = this->worker_configuration["candle"];
+                string short_goal = this->worker_configuration["trader_params"]["short_goal"];
+                string sym;
+
+                map<string, bool> signals;
+
+                Candles::Candle candle;
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                io::CSVReader<11> data_file(
+                    data_dir + sym + '_' + interval +".csv"               
+                );
+
+                double candle_close_price;
+                double stake_amount_trade;
+                double symbol_amount_trade;
+                double symbol_balance_usdt = 0;
+                double minimal_symbol_balance_usdt;
+                double maximum_symbol_balance_usdt;
+                double abs_profit_long = 0;
+                double per_profit_long = 0;
+                double average_abs_profit_per_trade_long = 0;
+                double average_per_profit_per_trade_long = 0;
+                double abs_profit_short = 0;
+                double per_profit_short = 0;
+                double average_abs_profit_per_trade_short = 0;
+                double average_per_profit_per_trade_short = 0;
+                int total_trades_long = 0;
+                int wins_long = 0;
+                int loses_long = 0;
+                double per_wins_long;
+                int total_trades_short = 0;
+                int wins_short = 0;
+                int loses_short = 0;
+                double per_wins_short;
+                double best_long_trade = 0.0;
+                double worst_long_trade = 0.0;
+                double best_short_trade = 0.0;
+                double worst_short_trade = 0.0;
+
+                double balance = start_balance;
+                double minimal_balance = start_balance;
+                double maximum_balance = start_balance;
+
+                double symbol_balance = start_symbols;
+                double minimal_symbol_balance = start_symbols;
+                double maximum_symbol_balance = start_symbols;
+
+                auto start_time = std::chrono::high_resolution_clock::now();
+
+                this->candle_watcher.read_file_once(data_file);
+                while(candle_watcher.read_file_once(data_file))
+                {
+                    vector<Trade> trades;
+
+                    candle = this->candle_watcher.get_candle();
+                    this->strateger.resolve(candle);
+                    signals = this->strateger.get_signals();
+
+                    stake_amount_trade = balance / max_open_trades;
+                    symbol_amount_trade = symbol_balance / max_open_trades;
+
+                    this->trader.set_stake_amount(stake_amount_trade);
+                    this->trader.set_symbol_abount(symbol_amount_trade);
+
+                    candle_close_price = candle.get_close_price();
+
+                    trader.resolve(
+                        signals,
+                        trades,
+                        candle_close_price
+                    );
+
+                    for (Trade& trade : trades) 
+                    {
+                        if (trade.is_completed())
+                        {
+                            if (trade.get_position() == "long")
+                            {
+                                balance += trade.get_abs_profit();
+
+                                if (best_long_trade == 0.0)
+                                {
+                                    best_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_long_trade <= trade.get_per_profit())
+                                        best_long_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_long_trade == 0.0)
+                                {
+                                    worst_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_long_trade >= trade.get_per_profit())
+                                        worst_long_trade = trade.get_per_profit();
+                                }
+
+                                if (balance > maximum_balance)
+                                    maximum_balance = balance;
+                                if (balance < minimal_balance)
+                                    minimal_balance = balance;
+
+                                average_abs_profit_per_trade_long += trade.get_abs_profit();
+                                average_per_profit_per_trade_long += trade.get_per_profit();
+
+                                total_trades_long++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_long++;
+
+                                } else {
+                                    loses_long++;
+                                }
+                            } else if (trade.get_position() == "short") {
+                                if (short_goal == "symbol")
+                                {
+                                    symbol_balance +=trade.get_abs_profit();
+
+                                    if (symbol_balance > maximum_symbol_balance)
+                                        maximum_symbol_balance = symbol_balance;
+
+                                    if (symbol_balance < minimal_symbol_balance)
+                                        minimal_symbol_balance = symbol_balance;
+                                }
+                                if (short_goal == "USDT")
+                                {
+                                    symbol_balance_usdt +=trade.get_abs_profit();
+
+                                    if (symbol_balance_usdt > maximum_symbol_balance_usdt)
+                                        maximum_symbol_balance_usdt = symbol_balance_usdt;
+
+                                    if (symbol_balance_usdt < minimal_symbol_balance_usdt)
+                                        minimal_symbol_balance_usdt = symbol_balance_usdt;
+                                }
+
+                                if (best_short_trade == 0.0)
+                                {
+                                    best_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_short_trade <= trade.get_per_profit())
+                                        best_short_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_short_trade == 0.0) 
+                                {
+                                    worst_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_short_trade >= trade.get_per_profit())
+                                        worst_short_trade = trade.get_per_profit();
+                                }
+
+                                average_abs_profit_per_trade_short += trade.get_abs_profit();
+                                average_per_profit_per_trade_short += trade.get_per_profit();
+
+                                total_trades_short++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_short++;
+                                } else {
+                                    loses_short++;
+                                }
+                            }
+
+                            cout 
+                                << "Position: " << trade.get_position() << endl
+                                << "Absolute profit: " << trade.get_abs_profit() << endl
+                                << "Percentage profit: " << trade.get_per_profit() << endl
+                                << "Open price: " << trade.get_open_price() << endl
+                                << "Close price: " << trade.get_close_price() << endl
+                                << "Stake amount: " << trade.get_stake_amount() << endl
+                                << "Symbol amount: " << trade.get_symbol_amount() << endl
+                                << "Current balance: " << balance << endl
+                                << "Current symbol balance: " << symbol_balance << endl
+                            << endl;
+                        }
+                    }
+
+                    cout << "Candle close: " << candle_close_price << endl;
+                    for (auto& [key, val] : signals)
+                        cout << key << " : " << val << endl;
+                    cout << endl;
+                }
+            
+                auto end_time = std::chrono::high_resolution_clock::now();
+                auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+                abs_profit_long = balance - start_balance;
+                per_profit_long = balance / start_balance * 100 - 100;
+                average_abs_profit_per_trade_long /= total_trades_long;
+                average_per_profit_per_trade_long /= total_trades_long;
+
+                average_abs_profit_per_trade_short /= total_trades_short;
+                average_per_profit_per_trade_short /= total_trades_short;
+
+                per_wins_long = (double)wins_long / (double)total_trades_long * 100;
+                per_wins_short = (double)wins_short / (double)total_trades_short * 100;
+
+                cout 
+                    << "----------------------------------" << endl
+                    << "LONG POSITION STATISTIC:" << endl
+                    << endl
+                    << "BALANCE:" << endl
+                    << "Start Balance: " << start_balance << " USDT" << endl
+                    << "Final Balance: " << balance << " USDT" << endl 
+                    << "Maximum balance: " << maximum_balance<< " USDT"  << endl
+                    << "Minimal balance: " << minimal_balance << " USDT" << endl
+                    << endl
+                    << "PROFIT:" << endl
+                    << "Absolute profit: " << abs_profit_long << " USDT" << endl
+                    << "Percentage profit: " << per_profit_long << " %" << endl
+                    << "Average absolute profit per trades: " << average_abs_profit_per_trade_long << " USDT" << endl
+                    << "Average percentage profit per trades: " << average_per_profit_per_trade_long << " %" << endl
+                    << endl
+                    << "TRADE" << endl
+                    << "Total trades: " << total_trades_long << endl
+                    << "Wins: " << wins_long << endl
+                    << "Loses: " << loses_long << endl
+                    << "Percent wins: " << per_wins_long << " %" << endl
+                    << "Best long trade: " << best_long_trade << " %" << endl
+                    << "Worst long trade: " << worst_long_trade << " %" << endl
+                    << "----------------------------------" << endl
+                    << "SHORT POSITION STATISTIC:" << endl
+                    << endl
+                    << "BALANCE:" << endl;
+                if (this->worker_configuration["trader_params"]["short_goal"] == "USDT")
+                {
+                    cout 
+                        << "Start Balance: " << 0 << " USDT" << endl
+                        << "Final Balance: " << symbol_balance_usdt << " USDT" << endl 
+                        << "Maximum balance: " << maximum_symbol_balance_usdt << " USDT"  << endl
+                        << "Minimal balance: " << minimal_symbol_balance_usdt << " USDT" << endl
+                        << endl
+                        << "PROFIT:" << endl
+                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " USDT" << endl
+                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
+                        << endl;
+                } else if (this->worker_configuration["trader_params"]["short_goal"] == "symbol") {
+                    cout 
+                        << "Start Balance: " << start_symbols << " Symbols" << endl
+                        << "Final Balance: " << symbol_balance << " Symbols" << endl 
+                        << "Maximum balance: " << maximum_symbol_balance << " Symbols"  << endl
+                        << "Minimal balance: " << minimal_symbol_balance << " Symbols" << endl
+                        << endl
+                        << "PROFIT:" << endl
+                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " Symbols" << endl
+                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
+                        << endl;
+                }
+                cout 
+                    << "TRADE" << endl
+                    << "Total trades: " << total_trades_short << endl
+                    << "Wins: " << wins_short << endl
+                    << "Loses: " << loses_short << endl
+                    << "Percent wins: " << per_wins_short << " %" << endl
+                    << "Best long trade: " << best_short_trade << " %" << endl
+                    << "Worst long trade: " << worst_short_trade << " %" << endl
+                    << "----------------------------------" << endl
+                    << "Test time (ms): " << exec_time.count() << endl
+                ;
+            }
+    
+            /**
+             * @brief Backtest Worker by Heikin_Ashi type
+             * 
+             * @param data_dir Root path to data directory
+             * @param start_balance Start USDT balance (for long trades)
+             * @param start_symbols Start Symbol balance (for short trades)
+             */
+            void backtest_heikin_ashi(
+                const string& data_dir,
+                double start_balance,
+                double start_symbols
+            ) {
+                double max_open_trades = this->worker_configuration["trader_params"]["max_open_trade"];
+
+                string symbol = this->worker_configuration["trader_params"]["symbol"];
+                string interval = this->worker_configuration["interval"];
+                string candle_type = this->worker_configuration["candle"];
+                string short_goal = this->worker_configuration["trader_params"]["short_goal"];
+                string sym;
+
+                map<string, bool> signals;
+
+                Candles::Heikin_Ashi candle;
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                io::CSVReader<11> data_file(
+                    data_dir + sym + '_' + interval +".csv"               
+                );
+
+                double candle_close_price;
+                double stake_amount_trade;
+                double symbol_amount_trade;
+                double symbol_balance_usdt = 0;
+                double minimal_symbol_balance_usdt;
+                double maximum_symbol_balance_usdt;
+                double abs_profit_long = 0;
+                double per_profit_long = 0;
+                double average_abs_profit_per_trade_long = 0;
+                double average_per_profit_per_trade_long = 0;
+                double abs_profit_short = 0;
+                double per_profit_short = 0;
+                double average_abs_profit_per_trade_short = 0;
+                double average_per_profit_per_trade_short = 0;
+                int total_trades_long = 0;
+                int wins_long = 0;
+                int loses_long = 0;
+                double per_wins_long;
+                int total_trades_short = 0;
+                int wins_short = 0;
+                int loses_short = 0;
+                double per_wins_short;
+                double best_long_trade = 0.0;
+                double worst_long_trade = 0.0;
+                double best_short_trade = 0.0;
+                double worst_short_trade = 0.0;
+
+                double balance = start_balance;
+                double minimal_balance = start_balance;
+                double maximum_balance = start_balance;
+
+                double symbol_balance = start_symbols;
+                double minimal_symbol_balance = start_symbols;
+                double maximum_symbol_balance = start_symbols;
+
+                auto start_time = std::chrono::high_resolution_clock::now();
+
+                this->candle_watcher.read_file_once(data_file);
+                while(candle_watcher.read_file_once(data_file))
+                {
+                    vector<Trade> trades;
+
+                    candle = this->candle_watcher.get_heikin_ashi();
+                    this->strateger.resolve(candle);
+                    signals = this->strateger.get_signals();
+
+                    stake_amount_trade = balance / max_open_trades;
+                    symbol_amount_trade = symbol_balance / max_open_trades;
+
+                    this->trader.set_stake_amount(stake_amount_trade);
+                    this->trader.set_symbol_abount(symbol_amount_trade);
+
+                    candle_close_price = candle.get_close_price();
+
+                    trader.resolve(
+                        signals,
+                        trades,
+                        candle_close_price
+                    );
+
+                    for (Trade& trade : trades) 
+                    {
+                        if (trade.is_completed())
+                        {
+                            if (trade.get_position() == "long")
+                            {
+                                balance += trade.get_abs_profit();
+
+                                if (best_long_trade == 0.0)
+                                {
+                                    best_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_long_trade <= trade.get_per_profit())
+                                        best_long_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_long_trade == 0.0)
+                                {
+                                    worst_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_long_trade >= trade.get_per_profit())
+                                        worst_long_trade = trade.get_per_profit();
+                                }
+
+                                if (balance > maximum_balance)
+                                    maximum_balance = balance;
+                                if (balance < minimal_balance)
+                                    minimal_balance = balance;
+
+                                average_abs_profit_per_trade_long += trade.get_abs_profit();
+                                average_per_profit_per_trade_long += trade.get_per_profit();
+
+                                total_trades_long++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_long++;
+
+                                } else {
+                                    loses_long++;
+                                }
+                            } else if (trade.get_position() == "short") {
+                                if (short_goal == "symbol")
+                                {
+                                    symbol_balance +=trade.get_abs_profit();
+
+                                    if (symbol_balance > maximum_symbol_balance)
+                                        maximum_symbol_balance = symbol_balance;
+
+                                    if (symbol_balance < minimal_symbol_balance)
+                                        minimal_symbol_balance = symbol_balance;
+                                }
+                                if (short_goal == "USDT")
+                                {
+                                    symbol_balance_usdt +=trade.get_abs_profit();
+
+                                    if (symbol_balance_usdt > maximum_symbol_balance_usdt)
+                                        maximum_symbol_balance_usdt = symbol_balance_usdt;
+
+                                    if (symbol_balance_usdt < minimal_symbol_balance_usdt)
+                                        minimal_symbol_balance_usdt = symbol_balance_usdt;
+                                }
+
+                                if (best_short_trade == 0.0)
+                                {
+                                    best_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_short_trade <= trade.get_per_profit())
+                                        best_short_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_short_trade == 0.0) 
+                                {
+                                    worst_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_short_trade >= trade.get_per_profit())
+                                        worst_short_trade = trade.get_per_profit();
+                                }
+
+                                average_abs_profit_per_trade_short += trade.get_abs_profit();
+                                average_per_profit_per_trade_short += trade.get_per_profit();
+
+                                total_trades_short++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_short++;
+                                } else {
+                                    loses_short++;
+                                }
+                            }
+
+                            cout 
+                                << "Position: " << trade.get_position() << endl
+                                << "Absolute profit: " << trade.get_abs_profit() << endl
+                                << "Percentage profit: " << trade.get_per_profit() << endl
+                                << "Open price: " << trade.get_open_price() << endl
+                                << "Close price: " << trade.get_close_price() << endl
+                                << "Stake amount: " << trade.get_stake_amount() << endl
+                                << "Symbol amount: " << trade.get_symbol_amount() << endl
+                                << "Current balance: " << balance << endl
+                                << "Current symbol balance: " << symbol_balance << endl
+                            << endl;
+                        }
+                    }
+
+                    cout << "Candle close: " << candle_close_price << endl;
+                    for (auto& [key, val] : signals)
+                        cout << key << " : " << val << endl;
+                    cout << endl;
+                }
+            
+                auto end_time = std::chrono::high_resolution_clock::now();
+                auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+
+                abs_profit_long = balance - start_balance;
+                per_profit_long = balance / start_balance * 100 - 100;
+                average_abs_profit_per_trade_long /= total_trades_long;
+                average_per_profit_per_trade_long /= total_trades_long;
+
+                average_abs_profit_per_trade_short /= total_trades_short;
+                average_per_profit_per_trade_short /= total_trades_short;
+
+                per_wins_long = (double)wins_long / (double)total_trades_long * 100;
+                per_wins_short = (double)wins_short / (double)total_trades_short * 100;
+
+                cout 
+                    << "----------------------------------" << endl
+                    << "LONG POSITION STATISTIC:" << endl
+                    << endl
+                    << "BALANCE:" << endl
+                    << "Start Balance: " << start_balance << " USDT" << endl
+                    << "Final Balance: " << balance << " USDT" << endl 
+                    << "Maximum balance: " << maximum_balance<< " USDT"  << endl
+                    << "Minimal balance: " << minimal_balance << " USDT" << endl
+                    << endl
+                    << "PROFIT:" << endl
+                    << "Absolute profit: " << abs_profit_long << " USDT" << endl
+                    << "Percentage profit: " << per_profit_long << " %" << endl
+                    << "Average absolute profit per trades: " << average_abs_profit_per_trade_long << " USDT" << endl
+                    << "Average percentage profit per trades: " << average_per_profit_per_trade_long << " %" << endl
+                    << endl
+                    << "TRADE" << endl
+                    << "Total trades: " << total_trades_long << endl
+                    << "Wins: " << wins_long << endl
+                    << "Loses: " << loses_long << endl
+                    << "Percent wins: " << per_wins_long << " %" << endl
+                    << "Best long trade: " << best_long_trade << " %" << endl
+                    << "Worst long trade: " << worst_long_trade << " %" << endl
+                    << "----------------------------------" << endl
+                    << "SHORT POSITION STATISTIC:" << endl
+                    << endl
+                    << "BALANCE:" << endl;
+                if (this->worker_configuration["trader_params"]["short_goal"] == "USDT")
+                {
+                    cout 
+                        << "Start Balance: " << 0 << " USDT" << endl
+                        << "Final Balance: " << symbol_balance_usdt << " USDT" << endl 
+                        << "Maximum balance: " << maximum_symbol_balance_usdt << " USDT"  << endl
+                        << "Minimal balance: " << minimal_symbol_balance_usdt << " USDT" << endl
+                        << endl
+                        << "PROFIT:" << endl
+                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " USDT" << endl
+                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
+                        << endl;
+                } else if (this->worker_configuration["trader_params"]["short_goal"] == "symbol") {
+                    cout 
+                        << "Start Balance: " << start_symbols << " Symbols" << endl
+                        << "Final Balance: " << symbol_balance << " Symbols" << endl 
+                        << "Maximum balance: " << maximum_symbol_balance << " Symbols"  << endl
+                        << "Minimal balance: " << minimal_symbol_balance << " Symbols" << endl
+                        << endl
+                        << "PROFIT:" << endl
+                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " Symbols" << endl
+                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
+                        << endl;
+                }
+                cout 
+                    << "TRADE" << endl
+                    << "Total trades: " << total_trades_short << endl
+                    << "Wins: " << wins_short << endl
+                    << "Loses: " << loses_short << endl
+                    << "Percent wins: " << per_wins_short << " %" << endl
+                    << "Best long trade: " << best_short_trade << " %" << endl
+                    << "Worst long trade: " << worst_short_trade << " %" << endl
+                    << "----------------------------------" << endl
+                    << "Test time (ms): " << exec_time.count() << endl
+                ;
+            }
+    };
+}
 
 
 

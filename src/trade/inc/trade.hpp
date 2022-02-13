@@ -40,11 +40,6 @@ class Trade
         string symbol;
 
         /**
-         * @brief Candles Interval
-         */
-        string interval;
-
-        /**
          * @brief Trade position (long/short)
          */
         string position;
@@ -113,13 +108,12 @@ class Trade
             double stake_amount, 
             double symbol_amount,
             double open_price, 
-            const string &interval,
             const string &symbol,
             const string &position
         ) : stake_amount(stake_amount), 
             symbol_amount(symbol_amount),
             open_price(open_price), symbol(symbol), 
-            interval(interval), position(position)
+            position(position)
         { }
 
         /**
@@ -160,13 +154,6 @@ class Trade
          * @return string 
          */
         string get_position() { return this->position; }
-
-        /**
-         * @brief Get the interval 
-         * 
-         * @return string 
-         */
-        string get_interval() { return this->interval; }
 
         /**
          * @brief Get the live time 
@@ -266,7 +253,6 @@ class Trade
             unsigned int id,
             const string& symbol,
             const string& position,
-            const string& interval,
             double stake_amount,
             double symbol_amount,
             double open_p
@@ -280,18 +266,10 @@ class Trade
             this->id = id;
             this->symbol = symbol,
             this->position = position;
-            this->interval = interval;
             this->stake_amount = stake_amount;
             this->symbol_amount = symbol_amount;
             this->open_price = open_p;
         }
-
-        /**
-         * @brief Set the interval 
-         * 
-         * @param intr Interval
-         */
-        void set_interval(string &intr) { this->interval = intr; }
 
         /**
          * @brief Set the close time. Behave as exit function for Trade
@@ -356,7 +334,6 @@ class Trade
         {
             cout << "ID: " << this->id << endl
                  << "Symbol: " << this->symbol << endl
-                 << "Interval: " << this->interval << endl
                  << "Position: " << this->position << endl
                  << "Open price: " << this->open_price << endl
                  << "Stake amount: " << this->stake_amount << endl
