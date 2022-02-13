@@ -81,6 +81,7 @@ df = pd.DataFrame(
 )
 
 df = df.drop("Ignore", 1)
+df.drop(df.tail(1).index, inplace=True)
 print(df)
 
 try:

@@ -8,8 +8,14 @@
 
 using std::string, std::cout, std::endl;
 
+/**
+ * @brief All Candles
+ */
 namespace Candles
 {
+    /**
+     * @brief Abstract class for Candle
+     */
     class Kline
     {
         protected:
@@ -26,12 +32,12 @@ namespace Candles
             /**
              * @brief Open time 
              */
-            double open_time;
+            unsigned long open_time;
 
             /**
              * @brief Close time
              */
-            double close_time;
+            unsigned long close_time;
 
             /**
              * @brief Open price
@@ -115,14 +121,14 @@ namespace Candles
              * 
              * @return double 
              */
-            double get_open_time() { return this->open_time; }
+            unsigned long get_open_time() { return this->open_time; }
 
             /**
              * @brief Get the close time object
              * 
              * @return double 
              */
-            double get_close_time() { return this->close_time; }
+            unsigned long get_close_time() { return this->close_time; }
 
             /**
              * @brief Get the close price 
@@ -212,8 +218,8 @@ namespace Candles
              * @param open_prev Previous candle open price
              */
             virtual void construct(
-                double open_time,
-                double close_time,
+                unsigned long open_time,
+                unsigned long close_time,
                 double open_price,
                 double high_price,
                 double low_price,
@@ -255,8 +261,8 @@ namespace Candles
              * @param tbqav Taker buy quote asset volume
              */
             Candle(
-                double open_time,
-                double close_time,
+                unsigned long open_time,
+                unsigned long close_time,
                 double open_price,
                 double high_price,
                 double low_price,
@@ -317,8 +323,8 @@ namespace Candles
              * @param open_prev Previous candle open price
              */
             virtual void construct(
-                double open_time,
-                double close_time,
+                unsigned long open_time,
+                unsigned long close_time,
                 double open_price,
                 double high_price,
                 double low_price,
@@ -390,8 +396,8 @@ namespace Candles
              * @param open_prev Previous candle open price
              */
             Heikin_Ashi(
-                double open_time,
-                double close_time,
+                unsigned long open_time,
+                unsigned long close_time,
                 double open_price,
                 double high_price,
                 double low_price,
@@ -462,8 +468,8 @@ namespace Candles
              * @param open_prev Previous candle open price
              */
             virtual void construct(
-                double open_time,
-                double close_time,
+                unsigned long open_time,
+                unsigned long close_time,
                 double open_price,
                 double high_price,
                 double low_price,

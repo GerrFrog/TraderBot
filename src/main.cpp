@@ -16,15 +16,11 @@ int main(int argc, char *argv[]) {
     double usdt_balance = 10000.0;
     double symbol_balance = 20.0;
 
-    Workers::Worker<Strategies::RSXC_ADX, Candles::Candle> worker_cd(
-        worker_configuration
-    );
-    Workers::Worker<Strategies::RSXC_ADX, Candles::Heikin_Ashi> worker_ha(
+    Workers::Worker<Strategies::RSXC_ADX, Candles::Candle> worker(
         worker_configuration
     );
 
-    worker_cd.configurate();
-    worker_ha.configurate();
+    worker.configurate();
 
     Tester tester;
 
@@ -67,16 +63,16 @@ int main(int argc, char *argv[]) {
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
     // // ONLINE TRADING
-    // worker_cd.initialize(
-    //     dir
-    // );
+    worker.initialize(
+        dir
+    );
 
     // // STRATEGY BACKTEST
-    worker_cd.backtest(
-        dir,
-        usdt_balance,
-        symbol_balance
-    );
+    // worker_cd.backtest(
+    //     dir,
+    //     usdt_balance,
+    //     symbol_balance
+    // );
 
     // // BACKTEST CANDLE
     // tester.backtest_candle<Candles::Heikin_Ashi>(

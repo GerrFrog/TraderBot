@@ -12,6 +12,7 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 #include <type_traits>
+#include <chrono>
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
@@ -409,6 +410,9 @@ namespace Workers::Watchers
     class Candle_Watcher
     {
         private:
+            /**
+             * @brief Candle type
+             */
             Candle_T candle;
 
             /**
@@ -510,8 +514,8 @@ namespace Workers::Watchers
                         if (this->prev_ha_close == 0 || prev_ha_open == 0)
                         {
                             this->candle.construct(
-                                std::stod(open_time),
-                                std::stod(close_time),
+                                std::stoul(open_time),
+                                std::stoul(close_time),
                                 std::stod(open_price),
                                 std::stod(high_price),
                                 std::stod(low_price),
@@ -526,8 +530,8 @@ namespace Workers::Watchers
                             );
                         } else {
                             this->candle.construct(
-                                std::stod(open_time),
-                                std::stod(close_time),
+                                std::stoul(open_time),
+                                std::stoul(close_time),
                                 std::stod(open_price),
                                 std::stod(high_price),
                                 std::stod(low_price),
@@ -575,6 +579,76 @@ namespace Workers::Watchers
              * @return Candle_T 
              */
             Candle_T get_candle() { return this->candle; }
+
+            /**
+             * @brief Get the new candles 
+             * 
+             * @param startTime 
+             * @param endTime 
+             */
+            vector<Candle_T> get_new_candles(unsigned long startTime, unsigned long endTime)
+            {
+                map<string, string> params;
+
+                string sym;
+                string symbol = this->symbol;
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                params["symbol"] = sym;
+                params["interval"] = this->interval;
+                params["startTime"] = std::to_string(startTime);
+                params["endTime"] = std::to_string(endTime);
+                params["limit"] = "20";
+
+                Request::Simple::JSON_Curl json_curl("https://api.binance.com/api/v3/klines");
+
+                json_curl.construct_request(params);
+
+                nlohmann::json ret = json_curl.request();
+
+                vector<Candle_T> candles;
+
+                for (auto& [key, val] : ret.items())
+                {
+                    unsigned long open_time = val[0];
+                    double open = std::stod((string)val[1]);
+                    double high = std::stod((string)val[2]);
+                    double low = std::stod((string)val[3]);
+                    double close = std::stod((string)val[4]);
+                    double volume = std::stod((string)val[5]);
+                    unsigned long close_time = val[6];
+                    double quote = std::stod((string)val[7]);
+                    double trades = val[8];
+                    double tbbav = std::stod((string)val[9]);
+                    double tbqav = std::stod((string)val[10]);
+
+                    Candle_T candle;
+                    candle.construct(
+                        open_time,
+                        close_time,
+                        open,
+                        high,
+                        low,
+                        close,
+                        volume,
+                        quote,
+                        trades,
+                        tbbav,
+                        tbqav,
+                        this->prev_ha_close,
+                        this->prev_ha_open                       
+                    );
+                    candles.push_back(candle);
+                }
+
+                return candles;
+            }
 
             /**
              * @brief Get the current price of cryptocurrency
@@ -1056,6 +1130,11 @@ namespace Workers::Solvers
             nlohmann::json strategy_params;
 
             /**
+             * @brief Resolved Indicators for strategy
+             */
+            nlohmann::json params;
+
+            /**
              * @brief Data container for resolved signals
              */
             map<string, bool> signals{
@@ -1101,6 +1180,13 @@ namespace Workers::Solvers
             nlohmann::json get_strategy_params() { return this->strategy_params; }
 
             /**
+             * @brief Get the Resolved indicators
+             * 
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_params() { return this->params; }
+
+            /**
              * @brief Get the signals object
              * 
              * @return map<string, bool> 
@@ -1132,13 +1218,12 @@ namespace Workers::Solvers
             void resolve(Candle_T &candle)
             {
                 this->indicator_watcher.resolve(candle);
-                nlohmann::json params = this->indicator_watcher.get(
+                this->params = this->indicator_watcher.get(
                     this->strategy_params,
                     ""
                 );
-                cout << "Params: " << params << endl;
                 this->strategy.resolve(
-                    params,
+                    this->params,
                     this->signals
                 );
             }
@@ -1227,6 +1312,10 @@ namespace Workers
                 string short_goal = this->worker_configuration["trader_params"]["short_goal"];
                 string sym;
 
+                long last_candle_close_time;
+
+                Candle_T candle;
+
                 std::remove_copy(
                     symbol.begin(),
                     symbol.end(),
@@ -1238,11 +1327,35 @@ namespace Workers
                     data_dir + sym + '_' + interval +".csv"               
                 );
 
-                // this->candle_watcher.read_file_once(data_file);
-                // while(candle_watcher.read_file_once(data_file))
-                // {
+                this->candle_watcher.read_file_once(data_file);
+                while(candle_watcher.read_file_once(data_file))
+                {
+                    candle = this->candle_watcher.get_candle();
+                    this->strateger.resolve(candle);
 
-                // }
+                    cout 
+                        << "Candle close price: " << candle.get_close_price() << endl
+                        << "Candle close time: " << candle.get_close_time() << endl
+                        << "Params: " << this->strateger.get_params() << endl
+                    << endl;
+                }
+
+                last_candle_close_time = candle.get_close_time();
+                cout << "Last candle close time: " << last_candle_close_time << endl;
+
+                uint64_t now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+
+                cout << "Now Linux epoch: " << now_epoch << endl;
+                vector<Candle_T> candles = this->candle_watcher.get_new_candles(last_candle_close_time, now_epoch);
+
+                cout << "[+] Got new candels" << endl;
+                for (Candle_T& cd : candles)
+                    cout
+                        << cd.get_close_price() << endl
+                        << cd.get_close_time() << endl
+                    << endl;
             }
 
             /**
