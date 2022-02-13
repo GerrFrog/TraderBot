@@ -193,6 +193,39 @@ namespace Candles
              * @return double 
              */
             double get_tbqav() { return this->taker_buy_quote_asset_volume; }
+
+            /**
+             * @brief Construct a new Kline object
+             * 
+             * @param open_time Open time
+             * @param close_time Close time
+             * @param open_price Open price
+             * @param high_price High price
+             * @param low_price Low price
+             * @param close_price Close price
+             * @param volume Volume 
+             * @param quote Quote asset volume
+             * @param trades_count Number of trades
+             * @param tbbav Taker buy base asset volume
+             * @param tbqav Taker buy quote asset volume
+             * @param close_prev Previous candle close price
+             * @param open_prev Previous candle open price
+             */
+            virtual void construct(
+                double open_time,
+                double close_time,
+                double open_price,
+                double high_price,
+                double low_price,
+                double close_price,
+                double volume,
+                double quote,
+                double trades_count,
+                double tbbav,
+                double tbqav,
+                double close_prev = 0,
+                double open_prev = 0
+            ) = 0;
     };
 
     /**
@@ -267,7 +300,7 @@ namespace Candles
             virtual ~Candle() = default;
 
             /**
-             * @brief Construct a new Candle object
+             * @brief Construct a new Kline object
              * 
              * @param open_time Open time
              * @param close_time Close time
@@ -280,8 +313,10 @@ namespace Candles
              * @param trades_count Number of trades
              * @param tbbav Taker buy base asset volume
              * @param tbqav Taker buy quote asset volume
+             * @param close_prev Previous candle close price
+             * @param open_prev Previous candle open price
              */
-            void construct(
+            virtual void construct(
                 double open_time,
                 double close_time,
                 double open_price,
@@ -292,7 +327,9 @@ namespace Candles
                 double quote,
                 double trades_count,
                 double tbbav,
-                double tbqav
+                double tbqav,
+                double close_prev = 0,
+                double open_prev = 0
             )
             {
                 this->open_time = open_time;
@@ -324,6 +361,8 @@ namespace Candles
 
     /**
      * @brief Heikin Ashi candle
+     * 
+     * @note https://tradewithpython.com/constructing-heikin-ashi-candlesticks-using-python
      */
     class Heikin_Ashi : public Candles::Kline
     {
@@ -336,37 +375,56 @@ namespace Candles
             /**
              * @brief Construct new Heikin Ashi Candle
              * 
-             * @param candle Candle
-             * @param interval Candle interval (timeframe)
-             * @param close_prev Previous Heikin Ashi close price
-             * @param open_prev Previous Heikin Ashi open price
+             * @param open_time Open time
+             * @param close_time Close time
+             * @param open_price Open price
+             * @param high_price High price
+             * @param low_price Low price
+             * @param close_price Close price
+             * @param volume Volume 
+             * @param quote Quote asset volume
+             * @param trades_count Number of trades
+             * @param tbbav Taker buy base asset volume
+             * @param tbqav Taker buy quote asset volume
+             * @param close_prev Previous candle close price
+             * @param open_prev Previous candle open price
              */
             Heikin_Ashi(
-                Candles::Candle &candle,
+                double open_time,
+                double close_time,
+                double open_price,
+                double high_price,
+                double low_price,
+                double close_price,
+                double volume,
+                double quote,
+                double trades_count,
+                double tbbav,
+                double tbqav,
                 double close_prev,
                 double open_prev
             )
             { 
-                this->open_time = candle.get_open_time();
-                this->close_time = candle.get_close_time();
-                this->volume = candle.get_volume();
-                this->quote_asset_volume = candle.get_qav();
-                this->trades_count = candle.get_trades();
-                this->taker_buy_base_asset_volume = candle.get_tbbav();
-                this->taker_buy_quote_asset_volume = candle.get_tbqav();
+                this->open_time = open_time;
+                this->close_time = close_time;
+                this->volume = volume;
+                this->quote_asset_volume = quote;
+                this->trades_count = trades_count;
+                this->taker_buy_base_asset_volume = tbbav;
+                this->taker_buy_quote_asset_volume = tbqav;
 
                 this->set = true;
 
                 this->open_price = (open_prev + close_prev) / 2;
                 this->close_price = (
-                    candle.get_open_price() + candle.get_high_price() +
-                    candle.get_low_price() + candle.get_close_price()
+                    open_price + high_price +
+                    low_price + close_price
                 ) / 4;
 
-                this->high_price = ((candle.get_high_price() > open_prev && candle.get_high_price() > close_prev) 
-                                ? candle.get_high_price() : (open_prev < close_prev) ? open_prev : close_prev);
-                this->low_price = ((candle.get_low_price() < open_prev && candle.get_low_price() < close_prev) 
-                                ? candle.get_low_price() : (open_prev < close_prev) ? open_prev : close_prev);
+                this->high_price = ((high_price > open_prev && high_price > close_prev) 
+                                ? high_price : (open_prev < close_prev) ? open_prev : close_prev);
+                this->low_price = ((low_price < open_prev && low_price < close_prev) 
+                                ? low_price : (open_prev < close_prev) ? open_prev : close_prev);
 
                 if (this->close_price >= this->open_price)
                 {
@@ -387,38 +445,58 @@ namespace Candles
             virtual ~Heikin_Ashi() = default;
 
             /**
-             * @brief Construct new Heikin Ashi Candle
+             * @brief Construct a new Kline object
              * 
-             * @param candle Candle
-             * @param close_prev Previous Heikin Ashi close price
-             * @param open_prev Previous Heikin Ashi open price
+             * @param open_time Open time
+             * @param close_time Close time
+             * @param open_price Open price
+             * @param high_price High price
+             * @param low_price Low price
+             * @param close_price Close price
+             * @param volume Volume 
+             * @param quote Quote asset volume
+             * @param trades_count Number of trades
+             * @param tbbav Taker buy base asset volume
+             * @param tbqav Taker buy quote asset volume
+             * @param close_prev Previous candle close price
+             * @param open_prev Previous candle open price
              */
-            void construct(
-                Candle &candle,
-                double close_prev,
-                double open_prev
+            virtual void construct(
+                double open_time,
+                double close_time,
+                double open_price,
+                double high_price,
+                double low_price,
+                double close_price,
+                double volume,
+                double quote,
+                double trades_count,
+                double tbbav,
+                double tbqav,
+                double close_prev = 0,
+                double open_prev = 0
             ) 
             {
-                this->open_time = candle.get_open_time();
-                this->close_time = candle.get_close_time();
-                this->volume = candle.get_volume();
-                this->quote_asset_volume = candle.get_qav();
-                this->trades_count = candle.get_trades();
-                this->taker_buy_base_asset_volume = candle.get_tbbav();
-                this->taker_buy_quote_asset_volume = candle.get_tbqav();
+                this->open_time = open_time;
+                this->close_time = close_time;
+                this->volume = volume;
+                this->quote_asset_volume = quote;
+                this->trades_count = trades_count;
+                this->taker_buy_base_asset_volume = tbbav;
+                this->taker_buy_quote_asset_volume = tbqav;
 
                 this->set = true;
 
                 this->open_price = (open_prev + close_prev) / 2;
                 this->close_price = (
-                    candle.get_open_price() + candle.get_high_price() +
-                    candle.get_low_price() + candle.get_close_price()
+                    open_price + high_price +
+                    low_price + close_price
                 ) / 4;
 
-                this->high_price = ((candle.get_high_price() > open_prev && candle.get_high_price() > close_prev) 
-                                ? candle.get_high_price() : (open_prev < close_prev) ? open_prev : close_prev);
-                this->low_price = ((candle.get_low_price() < open_prev && candle.get_low_price() < close_prev) 
-                                ? candle.get_low_price() : (open_prev < close_prev) ? open_prev : close_prev);
+                this->high_price = ((high_price > open_prev && high_price > close_prev) 
+                                ? high_price : (open_prev < close_prev) ? open_prev : close_prev);
+                this->low_price = ((low_price < open_prev && low_price < close_prev) 
+                                ? low_price : (open_prev < close_prev) ? open_prev : close_prev);
 
                 if (this->close_price >= this->open_price)
                 {

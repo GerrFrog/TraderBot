@@ -405,18 +405,11 @@ namespace Workers::Watchers
     /**
      * @brief Responsable for Candles
      */
+    template <class Candle_T>
     class Candle_Watcher
     {
         private:
-            /**
-             * @brief Standard Candle
-             */
-            Candles::Candle candle;
-
-            /**
-             * @brief Heikin Ashi Candle
-             */
-            Candles::Heikin_Ashi heikin_ashi;
+            Candle_T candle;
 
             /**
              * @brief Symbol (pair)
@@ -468,7 +461,7 @@ namespace Workers::Watchers
              * @return true 
              * @return false 
              */
-            bool operator ==(const Workers::Watchers::Candle_Watcher& cw)
+            bool operator ==(const Workers::Watchers::Candle_Watcher<Candle_T>& cw)
             {
                 if (
                     cw.symbol == this->symbol && 
@@ -514,26 +507,43 @@ namespace Workers::Watchers
                 ) {
                     // TODO: Remake without try-catch
                     try {
-                        this->candle.construct(
-                            std::stod(open_time),
-                            std::stod(close_time),
-                            std::stod(open_price),
-                            std::stod(high_price),
-                            std::stod(low_price),
-                            std::stod(close_price),
-                            std::stod(volume),
-                            std::stod(quote),
-                            std::stod(trades_count),
-                            std::stod(tbbav),
-                            std::stod(tbqav)
-                        );
-
                         if (this->prev_ha_close == 0 || prev_ha_open == 0)
-                            this->heikin_ashi.construct(this->candle, this->candle.get_close_price(), this->candle.get_open_price());
-                        else
-                            this->heikin_ashi.construct(this->candle, this->prev_ha_close, this->prev_ha_open);
-                        this->prev_ha_close = this->heikin_ashi.get_close_price();
-                        this->prev_ha_open = this->heikin_ashi.get_open_price();
+                        {
+                            this->candle.construct(
+                                std::stod(open_time),
+                                std::stod(close_time),
+                                std::stod(open_price),
+                                std::stod(high_price),
+                                std::stod(low_price),
+                                std::stod(close_price),
+                                std::stod(volume),
+                                std::stod(quote),
+                                std::stod(trades_count),
+                                std::stod(tbbav),
+                                std::stod(tbqav),
+                                std::stod(close_price),
+                                std::stod(open_price)
+                            );
+                        } else {
+                            this->candle.construct(
+                                std::stod(open_time),
+                                std::stod(close_time),
+                                std::stod(open_price),
+                                std::stod(high_price),
+                                std::stod(low_price),
+                                std::stod(close_price),
+                                std::stod(volume),
+                                std::stod(quote),
+                                std::stod(trades_count),
+                                std::stod(tbbav),
+                                std::stod(tbqav),
+                                this->prev_ha_close,
+                                this->prev_ha_open
+                            );
+                        }
+
+                        this->prev_ha_close = this->candle.get_close_price();
+                        this->prev_ha_open = this->candle.get_open_price();
 
                         return true;
                     } catch (std::invalid_argument& exp) {
@@ -544,15 +554,6 @@ namespace Workers::Watchers
                     return false;
                 }
             }
-
-            // template <class Candle_T>
-            // Candle_T get_candle() 
-            // {
-            //     if (std::is_same<Candle_T, Candle>::value)
-            //         return this->candle;
-            //     if (std::is_same<Candle_T, Heikin_Ashi>::value)
-            //         return this->heikin_ashi;
-            // }
 
             /**
              * @brief Get the symbol object
@@ -571,17 +572,9 @@ namespace Workers::Watchers
             /**
              * @brief Get the candle object
              * 
-             * @param candle_type Type of Candle
              * @return Candle_T 
              */
-            Candles::Candle get_candle() { return this->candle; }
-
-            /**
-             * @brief Get the heikin ashi object
-             * 
-             * @return Heikin_Ashi 
-             */
-            Candles::Heikin_Ashi get_heikin_ashi() { return this->heikin_ashi; }
+            Candle_T get_candle() { return this->candle; }
 
             /**
              * @brief Get the current price of cryptocurrency
@@ -1185,7 +1178,7 @@ namespace Workers
             /**
              * @brief Candle Watcher object
              */
-            Workers::Watchers::Candle_Watcher candle_watcher;
+            Workers::Watchers::Candle_Watcher<Candle_T> candle_watcher;
 
         public:
             /**
@@ -1206,7 +1199,7 @@ namespace Workers
             /**
              * @brief Initialize Worker
              */
-            void initialize()
+            void configurate()
             {
                 this->trader.set_trader_params(
                     this->worker_configuration["trader_params"]
@@ -1224,14 +1217,42 @@ namespace Workers
                 );
             }
 
+            void initialize(
+                const string& data_dir
+            )
+            {
+                string symbol = this->worker_configuration["trader_params"]["symbol"];
+                string interval = this->worker_configuration["interval"];
+                string candle_type = this->worker_configuration["candle"];
+                string short_goal = this->worker_configuration["trader_params"]["short_goal"];
+                string sym;
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+    
+                io::CSVReader<11> data_file(
+                    data_dir + sym + '_' + interval +".csv"               
+                );
+
+                // this->candle_watcher.read_file_once(data_file);
+                // while(candle_watcher.read_file_once(data_file))
+                // {
+
+                // }
+            }
+
             /**
-             * @brief Backtest Worker by Candle type
+             * @brief Backtest Worker
              * 
              * @param data_dir Root path to data directory
              * @param start_balance Start USDT balance (for long trades)
              * @param start_symbols Start Symbol balance (for short trades)
              */
-            void backtest_candle(
+            void backtest(
                 const string& data_dir,
                 double start_balance,
                 double start_symbols 
@@ -1246,7 +1267,7 @@ namespace Workers
 
                 map<string, bool> signals;
 
-                Candles::Candle candle;
+                Candle_T candle;
 
                 std::remove_copy(
                     symbol.begin(),
@@ -1302,291 +1323,6 @@ namespace Workers
                     vector<Trade> trades;
 
                     candle = this->candle_watcher.get_candle();
-                    this->strateger.resolve(candle);
-                    signals = this->strateger.get_signals();
-
-                    stake_amount_trade = balance / max_open_trades;
-                    symbol_amount_trade = symbol_balance / max_open_trades;
-
-                    this->trader.set_stake_amount(stake_amount_trade);
-                    this->trader.set_symbol_abount(symbol_amount_trade);
-
-                    candle_close_price = candle.get_close_price();
-
-                    trader.resolve(
-                        signals,
-                        trades,
-                        candle_close_price
-                    );
-
-                    for (Trade& trade : trades) 
-                    {
-                        if (trade.is_completed())
-                        {
-                            if (trade.get_position() == "long")
-                            {
-                                balance += trade.get_abs_profit();
-
-                                if (best_long_trade == 0.0)
-                                {
-                                    best_long_trade = trade.get_per_profit();
-                                } else {
-                                    if (best_long_trade <= trade.get_per_profit())
-                                        best_long_trade = trade.get_per_profit();
-                                }
-
-                                if (worst_long_trade == 0.0)
-                                {
-                                    worst_long_trade = trade.get_per_profit();
-                                } else {
-                                    if (worst_long_trade >= trade.get_per_profit())
-                                        worst_long_trade = trade.get_per_profit();
-                                }
-
-                                if (balance > maximum_balance)
-                                    maximum_balance = balance;
-                                if (balance < minimal_balance)
-                                    minimal_balance = balance;
-
-                                average_abs_profit_per_trade_long += trade.get_abs_profit();
-                                average_per_profit_per_trade_long += trade.get_per_profit();
-
-                                total_trades_long++;
-
-                                if ((trade.get_per_profit() + 100) / 100 >= 1)
-                                {
-                                    wins_long++;
-
-                                } else {
-                                    loses_long++;
-                                }
-                            } else if (trade.get_position() == "short") {
-                                if (short_goal == "symbol")
-                                {
-                                    symbol_balance +=trade.get_abs_profit();
-
-                                    if (symbol_balance > maximum_symbol_balance)
-                                        maximum_symbol_balance = symbol_balance;
-
-                                    if (symbol_balance < minimal_symbol_balance)
-                                        minimal_symbol_balance = symbol_balance;
-                                }
-                                if (short_goal == "USDT")
-                                {
-                                    symbol_balance_usdt +=trade.get_abs_profit();
-
-                                    if (symbol_balance_usdt > maximum_symbol_balance_usdt)
-                                        maximum_symbol_balance_usdt = symbol_balance_usdt;
-
-                                    if (symbol_balance_usdt < minimal_symbol_balance_usdt)
-                                        minimal_symbol_balance_usdt = symbol_balance_usdt;
-                                }
-
-                                if (best_short_trade == 0.0)
-                                {
-                                    best_short_trade = trade.get_per_profit();
-                                } else {
-                                    if (best_short_trade <= trade.get_per_profit())
-                                        best_short_trade = trade.get_per_profit();
-                                }
-
-                                if (worst_short_trade == 0.0) 
-                                {
-                                    worst_short_trade = trade.get_per_profit();
-                                } else {
-                                    if (worst_short_trade >= trade.get_per_profit())
-                                        worst_short_trade = trade.get_per_profit();
-                                }
-
-                                average_abs_profit_per_trade_short += trade.get_abs_profit();
-                                average_per_profit_per_trade_short += trade.get_per_profit();
-
-                                total_trades_short++;
-
-                                if ((trade.get_per_profit() + 100) / 100 >= 1)
-                                {
-                                    wins_short++;
-                                } else {
-                                    loses_short++;
-                                }
-                            }
-
-                            cout 
-                                << "Position: " << trade.get_position() << endl
-                                << "Absolute profit: " << trade.get_abs_profit() << endl
-                                << "Percentage profit: " << trade.get_per_profit() << endl
-                                << "Open price: " << trade.get_open_price() << endl
-                                << "Close price: " << trade.get_close_price() << endl
-                                << "Stake amount: " << trade.get_stake_amount() << endl
-                                << "Symbol amount: " << trade.get_symbol_amount() << endl
-                                << "Current balance: " << balance << endl
-                                << "Current symbol balance: " << symbol_balance << endl
-                            << endl;
-                        }
-                    }
-
-                    cout << "Candle close: " << candle_close_price << endl;
-                    for (auto& [key, val] : signals)
-                        cout << key << " : " << val << endl;
-                    cout << endl;
-                }
-            
-                auto end_time = std::chrono::high_resolution_clock::now();
-                auto exec_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-                abs_profit_long = balance - start_balance;
-                per_profit_long = balance / start_balance * 100 - 100;
-                average_abs_profit_per_trade_long /= total_trades_long;
-                average_per_profit_per_trade_long /= total_trades_long;
-
-                average_abs_profit_per_trade_short /= total_trades_short;
-                average_per_profit_per_trade_short /= total_trades_short;
-
-                per_wins_long = (double)wins_long / (double)total_trades_long * 100;
-                per_wins_short = (double)wins_short / (double)total_trades_short * 100;
-
-                cout 
-                    << "----------------------------------" << endl
-                    << "LONG POSITION STATISTIC:" << endl
-                    << endl
-                    << "BALANCE:" << endl
-                    << "Start Balance: " << start_balance << " USDT" << endl
-                    << "Final Balance: " << balance << " USDT" << endl 
-                    << "Maximum balance: " << maximum_balance<< " USDT"  << endl
-                    << "Minimal balance: " << minimal_balance << " USDT" << endl
-                    << endl
-                    << "PROFIT:" << endl
-                    << "Absolute profit: " << abs_profit_long << " USDT" << endl
-                    << "Percentage profit: " << per_profit_long << " %" << endl
-                    << "Average absolute profit per trades: " << average_abs_profit_per_trade_long << " USDT" << endl
-                    << "Average percentage profit per trades: " << average_per_profit_per_trade_long << " %" << endl
-                    << endl
-                    << "TRADE" << endl
-                    << "Total trades: " << total_trades_long << endl
-                    << "Wins: " << wins_long << endl
-                    << "Loses: " << loses_long << endl
-                    << "Percent wins: " << per_wins_long << " %" << endl
-                    << "Best long trade: " << best_long_trade << " %" << endl
-                    << "Worst long trade: " << worst_long_trade << " %" << endl
-                    << "----------------------------------" << endl
-                    << "SHORT POSITION STATISTIC:" << endl
-                    << endl
-                    << "BALANCE:" << endl;
-                if (this->worker_configuration["trader_params"]["short_goal"] == "USDT")
-                {
-                    cout 
-                        << "Start Balance: " << 0 << " USDT" << endl
-                        << "Final Balance: " << symbol_balance_usdt << " USDT" << endl 
-                        << "Maximum balance: " << maximum_symbol_balance_usdt << " USDT"  << endl
-                        << "Minimal balance: " << minimal_symbol_balance_usdt << " USDT" << endl
-                        << endl
-                        << "PROFIT:" << endl
-                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " USDT" << endl
-                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
-                        << endl;
-                } else if (this->worker_configuration["trader_params"]["short_goal"] == "symbol") {
-                    cout 
-                        << "Start Balance: " << start_symbols << " Symbols" << endl
-                        << "Final Balance: " << symbol_balance << " Symbols" << endl 
-                        << "Maximum balance: " << maximum_symbol_balance << " Symbols"  << endl
-                        << "Minimal balance: " << minimal_symbol_balance << " Symbols" << endl
-                        << endl
-                        << "PROFIT:" << endl
-                        << "Average absolute profit per trades: " << average_abs_profit_per_trade_short << " Symbols" << endl
-                        << "Average percentage profit per trades: " << average_per_profit_per_trade_short << " %" << endl
-                        << endl;
-                }
-                cout 
-                    << "TRADE" << endl
-                    << "Total trades: " << total_trades_short << endl
-                    << "Wins: " << wins_short << endl
-                    << "Loses: " << loses_short << endl
-                    << "Percent wins: " << per_wins_short << " %" << endl
-                    << "Best long trade: " << best_short_trade << " %" << endl
-                    << "Worst long trade: " << worst_short_trade << " %" << endl
-                    << "----------------------------------" << endl
-                    << "Test time (ms): " << exec_time.count() << endl
-                ;
-            }
-    
-            /**
-             * @brief Backtest Worker by Heikin_Ashi type
-             * 
-             * @param data_dir Root path to data directory
-             * @param start_balance Start USDT balance (for long trades)
-             * @param start_symbols Start Symbol balance (for short trades)
-             */
-            void backtest_heikin_ashi(
-                const string& data_dir,
-                double start_balance,
-                double start_symbols
-            ) {
-                double max_open_trades = this->worker_configuration["trader_params"]["max_open_trade"];
-
-                string symbol = this->worker_configuration["trader_params"]["symbol"];
-                string interval = this->worker_configuration["interval"];
-                string candle_type = this->worker_configuration["candle"];
-                string short_goal = this->worker_configuration["trader_params"]["short_goal"];
-                string sym;
-
-                map<string, bool> signals;
-
-                Candles::Heikin_Ashi candle;
-
-                std::remove_copy(
-                    symbol.begin(),
-                    symbol.end(),
-                    std::back_inserter(sym),
-                    '/'
-                );
-
-                io::CSVReader<11> data_file(
-                    data_dir + sym + '_' + interval +".csv"               
-                );
-
-                double candle_close_price;
-                double stake_amount_trade;
-                double symbol_amount_trade;
-                double symbol_balance_usdt = 0;
-                double minimal_symbol_balance_usdt;
-                double maximum_symbol_balance_usdt;
-                double abs_profit_long = 0;
-                double per_profit_long = 0;
-                double average_abs_profit_per_trade_long = 0;
-                double average_per_profit_per_trade_long = 0;
-                double abs_profit_short = 0;
-                double per_profit_short = 0;
-                double average_abs_profit_per_trade_short = 0;
-                double average_per_profit_per_trade_short = 0;
-                int total_trades_long = 0;
-                int wins_long = 0;
-                int loses_long = 0;
-                double per_wins_long;
-                int total_trades_short = 0;
-                int wins_short = 0;
-                int loses_short = 0;
-                double per_wins_short;
-                double best_long_trade = 0.0;
-                double worst_long_trade = 0.0;
-                double best_short_trade = 0.0;
-                double worst_short_trade = 0.0;
-
-                double balance = start_balance;
-                double minimal_balance = start_balance;
-                double maximum_balance = start_balance;
-
-                double symbol_balance = start_symbols;
-                double minimal_symbol_balance = start_symbols;
-                double maximum_symbol_balance = start_symbols;
-
-                auto start_time = std::chrono::high_resolution_clock::now();
-
-                this->candle_watcher.read_file_once(data_file);
-                while(candle_watcher.read_file_once(data_file))
-                {
-                    vector<Trade> trades;
-
-                    candle = this->candle_watcher.get_heikin_ashi();
                     this->strateger.resolve(candle);
                     signals = this->strateger.get_signals();
 

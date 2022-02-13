@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
         worker_configuration
     );
 
-    worker_cd.initialize();
-    worker_ha.initialize();
+    worker_cd.configurate();
+    worker_ha.configurate();
 
     Tester tester;
 
@@ -66,35 +66,28 @@ int main(int argc, char *argv[]) {
 
     // std::cout << "account info: " << account.v << std::endl << std::endl;
 
+    // // ONLINE TRADING
+    // worker_cd.initialize(
+    //     dir
+    // );
 
     // // STRATEGY BACKTEST
-    // worker_cd.backtest_candle(
-    //     dir,
-    //     usdt_balance,
-    //     symbol_balance
-    // );
-    // worker_ha.backtest_heikin_ashi(
-    //     dir,
-    //     usdt_balance,
-    //     symbol_balance
-    // );
+    worker_cd.backtest(
+        dir,
+        usdt_balance,
+        symbol_balance
+    );
 
     // // BACKTEST CANDLE
-    // tester.backtest_candle(
+    // tester.backtest_candle<Candles::Heikin_Ashi>(
     //     "BTCUSDT",
     //     "1d",
     //     dir
     // );
 
     // // BACKTEST INDICATORS
-    // tester.backtest_candle_indicator<Indicators::TradingView::RSXC_LB<Candles::Candle>>(
+    // tester.backtest_indicator<Indicators::TradingView::RSXC_LB<Candles::Candle>, Candles::Candle>(
     //     indicator_params,
-    //     "BTCUSDT",
-    //     "1d",
-    //     dir
-    // );
-    // tester.backtest_heikin_ashi_indicator<Indicators::TradingView::Normalized_MACD<Candles::Heikin_Ashi>>(
-    //     indicator_params2,
     //     "BTCUSDT",
     //     "1d",
     //     dir
