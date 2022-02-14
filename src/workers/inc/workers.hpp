@@ -1435,7 +1435,7 @@ namespace Workers
                     candles = this->candle_watcher.get_new_candles(previous_candle_close_time, now_epoch - this->candle_duration);
                     for (Candle_T& cd : candles)
                     {
-                        current_candle_close_time = cd.get_close_time();
+                        previous_candle_close_time = cd.get_close_time();
                         this->strateger.resolve(cd);
                         cout 
                             << "Got new candle" <<endl 
