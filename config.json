@@ -9,7 +9,7 @@
             "candle": "Candle",
             "interval": "1d",
             "trader_params": {
-                "symbol": "BTC/USDT",
+                "symbol": "ALGO/USDT",
                 "positions": "both",
                 "type": "position",
                 "short_goal": "symbol",

@@ -616,7 +616,7 @@ namespace Workers::Watchers
                 params["interval"] = this->interval;
                 params["startTime"] = std::to_string(startTime);
                 params["endTime"] = std::to_string(endTime);
-                params["limit"] = "300";
+                params["limit"] = "1000";
 
                 Request::Simple::JSON_Curl json_curl("https://api.binance.com/api/v3/klines");
 
