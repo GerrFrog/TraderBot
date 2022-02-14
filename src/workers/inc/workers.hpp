@@ -22,6 +22,18 @@
 #include "../../request/inc/request.hpp"
 #include "../../libs/csv/csv.hpp"
 
+#define CANDLE_1D_DURATION  86399999
+#define CANDLE_12H_DURATION 43199999
+#define CANDLE_8H_DURATION  28799999
+#define CANDLE_6H_DURATION  21599999
+#define CANDLE_4H_DURATION  14399999
+#define CANDLE_2H_DURATION  7199999
+#define CANDLE_1H_DURATION  3599999
+#define CANDLE_30M_DURATION 1799999
+#define CANDLE_15M_DURATION 899999
+#define CANDLE_5M_DURATION  299999
+#define CANDLE_1M_DURATION  59999
+
 using std::string; 
 using std::cout; 
 using std::endl; 
@@ -604,7 +616,7 @@ namespace Workers::Watchers
                 params["interval"] = this->interval;
                 params["startTime"] = std::to_string(startTime);
                 params["endTime"] = std::to_string(endTime);
-                params["limit"] = "20";
+                params["limit"] = "300";
 
                 Request::Simple::JSON_Curl json_curl("https://api.binance.com/api/v3/klines");
 
@@ -1265,6 +1277,11 @@ namespace Workers
              */
             Workers::Watchers::Candle_Watcher<Candle_T> candle_watcher;
 
+            /**
+             * @brief Candle duraction in milliseconds
+             */
+            unsigned long candle_duration;
+
         public:
             /**
              * @brief Construct a new Worker object
@@ -1300,6 +1317,30 @@ namespace Workers
                     this->worker_configuration["trader_params"]["symbol"],
                     this->worker_configuration["interval"]
                 );
+
+                string interval = this->worker_configuration["interval"];
+                if (interval == "1d")
+                {
+                    this->candle_duration = CANDLE_1D_DURATION;
+                } else if (interval == "12h") {
+                    this->candle_duration = CANDLE_12H_DURATION;
+                } else if (interval == "8h") {
+                    this->candle_duration = CANDLE_8H_DURATION;
+                } else if (interval == "6h") {
+                    this->candle_duration = CANDLE_4H_DURATION;
+                } else if (interval == "2h") {
+                    this->candle_duration = CANDLE_2H_DURATION;
+                } else if (interval == "1h") {
+                    this->candle_duration = CANDLE_1H_DURATION;
+                } else if (interval == "30m") {
+                    this->candle_duration = CANDLE_30M_DURATION;
+                } else if (interval == "15m") {
+                    this->candle_duration = CANDLE_15M_DURATION;
+                } else if (interval == "5m") {
+                    this->candle_duration = CANDLE_5M_DURATION;
+                } else if (interval == "1m") {
+                    this->candle_duration = CANDLE_1M_DURATION;
+                }
             }
 
             void initialize(
@@ -1312,9 +1353,13 @@ namespace Workers
                 string short_goal = this->worker_configuration["trader_params"]["short_goal"];
                 string sym;
 
-                long last_candle_close_time;
+                unsigned long last_candle_close_time;
+
+                uint64_t now_epoch;
 
                 Candle_T candle;
+
+                vector<Candle_T> candles;
 
                 std::remove_copy(
                     symbol.begin(),
@@ -1340,22 +1385,41 @@ namespace Workers
                     << endl;
                 }
 
-                last_candle_close_time = candle.get_close_time();
-                cout << "Last candle close time: " << last_candle_close_time << endl;
-
-                uint64_t now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()
                 ).count();
 
-                cout << "Now Linux epoch: " << now_epoch << endl;
-                vector<Candle_T> candles = this->candle_watcher.get_new_candles(last_candle_close_time, now_epoch);
+                last_candle_close_time = candle.get_close_time();
 
-                cout << "[+] Got new candels" << endl;
-                for (Candle_T& cd : candles)
-                    cout
-                        << cd.get_close_price() << endl
-                        << cd.get_close_time() << endl
-                    << endl;
+                while(now_epoch - last_candle_close_time >= this->candle_duration) 
+                {
+                    now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
+
+                    cout << "Last candle close time: " << last_candle_close_time << endl;
+                    cout << "Now Linux epoch: " << now_epoch << endl;
+
+                    candles = this->candle_watcher.get_new_candles(last_candle_close_time, now_epoch);
+                    cout << "[+] Got new candels" << endl;
+                    for (Candle_T& cd : candles)
+                    {
+                        // TODO: Remake. Because it is unsigned we can't get negative value (sign doesn't change but value increase)
+                        last_candle_close_time = cd.get_close_time();
+                        if (now_epoch - last_candle_close_time >= 18000000000000000000)
+                            goto finish_getting_candles;
+                        this->strateger.resolve(cd);
+                        cout
+                            << "Candle close price: " << cd.get_close_price() << endl
+                            << "Candle close time: " << cd.get_close_time() << endl
+                            << "Difference: " << now_epoch - last_candle_close_time << endl
+                            << "Params: " << this->strateger.get_params() << endl
+                        << endl;
+                    }
+                }
+            finish_getting_candles:
+                cout << "[+] Got the newest candle!" << endl;
+
             }
 
             /**

@@ -16,7 +16,7 @@
                 "exchange": "binance",
                 "stake_amount": -1.0,
                 "symbol_amount": -1.0,
-                "max_open_trade": 20,
+                "max_open_trade": 30,
                 "stop-loss": 1,
                 "target": 2
             },

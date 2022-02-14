@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     );
 
     // // STRATEGY BACKTEST
-    // worker_cd.backtest(
+    // worker.backtest(
     //     dir,
     //     usdt_balance,
     //     symbol_balance
