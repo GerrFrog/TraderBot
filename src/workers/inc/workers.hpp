@@ -1353,7 +1353,13 @@ namespace Workers
                 string short_goal = this->worker_configuration["trader_params"]["short_goal"];
                 string sym;
 
-                unsigned long last_candle_close_time;
+                unsigned long current_candle_open_time;
+                unsigned long current_candle_close_time;
+                unsigned long previous_candle_open_time;
+                unsigned long previous_candle_close_time;
+                unsigned long sleep_duration;
+
+                double last_candle_close_price;
 
                 uint64_t now_epoch;
 
@@ -1377,49 +1383,72 @@ namespace Workers
                 {
                     candle = this->candle_watcher.get_candle();
                     this->strateger.resolve(candle);
-
-                    cout 
-                        << "Candle close price: " << candle.get_close_price() << endl
-                        << "Candle close time: " << candle.get_close_time() << endl
-                        << "Params: " << this->strateger.get_params() << endl
-                    << endl;
                 }
 
                 now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()
                 ).count();
 
-                last_candle_close_time = candle.get_close_time();
+                current_candle_close_time = candle.get_close_time();
 
-                while(now_epoch - last_candle_close_time >= this->candle_duration) 
+                // Get new data and initialize
+                while(now_epoch - current_candle_close_time >= this->candle_duration) 
                 {
                     now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
 
-                    cout << "Last candle close time: " << last_candle_close_time << endl;
-                    cout << "Now Linux epoch: " << now_epoch << endl;
-
-                    candles = this->candle_watcher.get_new_candles(last_candle_close_time, now_epoch);
-                    cout << "[+] Got new candels" << endl;
-                    for (Candle_T& cd : candles)
+                    candles = this->candle_watcher.get_new_candles(current_candle_close_time, now_epoch);
+                    for (int i = 0; i < candles.size(); i++)
                     {
                         // TODO: Remake. Because it is unsigned we can't get negative value (sign doesn't change but value increase)
-                        last_candle_close_time = cd.get_close_time();
-                        if (now_epoch - last_candle_close_time >= 18000000000000000000)
+                        if (i != 0)
+                        {
+                            previous_candle_close_time = candles[i - 1].get_close_time();
+                            previous_candle_open_time = candles[i - 1].get_open_time();
+                        }
+                        current_candle_open_time = candles[i].get_open_time();
+                        current_candle_close_time = candles[i].get_close_time();
+                        if (now_epoch - current_candle_close_time >= 18000000000000000000)
                             goto finish_getting_candles;
+                        this->strateger.resolve(candles[i]);
+                        last_candle_close_price = candles[i].get_close_price();
+                    }
+                }
+
+                // Start online trading
+            finish_getting_candles:
+                cout 
+                    << "[+] Got the newest candle!" << endl
+                    << "Now epoch: " << now_epoch << endl
+                    << "Last candle close time: " << current_candle_close_time << endl
+                    << "Last candle close price: " << last_candle_close_price << endl
+                << endl;
+
+                sleep_duration = current_candle_close_time - now_epoch;
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_duration));
+                while (1)
+                {
+                    now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
+                    candles = this->candle_watcher.get_new_candles(previous_candle_close_time, now_epoch - this->candle_duration);
+                    for (Candle_T& cd : candles)
+                    {
+                        current_candle_close_time = cd.get_close_time();
                         this->strateger.resolve(cd);
-                        cout
+                        cout 
+                            << "Got new candle" <<endl 
+                            << "Candle open price: " << cd.get_open_price() << endl
+                            << "Candle open time: " << cd.get_open_time() << endl
                             << "Candle close price: " << cd.get_close_price() << endl
                             << "Candle close time: " << cd.get_close_time() << endl
-                            << "Difference: " << now_epoch - last_candle_close_time << endl
+                            << "Now epoch: " << now_epoch << endl
                             << "Params: " << this->strateger.get_params() << endl
                         << endl;
                     }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(this->candle_duration));
                 }
-            finish_getting_candles:
-                cout << "[+] Got the newest candle!" << endl;
-
             }
 
             /**

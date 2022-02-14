@@ -7,9 +7,9 @@
             "name": "Worker 1",
             "strategy": "RSXC_ADX",
             "candle": "Candle",
-            "interval": "1d",
+            "interval": "1m",
             "trader_params": {
-                "symbol": "ALGO/USDT",
+                "symbol": "BTC/USDT",
                 "positions": "both",
                 "type": "position",
                 "short_goal": "symbol",
