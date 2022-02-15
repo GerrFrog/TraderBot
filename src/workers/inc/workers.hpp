@@ -1367,6 +1367,8 @@ namespace Workers
 
                 vector<Candle_T> candles;
 
+                map<string, bool> signals;
+
                 std::remove_copy(
                     symbol.begin(),
                     symbol.end(),
@@ -1447,7 +1449,15 @@ namespace Workers
                             << "Params: " << this->strateger.get_params() << endl
                         << endl;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(this->candle_duration));
+                    signals = this->strateger.get_signals();
+                    cout << "Signals:" << endl;
+                    for (auto& [key, val] : signals)
+                        cout << key << " : " << val << endl;
+                    cout << endl;
+                    // TODO: Little faster
+                    std::this_thread::sleep_for(std::chrono::milliseconds(
+                        previous_candle_close_time + 1 + this->candle_duration - now_epoch
+                    ));
                 }
             }
 
