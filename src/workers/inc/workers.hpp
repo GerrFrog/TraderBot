@@ -13,6 +13,7 @@
 #include <vector>
 #include <type_traits>
 #include <chrono>
+#include <sstream>
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
@@ -20,6 +21,7 @@
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../trade/inc/trade.hpp"
 #include "../../request/inc/request.hpp"
+#include "../../binapi/inc/binapi.hpp"
 #include "../../libs/csv/csv.hpp"
 
 #define CANDLE_1D_DURATION  86399999
@@ -563,7 +565,6 @@ namespace Workers::Watchers
 
                         return true;
                     } catch (std::invalid_argument& exp) {
-                        cout << exp.what() << endl;
                         return false;
                     }
                 } else {
@@ -708,7 +709,15 @@ namespace Workers::Solvers
     class Trader
     {
         private:
+            /**
+             * @brief Params for trader
+             */
             nlohmann::json trader_params;
+
+            /**
+             * @brief Pointer to Binance_API Object
+             */
+            Exchanges::Binance::Binance_API *binapi;
 
             /**
              * @brief All trades
@@ -741,6 +750,36 @@ namespace Workers::Solvers
             string short_goal;
 
             /**
+             * @brief Symbol balance
+             */
+            double symbol_balance;
+
+            /**
+             * @brief USDT balance
+             */
+            double usdt_balance;
+
+            /**
+             * @brief Step Size for open Trade (LOT_SIZE Binance API Error)
+             */
+            double stepSize;
+
+            /**
+             * @brief Minimal Notional for open Trade (MIN_NOTIONAL Binance API Error)
+             */
+            double minNotional;
+
+            /**
+             * @brief Quantities of long trade (in Symbol)
+             */
+            vector<double> long_quantities;
+
+            /**
+             * @brief Quantities of short trade (in USDT)
+             */
+            vector<double> short_quantities;
+
+            /**
              * @brief Maximum opened trades
              */
             double max_open_trade;
@@ -748,7 +787,7 @@ namespace Workers::Solvers
             /**
              * @brief Stake amount to "long" trade
              */
-            double stake_amount = 0.0;
+            double usdt_amount = 0.0;
 
             /**
              * @brief Stake amount to "short" trade
@@ -766,6 +805,33 @@ namespace Workers::Solvers
             double target = 0.0;
 
             /**
+             * @brief Set the up amounts to open Trade
+             */
+            void setup_amounts()
+            {
+                std::stringstream ss(this->symbol);
+                vector<string> symbols;
+                string segment;
+                while(std::getline(ss, segment, '/'))
+                    symbols.push_back(segment);
+                this->symbol_balance = std::stod((string)this->binapi->get_balance(symbols[0])["free"]);
+                this->usdt_balance = std::stod((string)this->binapi->get_balance(symbols[1])["free"]);
+
+                if (this->symbol_balance >= this->minNotional)
+                {
+                    this->symbol_amount = (int)(this->symbol_balance / this->max_open_trade);
+                    if (this->symbol_amount <= this->minNotional)
+                        this->symbol_amount = this->minNotional;
+                }
+                if (this->usdt_balance >= this->minNotional)
+                {
+                    this->usdt_amount = (int)(this->usdt_balance / this->max_open_trade);
+                    if (this->usdt_amount <= this->minNotional)
+                        this->usdt_amount = this->minNotional;
+                }
+            }
+
+            /**
              * @brief Initialize new Trade
              */
             void initialize_trade(
@@ -777,7 +843,7 @@ namespace Workers::Solvers
                 // TODO: Unique ID for each Trade
                 trade.set_open_time(
                     1, this->symbol, position, 
-                    this->stake_amount, 
+                    this->usdt_amount, 
                     this->symbol_amount, price 
                 );
             }
@@ -841,9 +907,11 @@ namespace Workers::Solvers
              * @brief Construct a new ema cross trader object
              * 
              * @param trader_params Parameters for Trader
+             * @param exchange_params Parameters for Exchanges
              */
             Trader(
-                nlohmann::json &trader_params
+                nlohmann::json &trader_params,
+                nlohmann::json &exchange_params
             ) : trader_params(trader_params)
             { 
                 this->symbol = (string)trader_params["symbol"];
@@ -851,7 +919,7 @@ namespace Workers::Solvers
                 this->positions = (string)trader_params["positions"];
                 this->short_goal = (string)trader_params["short_goal"];
 
-                this->stake_amount = (double)trader_params["stake_amount"];
+                this->usdt_amount = (double)trader_params["stake_amount"];
                 this->symbol_amount = (double)trader_params["symbol_amount"];
                 this->max_open_trade = (double)trader_params["max_open_trade"];
 
@@ -863,19 +931,57 @@ namespace Workers::Solvers
                 } else if ((string)trader_params["type"] == "position") {
                     this->type = (string)trader_params["type"];
                 }
+
+                if (this->exchange == "binance")
+                    this->binapi = new Exchanges::Binance::Binance_API(
+                        (string)exchange_params["binance"]["private_key"],
+                        (string)exchange_params["binance"]["secret_key"]
+                    );
             }
+
+            /**
+             * @brief Copy construct of Trader object
+             * 
+             * @param tr_in Trade object
+             */
+            Trader(const Trader& tr_in)
+                : binapi(new Exchanges::Binance::Binance_API("", ""))
+            { }
 
             /**
              * @brief Destroy the Trader object
              */
-            ~Trader() = default;
+            // ~Trader() = default;
+            ~Trader()
+            {
+                delete this->binapi;
+            }
+
+            /**
+             * @brief Assignment operator
+             * 
+             * @param tr_in Trade object
+             * @return Trader& 
+             */
+            Trader& operator = (const Trader& tr_in)
+            {
+                if (this != &tr_in)
+                {
+
+                }
+                return *this;
+            }
 
             /**
              * @brief Set the trader params via JSON Object
              * 
              * @param trader_params Params for Trader
+             * @param exchange_params Parameters for Exchanges
              */
-            void set_trader_params(nlohmann::json &trader_params) 
+            void set_trader_params(
+                nlohmann::json &trader_params,
+                nlohmann::json &exchange_params
+            ) 
             { 
                 this->trader_params = trader_params;
 
@@ -884,7 +990,7 @@ namespace Workers::Solvers
                 this->positions = (string)trader_params["positions"];
                 this->short_goal = (string)trader_params["short_goal"];
 
-                this->stake_amount = (double)trader_params["stake_amount"];
+                this->usdt_amount = (double)trader_params["stake_amount"];
                 this->symbol_amount = (double)trader_params["symbol_amount"];
                 this->max_open_trade = (double)trader_params["max_open_trade"];
 
@@ -896,6 +1002,12 @@ namespace Workers::Solvers
                 } else if ((string)trader_params["type"] == "position") {
                     this->type = (string)trader_params["type"];
                 }
+
+                if (this->exchange == "binance")
+                    this->binapi = new Exchanges::Binance::Binance_API(
+                        (string)exchange_params["binance"]["private_key"],
+                        (string)exchange_params["binance"]["secret_key"]
+                    );
             }
 
             /**
@@ -903,7 +1015,7 @@ namespace Workers::Solvers
              * 
              * @param amount Stake amount
              */
-            void set_stake_amount(double amount) { this->stake_amount = amount; }
+            void set_usdt_amount(double amount) { this->usdt_amount = amount; }
 
             /**
              * @brief Set the symbol abount object
@@ -938,7 +1050,40 @@ namespace Workers::Solvers
              * 
              * @return double 
              */
-            double get_stake_amount() { return this->stake_amount; }
+            double get_usdt_amount() { return this->usdt_amount; }
+
+            /**
+             * @brief Initialize Trader
+             */
+            void initialize()
+            {
+                string sym;
+
+                std::remove_copy(
+                    this->symbol.begin(),
+                    this->symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+
+                nlohmann::json ex_in = this->binapi->exchange_info(sym)["symbols"][0]["filters"];
+
+                this->stepSize = std::stod((string)ex_in[2]["stepSize"]);
+                this->minNotional = std::stod((string)ex_in[3]["minNotional"]);
+
+                cout 
+                    << "    LOT_SIZE for " << this->symbol << " is " << this->stepSize << endl
+                    << "    MIN_NOTIONAL for " << this->symbol << " is " << this->minNotional << endl
+                << endl;
+
+                this->setup_amounts();
+
+                cout
+                    << "[+] Start balance:" << endl
+                    << "    Symbols: " << this->symbol_balance << endl
+                    << "    USDT: " << this->usdt_balance << endl
+                << endl;
+            }
 
             /**
              * @brief Decide what to do with trade
@@ -1122,6 +1267,70 @@ namespace Workers::Solvers
                     }
                 }
             }
+
+            /**
+             * @brief Resolve for real money
+             * 
+             * @param signals Signals
+             */
+            void resolve_real(
+                map<string, bool> &signals
+            ) {
+                // TODO: scalping
+                cout << usdt_amount << ' ' << symbol_amount << endl;
+                if (
+                    signals["long_open"] &&
+                    (
+                        this->positions == "both" ||
+                        this->positions == "long"
+                    )
+                ) {
+                    nlohmann::json response = this->binapi->open_new_order(
+                        this->symbol,
+                        "BUY",
+                        std::to_string(this->usdt_amount)
+                    );
+                    cout << response << endl;
+                    double qty = (double)response["fills"][0]["qty"];
+                    this->long_quantities.push_back(qty);
+                }
+                if (signals["long_close"])
+                {
+                    for (auto& key : this->long_quantities)
+                        cout << this->binapi->open_new_order(
+                            this->symbol,
+                            "SELL",
+                            std::to_string(key)
+                        ) << endl;
+                    this->setup_amounts();
+                }
+                if (
+                    signals["short_open"] &&
+                    (
+                        this->positions == "both" ||
+                        this->positions == "short"
+                    )
+                ) {
+                    nlohmann::json response = this->binapi->open_new_order(
+                        this->symbol,
+                        "SELL",
+                        std::to_string(this->usdt_amount)
+                    );
+                    cout << response << endl;
+                    double qty = (double)response["fills"][0]["qty"];
+                    this->short_quantities.push_back(qty);
+                }
+                if (signals["short_close"])
+                {
+                    for (auto& key : this->long_quantities)
+                        cout << this->binapi->open_new_order(
+                            this->symbol,
+                            "BUY",
+                            std::to_string(key)
+                        ) << endl;
+                    this->setup_amounts();
+                }
+            }
     };
 
     /**
@@ -1234,6 +1443,7 @@ namespace Workers::Solvers
                     this->strategy_params,
                     ""
                 );
+                this->params["close"] = (double)candle.get_close_price();
                 this->strategy.resolve(
                     this->params,
                     this->signals
@@ -1258,6 +1468,41 @@ namespace Workers
     {
         private:
             /**
+             * @brief Worker name
+             */
+            string name;
+            
+            /**
+             * @brief Worker strategy
+             */
+            string strategy;
+
+            /**
+             * @brief Candle type of Worker
+             */
+            string candle_type;
+
+            /**
+             * @brief Worker interval
+             */
+            string interval;
+
+            /**
+             * @brief Worker symbol
+             */
+            string symbol;
+
+            /**
+             * @brief Last candle close time
+             */
+            unsigned long last_candle_close_time;
+
+            /**
+             * @brief Candle duraction in milliseconds
+             */
+            unsigned long candle_duration;
+
+            /**
              * @brief JSON Worker configuration
              */
             nlohmann::json worker_configuration;
@@ -1278,9 +1523,40 @@ namespace Workers
             Workers::Watchers::Candle_Watcher<Candle_T> candle_watcher;
 
             /**
-             * @brief Candle duraction in milliseconds
+             * @brief Initialize worker by data file
+             * 
+             * @param data_dir Path to data directory
              */
-            unsigned long candle_duration;
+            void initialize_indicators(
+                const string& data_dir
+            )
+            {
+                string symbol = this->worker_configuration["trader_params"]["symbol"];
+                string interval = this->worker_configuration["interval"];
+                string sym;
+
+                Candle_T candle;
+
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
+    
+                io::CSVReader<11> data_file(
+                    data_dir + sym + '_' + interval +".csv"               
+                );
+
+                cout << this->name << " : [+] Start initializing from file" << endl;
+                this->candle_watcher.read_file_once(data_file);
+                while(candle_watcher.read_file_once(data_file))
+                {
+                    candle = this->candle_watcher.get_candle();
+                    this->strateger.resolve(candle);
+                }
+                this->last_candle_close_time = candle.get_close_time();
+            }
 
         public:
             /**
@@ -1291,7 +1567,13 @@ namespace Workers
             Worker(
                 nlohmann::json &worker_configuration
             ) : worker_configuration(worker_configuration)
-            { }
+            { 
+                this->name = worker_configuration["name"];
+                this->strategy = worker_configuration["strategy"];
+                this->candle_type = worker_configuration["candle"];
+                this->interval = worker_configuration["interval"];
+                this->symbol = worker_configuration["trader_params"]["symbol"];
+            }
 
             /**
              * @brief Destroy the Worker object
@@ -1300,18 +1582,23 @@ namespace Workers
 
             /**
              * @brief Initialize Worker
+             * 
+             * @param exchange_params Parameters for Exchange
              */
-            void configurate()
+            void configurate(
+                nlohmann::json &exchange_params
+            )
             {
+                cout << this->name << " : [+] Configurate bot" << endl;
+
                 this->trader.set_trader_params(
-                    this->worker_configuration["trader_params"]
-                );
-                cout << this->trader.get_description() << endl;
+                    this->worker_configuration["trader_params"],
+                    exchange_params
+                ); this->trader.initialize();
 
                 this->strateger.set_strategy_params(
                     this->worker_configuration["strategy_params"]
-                );
-                this->strateger.initialize();
+                ); this->strateger.initialize();
 
                 this->candle_watcher.initialize(
                     this->worker_configuration["trader_params"]["symbol"],
@@ -1343,21 +1630,77 @@ namespace Workers
                 }
             }
 
-            void initialize(
-                const string& data_dir
+            /**
+             * @brief Describe worker
+             */
+            void describe_worker()
+            {
+                cout
+                    << "Worker description:" << endl
+                    << "Name: " << this->name << endl
+                    << "Strategy: " << this->strategy << endl
+                    << "Candle type: " << this->candle_type << endl
+                    << "Interval: " << this->interval << endl
+                    << "Symbol: " << this->symbol << endl 
+                << endl;
+            }
+
+            /**
+             * @brief Online backtesting
+             * 
+             * @param start_balance Start balance in USDT
+             * @param start_symbols Start balance in Symbol
+             * @param data_dir Path to data directory
+             */
+            void online_backtest(
+                double start_balance,
+                double start_symbols,
+                const string &data_dir
             )
             {
-                string symbol = this->worker_configuration["trader_params"]["symbol"];
-                string interval = this->worker_configuration["interval"];
+                double max_open_trades = this->worker_configuration["trader_params"]["max_open_trade"];
+
                 string candle_type = this->worker_configuration["candle"];
                 string short_goal = this->worker_configuration["trader_params"]["short_goal"];
-                string sym;
 
                 unsigned long current_candle_open_time;
-                unsigned long current_candle_close_time;
                 unsigned long previous_candle_open_time;
                 unsigned long previous_candle_close_time;
-                unsigned long sleep_duration;
+
+                double candle_close_price;
+                double stake_amount_trade;
+                double symbol_amount_trade;
+                double symbol_balance_usdt = 0;
+                double minimal_symbol_balance_usdt;
+                double maximum_symbol_balance_usdt;
+                double abs_profit_long = 0;
+                double per_profit_long = 0;
+                double average_abs_profit_per_trade_long = 0;
+                double average_per_profit_per_trade_long = 0;
+                double abs_profit_short = 0;
+                double per_profit_short = 0;
+                double average_abs_profit_per_trade_short = 0;
+                double average_per_profit_per_trade_short = 0;
+                int total_trades_long = 0;
+                int wins_long = 0;
+                int loses_long = 0;
+                double per_wins_long;
+                int total_trades_short = 0;
+                int wins_short = 0;
+                int loses_short = 0;
+                double per_wins_short;
+                double best_long_trade = 0.0;
+                double worst_long_trade = 0.0;
+                double best_short_trade = 0.0;
+                double worst_short_trade = 0.0;
+
+                double balance = start_balance;
+                double minimal_balance = start_balance;
+                double maximum_balance = start_balance;
+
+                double symbol_balance = start_symbols;
+                double minimal_symbol_balance = start_symbols;
+                double maximum_symbol_balance = start_symbols;
 
                 double last_candle_close_price;
 
@@ -1366,52 +1709,37 @@ namespace Workers
                 Candle_T candle;
 
                 vector<Candle_T> candles;
+                vector<Trade> trades;
 
                 map<string, bool> signals;
 
-                std::remove_copy(
-                    symbol.begin(),
-                    symbol.end(),
-                    std::back_inserter(sym),
-                    '/'
-                );
-    
-                io::CSVReader<11> data_file(
-                    data_dir + sym + '_' + interval +".csv"               
-                );
+                this->initialize_indicators(data_dir);
 
-                this->candle_watcher.read_file_once(data_file);
-                while(candle_watcher.read_file_once(data_file))
-                {
-                    candle = this->candle_watcher.get_candle();
-                    this->strateger.resolve(candle);
-                }
+                cout << this->name << " : [+] Start online backtesting" << endl;
 
                 now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                     std::chrono::system_clock::now().time_since_epoch()
                 ).count();
 
-                current_candle_close_time = candle.get_close_time();
-
                 // Get new data and initialize
-                while(now_epoch - current_candle_close_time >= this->candle_duration) 
+                cout << this->name << " : [+] Initialize with the newest candle data" << endl;
+                while(now_epoch - this->last_candle_close_time >= this->candle_duration) 
                 {
                     now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
 
-                    candles = this->candle_watcher.get_new_candles(current_candle_close_time, now_epoch);
+                    candles = this->candle_watcher.get_new_candles(this->last_candle_close_time, now_epoch);
                     for (int i = 0; i < candles.size(); i++)
                     {
-                        // TODO: Remake. Because it is unsigned we can't get negative value (sign doesn't change but value increase)
                         if (i != 0)
                         {
                             previous_candle_close_time = candles[i - 1].get_close_time();
                             previous_candle_open_time = candles[i - 1].get_open_time();
                         }
                         current_candle_open_time = candles[i].get_open_time();
-                        current_candle_close_time = candles[i].get_close_time();
-                        if (now_epoch - current_candle_close_time >= 18000000000000000000)
+                        this->last_candle_close_time = candles[i].get_close_time();
+                        if (now_epoch - this->last_candle_close_time >= 18000000000000000000)
                             goto finish_getting_candles;
                         this->strateger.resolve(candles[i]);
                         last_candle_close_price = candles[i].get_close_price();
@@ -1420,43 +1748,166 @@ namespace Workers
 
                 // Start online trading
             finish_getting_candles:
-                cout 
-                    << "[+] Got the newest candle!" << endl
-                    << "Now epoch: " << now_epoch << endl
-                    << "Last candle close time: " << current_candle_close_time << endl
-                    << "Last candle close price: " << last_candle_close_price << endl
-                << endl;
 
-                sleep_duration = current_candle_close_time - now_epoch;
-                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_duration));
+                std::this_thread::sleep_for(std::chrono::milliseconds(this->last_candle_close_time - now_epoch));
+
+                cout << this->name << " : [+] Online trading started" << endl;
                 while (1)
                 {
                     now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
+
                     candles = this->candle_watcher.get_new_candles(previous_candle_close_time, now_epoch - this->candle_duration);
+
                     for (Candle_T& cd : candles)
                     {
                         previous_candle_close_time = cd.get_close_time();
                         this->strateger.resolve(cd);
-                        cout 
-                            << "Got new candle" <<endl 
-                            << "Candle open price: " << cd.get_open_price() << endl
-                            << "Candle open time: " << cd.get_open_time() << endl
-                            << "Candle close price: " << cd.get_close_price() << endl
-                            << "Candle close time: " << cd.get_close_time() << endl
-                            << "Now epoch: " << now_epoch << endl
-                            << "Params: " << this->strateger.get_params() << endl
+                        cout
+                            << this->name 
+                            << " : [+] Got new Candle!" << endl
+                            << "    Candle open time: " << cd.get_open_time() << endl
+                            << "    Candle open price: " << cd.get_open_price() << endl
+                            << "    Candle close time: " << cd.get_close_time() << endl
+                            << "    Candle close price: " << cd.get_close_price() << endl
+                            << "    Params: " << this->strateger.get_params() << endl
                         << endl;
                     }
+
+                    cout 
+                        << this->name << " : [+] Status" << endl
+                        << "    Balance: " << balance << endl
+                        << "    Symbols: " << symbol_balance << endl
+                    << endl;
+
                     signals = this->strateger.get_signals();
-                    cout << "Signals:" << endl;
-                    for (auto& [key, val] : signals)
-                        cout << key << " : " << val << endl;
-                    cout << endl;
-                    // TODO: Little faster
+
+                    stake_amount_trade = balance / max_open_trades;
+                    symbol_amount_trade = symbol_balance / max_open_trades;
+
+                    this->trader.set_usdt_amount(stake_amount_trade);
+                    this->trader.set_symbol_abount(symbol_amount_trade);
+
+                    this->trader.resolve(signals, trades, this->candle_watcher.get_current_price_online());
+
+                    for (Trade& trade : trades) 
+                    {
+                        if (trade.is_completed())
+                        {
+                            if (trade.get_position() == "long")
+                            {
+                                balance += trade.get_abs_profit();
+
+                                if (best_long_trade == 0.0)
+                                {
+                                    best_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_long_trade <= trade.get_per_profit())
+                                        best_long_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_long_trade == 0.0)
+                                {
+                                    worst_long_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_long_trade >= trade.get_per_profit())
+                                        worst_long_trade = trade.get_per_profit();
+                                }
+
+                                if (balance > maximum_balance)
+                                    maximum_balance = balance;
+                                if (balance < minimal_balance)
+                                    minimal_balance = balance;
+
+                                average_abs_profit_per_trade_long += trade.get_abs_profit();
+                                average_per_profit_per_trade_long += trade.get_per_profit();
+
+                                total_trades_long++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_long++;
+
+                                } else {
+                                    loses_long++;
+                                }
+                            } else if (trade.get_position() == "short") {
+                                if (short_goal == "symbol")
+                                {
+                                    symbol_balance +=trade.get_abs_profit();
+
+                                    if (symbol_balance > maximum_symbol_balance)
+                                        maximum_symbol_balance = symbol_balance;
+
+                                    if (symbol_balance < minimal_symbol_balance)
+                                        minimal_symbol_balance = symbol_balance;
+                                }
+                                if (short_goal == "USDT")
+                                {
+                                    symbol_balance_usdt +=trade.get_abs_profit();
+
+                                    if (symbol_balance_usdt > maximum_symbol_balance_usdt)
+                                        maximum_symbol_balance_usdt = symbol_balance_usdt;
+
+                                    if (symbol_balance_usdt < minimal_symbol_balance_usdt)
+                                        minimal_symbol_balance_usdt = symbol_balance_usdt;
+                                }
+
+                                if (best_short_trade == 0.0)
+                                {
+                                    best_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (best_short_trade <= trade.get_per_profit())
+                                        best_short_trade = trade.get_per_profit();
+                                }
+
+                                if (worst_short_trade == 0.0) 
+                                {
+                                    worst_short_trade = trade.get_per_profit();
+                                } else {
+                                    if (worst_short_trade >= trade.get_per_profit())
+                                        worst_short_trade = trade.get_per_profit();
+                                }
+
+                                average_abs_profit_per_trade_short += trade.get_abs_profit();
+                                average_per_profit_per_trade_short += trade.get_per_profit();
+
+                                total_trades_short++;
+
+                                if ((trade.get_per_profit() + 100) / 100 >= 1)
+                                {
+                                    wins_short++;
+                                } else {
+                                    loses_short++;
+                                }
+                            }
+
+                            cout 
+                                << this->name << endl
+                                << "Position: " << trade.get_position() << endl
+                                << "Absolute profit: " << trade.get_abs_profit() << endl
+                                << "Percentage profit: " << trade.get_per_profit() << endl
+                                << "Open price: " << trade.get_open_price() << endl
+                                << "Close price: " << trade.get_close_price() << endl
+                                << "Stake amount: " << trade.get_stake_amount() << endl
+                                << "Symbol amount: " << trade.get_symbol_amount() << endl
+                                << "Current balance: " << balance << endl
+                                << "Current symbol balance: " << symbol_balance << endl
+                            << endl;
+                        }
+                    }
+
+                    trades.clear();
+
+                    now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
+
+                    // TODO: Remake delay
                     std::this_thread::sleep_for(std::chrono::milliseconds(
-                        previous_candle_close_time + 1 + this->candle_duration - now_epoch
+                        previous_candle_close_time + 1501 + this->candle_duration - now_epoch
+                        // previous_candle_close_time + 1 + this->candle_duration - now_epoch
                     ));
                 }
             }
@@ -1468,7 +1919,7 @@ namespace Workers
              * @param start_balance Start USDT balance (for long trades)
              * @param start_symbols Start Symbol balance (for short trades)
              */
-            void backtest(
+            void file_backtest(
                 const string& data_dir,
                 double start_balance,
                 double start_symbols 
@@ -1545,7 +1996,7 @@ namespace Workers
                     stake_amount_trade = balance / max_open_trades;
                     symbol_amount_trade = symbol_balance / max_open_trades;
 
-                    this->trader.set_stake_amount(stake_amount_trade);
+                    this->trader.set_usdt_amount(stake_amount_trade);
                     this->trader.set_symbol_abount(symbol_amount_trade);
 
                     candle_close_price = candle.get_close_price();
@@ -1744,6 +2195,96 @@ namespace Workers
                     << "----------------------------------" << endl
                     << "Test time (ms): " << exec_time.count() << endl
                 ;
+            }
+
+            /**
+             * @brief Start online trading for real money
+             * 
+             * @param data_dir 
+             */
+            void start(
+                const string &data_dir
+            ) {
+                // TODO: Remake with config settings
+
+                unsigned long current_candle_open_time;
+                unsigned long previous_candle_open_time;
+                unsigned long previous_candle_close_time;
+
+                double last_candle_close_price;
+
+                uint64_t now_epoch;
+
+                Candle_T candle;
+
+                vector<Candle_T> candles;
+                vector<Trade> trades;
+
+                map<string, bool> signals;
+
+                this->initialize_indicators(data_dir);
+
+                now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+
+                // Get new data and initialize
+                cout << this->name << " : [+] Initialize with the newest candle data" << endl;
+                while(now_epoch - this->last_candle_close_time >= this->candle_duration) 
+                {
+                    now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
+
+                    candles = this->candle_watcher.get_new_candles(this->last_candle_close_time, now_epoch);
+                    for (int i = 0; i < candles.size(); i++)
+                    {
+                        if (i != 0)
+                        {
+                            previous_candle_close_time = candles[i - 1].get_close_time();
+                            previous_candle_open_time = candles[i - 1].get_open_time();
+                        }
+                        current_candle_open_time = candles[i].get_open_time();
+                        this->last_candle_close_time = candles[i].get_close_time();
+                        if (now_epoch - this->last_candle_close_time >= 18000000000000000000)
+                            goto finish_getting_candles;
+                        this->strateger.resolve(candles[i]);
+                        last_candle_close_price = candles[i].get_close_price();
+                    }
+                }
+
+                // Start online trading
+            finish_getting_candles:
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(this->last_candle_close_time - now_epoch));
+
+                cout << this->name << " : [+] Online trading started" << endl;
+                while (1)
+                {
+                    now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now().time_since_epoch()
+                    ).count();
+
+                    candles = this->candle_watcher.get_new_candles(previous_candle_close_time, now_epoch - this->candle_duration);
+
+                    for (Candle_T& cd : candles)
+                    {
+                        previous_candle_close_time = cd.get_close_time();
+                        this->strateger.resolve(cd);
+                        cout
+                            << this->name 
+                            << " : [+] Got new Candle!" << endl
+                            << "    Candle open time: " << cd.get_open_time() << endl
+                            << "    Candle open price: " << cd.get_open_price() << endl
+                            << "    Candle close time: " << cd.get_close_time() << endl
+                            << "    Candle close price: " << cd.get_close_price() << endl
+                            << "    Params: " << this->strateger.get_params() << endl
+                        << endl;
+                    }
+
+                    signals = this->strateger.get_signals();
+                    this->trader.resolve_real(signals);
+                }
             }
     };
 }

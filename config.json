@@ -9,7 +9,46 @@
             "candle": "Candle",
             "interval": "1m",
             "trader_params": {
-                "symbol": "BTC/USDT",
+                "symbol": "ALGO/USDT",
+                "positions": "both",
+                "type": "position",
+                "short_goal": "symbol",
+                "exchange": "binance",
+                "stake_amount": -1.0,
+                "symbol_amount": -1.0,
+                "max_open_trade": 30,
+                "stop-loss": 1,
+                "target": 2
+            },
+            "strategy_params": {
+                "rsxc_lb": {
+                    "type": "Indicators::TradingView",
+                    "indicator": "RSXC_LB",
+                    "src": "Close",
+                    "length": 14
+                },
+                "adx": {
+                    "type": "Indicators::Integral",
+                    "indicator": "ADX",
+                    "period": 14,
+                    "dmi_period": 14,
+                    "dmi_smoothed": "RMA",
+                    "dmi_atr_smoothed": "RMA"
+                },
+                "ema": {
+                    "type": "Indicators::Integral",
+                    "indicator": "EMA",
+                    "period": 200
+                }
+            }
+        },
+        "worker_2": {
+            "name": "Worker 2",
+            "strategy": "RSXC_ADX",
+            "candle": "Candle",
+            "interval": "5m",
+            "trader_params": {
+                "symbol": "ALGO/USDT",
                 "positions": "both",
                 "type": "position",
                 "short_goal": "symbol",
@@ -44,7 +83,7 @@
     },
     "telegram": {
         "enabled": false,
-        "token": "",
+        "token": "5140001883:AAFxCdKzY6jWOHNJz5SFHw73jA5UjuZC7kg",
         "chat_id": ""
     },
     "api_server": {
