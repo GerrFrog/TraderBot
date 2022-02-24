@@ -45,21 +45,24 @@ int main(int argc, char *argv[]) {
     Tester tester;
 
     // // INITIALIZING
-    // worker.configurate(jf["exchange"]);
-    trade_manager.initialize();
+    worker.configurate(jf["exchange"]);
+    // trade_manager.initialize();
 
     // // ONLINE TRADING FOR REAL MONEY
-    trade_manager.describe_workers();
-    trade_manager.online_start(dir);
+    // trade_manager.describe_workers();
+    // trade_manager.online_start(dir);
+
+    // // ONLINE TRADING FOR REAL MONEY WITH WORKER
+    // worker.start(dir);
 
     // // BINANCE API
     // nlohmann::json account_info = binapi.account_info();
     // cout << account_info << endl;
-    // cout << binapi.open_new_order(
-    //     "ALGOUSDT",
-    //     "BUY",
-    //     "20"
-    // ) << endl;
+    cout << binapi.open_new_order(
+        "ALGOUSDT",
+        "SELL",
+        "25"
+    ) << endl;
     // cout << binapi.exchange_info("ALGOUSDT") << endl;
     // cout << binapi.get_balance("ALGO") << endl;
 

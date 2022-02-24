@@ -809,25 +809,34 @@ namespace Workers::Solvers
              */
             void setup_amounts()
             {
+                cout << "[+] Start setup amounts..." << endl;
                 std::stringstream ss(this->symbol);
                 vector<string> symbols;
                 string segment;
                 while(std::getline(ss, segment, '/'))
                     symbols.push_back(segment);
-                this->symbol_balance = std::stod((string)this->binapi->get_balance(symbols[0])["free"]);
-                this->usdt_balance = std::stod((string)this->binapi->get_balance(symbols[1])["free"]);
+
+                string sb_str = this->binapi->get_balance(symbols[0])["free"];
+                string ub_str = this->binapi->get_balance(symbols[1])["free"];
+
+                this->symbol_balance = std::stod(sb_str);
+                this->usdt_balance = std::stod(ub_str);
 
                 if (this->symbol_balance >= this->minNotional)
                 {
                     this->symbol_amount = (int)(this->symbol_balance / this->max_open_trade);
                     if (this->symbol_amount <= this->minNotional)
                         this->symbol_amount = this->minNotional;
+                } else {
+                    this->symbol_amount = 0;
                 }
                 if (this->usdt_balance >= this->minNotional)
                 {
                     this->usdt_amount = (int)(this->usdt_balance / this->max_open_trade);
                     if (this->usdt_amount <= this->minNotional)
                         this->usdt_amount = this->minNotional;
+                } else {
+                    this->usdt_amount = 0;
                 }
             }
 
@@ -933,10 +942,12 @@ namespace Workers::Solvers
                 }
 
                 if (this->exchange == "binance")
+                {
                     this->binapi = new Exchanges::Binance::Binance_API(
                         (string)exchange_params["binance"]["private_key"],
                         (string)exchange_params["binance"]["secret_key"]
                     );
+                }
             }
 
             /**
@@ -1277,28 +1288,38 @@ namespace Workers::Solvers
                 map<string, bool> &signals
             ) {
                 // TODO: scalping
-                cout << usdt_amount << ' ' << symbol_amount << endl;
+                string sym;
+                std::remove_copy(
+                    symbol.begin(),
+                    symbol.end(),
+                    std::back_inserter(sym),
+                    '/'
+                );
                 if (
                     signals["long_open"] &&
                     (
                         this->positions == "both" ||
                         this->positions == "long"
-                    )
+                    ) &&
+                    this->usdt_amount > this->minNotional
                 ) {
                     nlohmann::json response = this->binapi->open_new_order(
-                        this->symbol,
+                        sym,
                         "BUY",
                         std::to_string(this->usdt_amount)
                     );
                     cout << response << endl;
-                    double qty = (double)response["fills"][0]["qty"];
-                    this->long_quantities.push_back(qty);
+                    string s_qty = response["cummulativeQuoteQty"];
+                    // string s_qty = response["fills"][0]["qty"];
+                    double qty = std::stod(s_qty);
+                    this->long_quantities.push_back((int)qty);
+                    cout << "New quantity: " << qty << endl;
                 }
                 if (signals["long_close"])
                 {
                     for (auto& key : this->long_quantities)
                         cout << this->binapi->open_new_order(
-                            this->symbol,
+                            sym,
                             "SELL",
                             std::to_string(key)
                         ) << endl;
@@ -1309,22 +1330,26 @@ namespace Workers::Solvers
                     (
                         this->positions == "both" ||
                         this->positions == "short"
-                    )
+                    ) &&
+                    this->symbol_amount > this->minNotional
                 ) {
                     nlohmann::json response = this->binapi->open_new_order(
-                        this->symbol,
+                        sym,
                         "SELL",
-                        std::to_string(this->usdt_amount)
+                        std::to_string(this->symbol_amount)
                     );
                     cout << response << endl;
-                    double qty = (double)response["fills"][0]["qty"];
-                    this->short_quantities.push_back(qty);
+                    string s_qty = response["cummulativeQuoteQty"];
+                    // string s_qty = response["fills"][0]["qty"];
+                    double qty = std::stod(s_qty);
+                    this->short_quantities.push_back((int)qty);
+                    cout << "New quantity: " << qty << endl;
                 }
                 if (signals["short_close"])
                 {
                     for (auto& key : this->long_quantities)
                         cout << this->binapi->open_new_order(
-                            this->symbol,
+                            sym,
                             "BUY",
                             std::to_string(key)
                         ) << endl;
@@ -2246,7 +2271,10 @@ namespace Workers
                         }
                         current_candle_open_time = candles[i].get_open_time();
                         this->last_candle_close_time = candles[i].get_close_time();
-                        if (now_epoch - this->last_candle_close_time >= 18000000000000000000)
+                        if (
+                            now_epoch - this->last_candle_close_time >= 18000000000000000000 ||
+                            now_epoch - this->last_candle_close_time < this->candle_duration
+                        )
                             goto finish_getting_candles;
                         this->strateger.resolve(candles[i]);
                         last_candle_close_price = candles[i].get_close_price();
@@ -2284,6 +2312,9 @@ namespace Workers
 
                     signals = this->strateger.get_signals();
                     this->trader.resolve_real(signals);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(
+                        previous_candle_close_time + 1501 + this->candle_duration - now_epoch
+                    ));
                 }
             }
     };

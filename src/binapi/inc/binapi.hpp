@@ -42,6 +42,11 @@ namespace Exchanges::Binance
             typedef std::unique_ptr<CURL, cleanup> CurlHandle;
 
             /**
+             * @brief Request Header
+             */
+     		struct curl_slist *chunk = NULL;
+
+            /**
              * @brief CurlHandle object
              */
             CurlHandle curlHandle;
@@ -247,12 +252,20 @@ namespace Exchanges::Binance
             ) : private_key(pk), 
                 secret_key(sk),
                 curlHandle(curl_easy_init(), &curl_easy_cleanup)
-            { }
+            { 
+        		// struct curl_slist *chunk = NULL;
+        		this->chunk = curl_slist_append(this->chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
+                curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, this->chunk);
+            }
 
             /**
              * @brief Destroy the Bin_API object
              */
-            ~Binance_API() = default;
+            // ~Binance_API() = default;
+            ~Binance_API()
+            {
+                curl_slist_free_all(this->chunk);
+            }
 
             /**
              * @brief Set the keys 
@@ -291,15 +304,15 @@ namespace Exchanges::Binance
              */
             nlohmann::json account_info()
             {
-        		struct curl_slist *chunk = NULL;
-        		chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
+        		// struct curl_slist *chunk = NULL;
+        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
+                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
 
                 std::unordered_map<string,string> parameters;
 
         		sendSignedRequest("GET", "/api/v3/account", parameters);
 
-                curl_slist_free_all(chunk);
+                // curl_slist_free_all(chunk);
 
                 return nlohmann::json::parse(this->content);
             }
@@ -312,15 +325,15 @@ namespace Exchanges::Binance
              */
             nlohmann::json get_balance(const string &symbol)
             {
-        		struct curl_slist *chunk = NULL;
-        		chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
+        		// struct curl_slist *chunk = NULL;
+        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
+                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
 
                 std::unordered_map<string,string> parameters;
 
         		sendSignedRequest("GET", "/api/v3/account", parameters);
 
-                curl_slist_free_all(chunk);
+                // curl_slist_free_all(chunk);
 
                 nlohmann::json response = nlohmann::json::parse(this->content)["balances"];
                 for (int i = 0; i < response.size(); i++)
@@ -328,6 +341,7 @@ namespace Exchanges::Binance
                     if (response[i]["asset"] == symbol)
                         return response[i];
                 }
+                return NULL;
             }
 
             /**
@@ -344,9 +358,9 @@ namespace Exchanges::Binance
                 const string &quantity
             )
             {
-        		struct curl_slist *chunk = NULL;
-        		chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
+        		// struct curl_slist *chunk = NULL;
+        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
+                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
 
                 std::unordered_map<string,string> parameters;
 
@@ -367,7 +381,7 @@ namespace Exchanges::Binance
 
                 sendSignedRequest("POST", "/api/v3/order", parameters);
 
-                curl_slist_free_all(chunk);
+                // curl_slist_free_all(chunk);
 
                 return nlohmann::json::parse(this->content);
             }

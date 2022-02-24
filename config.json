@@ -16,7 +16,7 @@
                 "exchange": "binance",
                 "stake_amount": -1.0,
                 "symbol_amount": -1.0,
-                "max_open_trade": 30,
+                "max_open_trade": 1,
                 "stop-loss": 1,
                 "target": 2
             },
@@ -25,12 +25,12 @@
                     "type": "Indicators::TradingView",
                     "indicator": "RSXC_LB",
                     "src": "Close",
-                    "length": 14
+                    "length": 28
                 },
                 "adx": {
                     "type": "Indicators::Integral",
                     "indicator": "ADX",
-                    "period": 14,
+                    "period": 28,
                     "dmi_period": 14,
                     "dmi_smoothed": "RMA",
                     "dmi_atr_smoothed": "RMA"
@@ -38,7 +38,7 @@
                 "ema": {
                     "type": "Indicators::Integral",
                     "indicator": "EMA",
-                    "period": 200
+                    "period": 150
                 }
             }
         },

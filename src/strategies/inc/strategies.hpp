@@ -346,7 +346,7 @@ namespace Strategies
                     signals["long_close"] = true;
                 if (
                     params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line &&
-                    params["adx"]["value"] >= this->adx_line
+                    params["adx"]["value"] >= this->adx_line 
                     // params["ema"]["value"] > params["close"]
                 )
                     signals["short_open"] = true;
