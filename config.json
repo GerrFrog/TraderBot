@@ -9,52 +9,12 @@
             "candle": "Candle",
             "interval": "1m",
             "trader_params": {
-                "symbol": "ALGO/USDT",
+                "pair": "ALGO/USDT",
                 "positions": "both",
                 "type": "position",
-                "short_goal": "symbol",
                 "exchange": "binance",
-                "stake_amount": -1.0,
-                "symbol_amount": -1.0,
-                "max_open_trade": 1,
-                "stop-loss": 1,
-                "target": 2
-            },
-            "strategy_params": {
-                "rsxc_lb": {
-                    "type": "Indicators::TradingView",
-                    "indicator": "RSXC_LB",
-                    "src": "Close",
-                    "length": 28
-                },
-                "adx": {
-                    "type": "Indicators::Integral",
-                    "indicator": "ADX",
-                    "period": 28,
-                    "dmi_period": 14,
-                    "dmi_smoothed": "RMA",
-                    "dmi_atr_smoothed": "RMA"
-                },
-                "ema": {
-                    "type": "Indicators::Integral",
-                    "indicator": "EMA",
-                    "period": 150
-                }
-            }
-        },
-        "worker_2": {
-            "name": "Worker 2",
-            "strategy": "RSXC_ADX",
-            "candle": "Candle",
-            "interval": "5m",
-            "trader_params": {
-                "symbol": "ALGO/USDT",
-                "positions": "both",
-                "type": "position",
-                "short_goal": "symbol",
-                "exchange": "binance",
-                "stake_amount": -1.0,
-                "symbol_amount": -1.0,
+                "long_amount": -1.0,
+                "short_amount": -1.0,
                 "max_open_trade": 30,
                 "stop-loss": 1,
                 "target": 2
@@ -73,7 +33,37 @@
                     "dmi_period": 14,
                     "dmi_smoothed": "RMA",
                     "dmi_atr_smoothed": "RMA"
+                },
+                "ema": {
+                    "type": "Indicators::Integral",
+                    "indicator": "EMA",
+                    "period": 150
                 }
+            }
+        },
+        "worker_2": {
+            "name": "Worker 2",
+            "strategy": "Heikin_Kaufman_Strategy",
+            "candle": "Candle",
+            "interval": "1d",
+            "trader_params": {
+                "pair": "ALGO/USDT",
+                "positions": "both",
+                "type": "position",
+                "exchange": "binance",
+                "long_amount": -1.0,
+                "short_amount": -1.0,
+                "max_open_trade": 30,
+                "stop-loss": 1,
+                "target": 2
+            },
+            "strategy_params": {
+                "res1": "1d",
+                "test": 0,
+                "sloma": 20,
+                "Length": 5,
+                "Fastend": 2.5,
+                "Slowend": 20
             }
         }
     },

@@ -88,6 +88,11 @@ namespace Candles
              * @brief Taker buy quote asset volume
              */
             double taker_buy_quote_asset_volume;
+            
+            /**
+             * @brief High-Low-Close mean
+             */
+            double hlc3;
 
         public:
             /**
@@ -298,6 +303,9 @@ namespace Candles
                 } else {
                     this->change_absolute = open_price - close_price;
                 }
+
+                this->hlc3 = (this->high_price + 
+                    this->low_price + this->close_price) / 3;
             }
 
             /**
@@ -362,6 +370,9 @@ namespace Candles
                 } else {
                     this->change_absolute = open_price - close_price;
                 }
+
+                this->hlc3 = (this->high_price + 
+                    this->low_price + this->close_price) / 3;
             }
     };
 
@@ -443,6 +454,9 @@ namespace Candles
                 } else {
                     this->change_absolute = open_price - close_price;
                 }
+
+                this->hlc3 = (this->high_price + 
+                    this->low_price + this->close_price) / 3;
             }
 
             /**
@@ -515,6 +529,9 @@ namespace Candles
                 } else {
                     this->change_absolute = open_price - close_price;
                 }
+
+                this->hlc3 = (this->high_price + 
+                    this->low_price + this->close_price) / 3;
             }
     };
 }

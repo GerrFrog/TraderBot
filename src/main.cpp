@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
 
     nlohmann::json jf = nlohmann::json::parse(ifs);
     nlohmann::json worker_configuration = jf["workers"]["worker_1"];
+    nlohmann::json exchange = jf["exchange"];
     nlohmann::json indicator_params = {
         {"interval", "1d"},
         {"period", 14},
@@ -33,24 +34,17 @@ int main(int argc, char *argv[]) {
     const string pk = jf["exchange"]["binance"]["private_key"];
     const string sk = jf["exchange"]["binance"]["secret_key"];
 
-    double usdt_balance = 2000.0;
-    double symbol_balance = 5.0;
+    double usdt_balance = 10000.0;
+    double symbol_balance = 20.0;
 
-    Workers::Worker<Strategies::RSXC_ADX, Candles::Candle> worker(
-        worker_configuration
+    Workers::Customs::Worker<Strategies::Customs::RSXC_ADX, Candles::Candle> worker(
+        worker_configuration,
+        exchange,
+        dir
     );
-    Managers::Trade_Manager trade_manager(jf);
     Exchanges::Binance::Binance_API binapi(pk, sk);
 
     Tester tester;
-
-    // // INITIALIZING
-    worker.configurate(jf["exchange"]);
-    // trade_manager.initialize();
-
-    // // ONLINE TRADING FOR REAL MONEY
-    // trade_manager.describe_workers();
-    // trade_manager.online_start(dir);
 
     // // ONLINE TRADING FOR REAL MONEY WITH WORKER
     // worker.start(dir);
@@ -58,11 +52,11 @@ int main(int argc, char *argv[]) {
     // // BINANCE API
     // nlohmann::json account_info = binapi.account_info();
     // cout << account_info << endl;
-    cout << binapi.open_new_order(
-        "ALGOUSDT",
-        "SELL",
-        "25"
-    ) << endl;
+    // cout << binapi.open_new_order(
+    //     "ALGOUSDT",
+    //     "SELL",
+    //     "25"
+    // ) << endl;
     // cout << binapi.exchange_info("ALGOUSDT") << endl;
     // cout << binapi.get_balance("ALGO") << endl;
 
@@ -85,13 +79,11 @@ int main(int argc, char *argv[]) {
     // // ONLINE TRADING FOR WORKER
     // worker.online_backtest(
     //     usdt_balance,
-    //     symbol_balance,
-    //     dir
+    //     symbol_balance
     // );
 
     // // STRATEGY BACKTEST FOR WORKER
     // worker.file_backtest(
-    //     dir,
     //     usdt_balance,
     //     symbol_balance
     // );

@@ -3,6 +3,7 @@ echo "Start installing dependencies"
 # Prepare directory
 mkdir bin/
 mkdir data/
+mkdir backtest_results/
 
 # CMake
 sudo apt-get install extra-cmake-modules 

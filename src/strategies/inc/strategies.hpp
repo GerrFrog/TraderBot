@@ -14,9 +14,9 @@
 using std::cout, std::string, std::endl, std::map;
 
 /**
- * @brief All Strategies in Bot
+ * @brief Custom Strategies for Bot
  */
-namespace Strategies
+namespace Strategies::Customs
 {
     /**
      * @brief EMA Cross Strategy
@@ -305,6 +305,11 @@ namespace Strategies
             double rsxc_lb_low_line = 30.0;
 
             /**
+             * @brief RSXC_LB middle line
+             */
+            double rsxc_lb_middle_line = 50.0;
+
+            /**
              * @brief RSXC_LB high line
              */
             double rsxc_lb_high_line = 70.0;
@@ -327,7 +332,7 @@ namespace Strategies
              * @param params Parameters for strategy (indicators value)
              * @param signals Signals of resolving (sell or buy)
              */
-            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)           
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
             {
                 signals["long_open"] = false;
                 signals["long_close"] = false;
@@ -337,7 +342,6 @@ namespace Strategies
                 if (
                     params["rsxc_lb"]["value"] <= this->rsxc_lb_low_line &&
                     params["adx"]["value"] >= this->adx_line 
-                    // params["ema"]["value"] <= params["close"]
                 )
                     signals["long_open"] = true;
                 if (
@@ -347,7 +351,6 @@ namespace Strategies
                 if (
                     params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line &&
                     params["adx"]["value"] >= this->adx_line 
-                    // params["ema"]["value"] > params["close"]
                 )
                     signals["short_open"] = true;
                 if (
@@ -358,7 +361,13 @@ namespace Strategies
     };
 }
 
+/**
+ * @brief Strategies from TradingView for Bot
+ */
+namespace Strategies::TradingView
+{
 
+}
 
 
 

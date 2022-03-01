@@ -12,6 +12,44 @@
 using std::map, std::cout, std::endl, std::string;
 
 /**
+ * @brief Abstract classes for Trades
+ */
+namespace Trades::Abstract
+{
+    class Trade_Abstract
+    {
+        private:
+
+        protected:
+
+        public:
+
+    };
+}
+
+/**
+ * @brief Implemented Trades objects
+ */
+namespace Trades
+{
+    /**
+     * @brief Trade for backtesting
+     */
+    class Backtest_Trade
+    {
+
+    };
+
+    /**
+     * @brief Trade for Online trading
+     */
+    class Online_Trade
+    {
+
+    };
+}
+
+/**
  * @brief Contains all information about trade
  */
 class Trade
@@ -275,12 +313,8 @@ class Trade
          * @brief Set the close time. Behave as exit function for Trade
          * 
          * @param close_price Close price
-         * @param short_goal Goal of short trade (USDT or symbol)
          */
-        void set_close_time(
-            double close_p,
-            const string& short_goal = ""
-        ) 
+        void set_close_time(double close_p) 
         { 
             this->active = false;
             this->completed = true;
@@ -297,17 +331,10 @@ class Trade
                 this->per_profit = percentage - 100;
                 this->profit = this->stake_amount * percentage / 100 - this->stake_amount;
             } else if (this->position == "short") {
-                if (short_goal == "usdt") 
-                {
-                    this->per_profit = 100 - percentage;
-                    this->profit = this->symbol_amount * this->open_price -
-                                this->symbol_amount * close_p;
-                } else if (short_goal == "symbol") {
-                    total_monets = (this->symbol_amount * this->open_price) /
-                        close_p;
-                    this->profit = total_monets - this->symbol_amount;
-                    this->per_profit = (total_monets / this->symbol_amount - 1) * 100;
-                }
+                total_monets = (this->symbol_amount * this->open_price) /
+                    close_p;
+                this->profit = total_monets - this->symbol_amount;
+                this->per_profit = (total_monets / this->symbol_amount - 1) * 100;
             }
         }
 

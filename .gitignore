@@ -5,3 +5,4 @@ try/
 notes/technical_analysis/strategies
 data
 notes/*
+backtest_results/
