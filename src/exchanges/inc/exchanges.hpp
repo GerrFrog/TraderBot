@@ -253,7 +253,6 @@ namespace Exchanges::Binance
                 secret_key(sk),
                 curlHandle(curl_easy_init(), &curl_easy_cleanup)
             { 
-        		// struct curl_slist *chunk = NULL;
         		this->chunk = curl_slist_append(this->chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
                 curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, this->chunk);
             }
@@ -304,15 +303,9 @@ namespace Exchanges::Binance
              */
             nlohmann::json account_info()
             {
-        		// struct curl_slist *chunk = NULL;
-        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
-
                 std::unordered_map<string,string> parameters;
 
         		sendSignedRequest("GET", "/api/v3/account", parameters);
-
-                // curl_slist_free_all(chunk);
 
                 return nlohmann::json::parse(this->content);
             }
@@ -325,15 +318,9 @@ namespace Exchanges::Binance
              */
             nlohmann::json get_balance(const string &symbol)
             {
-        		// struct curl_slist *chunk = NULL;
-        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
-
                 std::unordered_map<string,string> parameters;
 
         		sendSignedRequest("GET", "/api/v3/account", parameters);
-
-                // curl_slist_free_all(chunk);
 
                 nlohmann::json response = nlohmann::json::parse(this->content)["balances"];
                 for (int i = 0; i < response.size(); i++)
@@ -358,10 +345,6 @@ namespace Exchanges::Binance
                 const string &quantity
             )
             {
-        		// struct curl_slist *chunk = NULL;
-        		// chunk = curl_slist_append(chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
-                // curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, chunk);
-
                 std::unordered_map<string,string> parameters;
 
                 if (side == "BUY")
@@ -380,8 +363,6 @@ namespace Exchanges::Binance
                     });
 
                 sendSignedRequest("POST", "/api/v3/order", parameters);
-
-                // curl_slist_free_all(chunk);
 
                 return nlohmann::json::parse(this->content);
             }

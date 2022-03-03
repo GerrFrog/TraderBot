@@ -16,6 +16,7 @@
 #include <sstream>
 #include <memory>
 #include <fstream>
+#include <unistd.h>
 
 #include "../../strategies/inc/strategies.hpp"
 #include "../../indicators/inc/indicators.hpp"
@@ -23,7 +24,7 @@
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../trade/inc/trade.hpp"
 #include "../../request/inc/request.hpp"
-#include "../../binapi/inc/binapi.hpp"
+#include "../../exchanges/inc/exchanges.hpp"
 #include "../../libs/csv/csv.hpp"
 
 #define CANDLE_1D_DURATION  86399999
@@ -1636,12 +1637,12 @@ namespace Workers::Implementors
             /**
              * @brief Quantities of long trade (in Symbol)
              */
-            vector<double> long_quantities;
+            vector<int> long_quantities;
 
             /**
              * @brief Quantities of short trade (in USDT)
              */
-            vector<double> short_quantities;
+            vector<int> short_quantities;
 
             /**
              * @brief Quantity in string
@@ -1676,19 +1677,20 @@ namespace Workers::Implementors
                 this->long_balance = std::stod(fs_balance);
                 this->short_balance = std::stod(ss_balance);
 
-                if (this->long_balance >= this->minNotional)
+                // TODO: minNotional in USDT. Check if amount(symbol) * price >= minNotional
+                if (this->long_balance >= this->minNotional + 2)
                 {
                     this->long_amount = (int)(this->long_balance / this->max_open_trade);
                     if (this->long_amount <= this->minNotional)
-                        this->long_amount = this->minNotional;
+                        this->long_amount = this->minNotional + 2;
                 } else {
                     this->long_amount = 0;
                 }
-                if (this->short_balance >= this->minNotional)
+                if (this->short_balance >= this->minNotional + 2)
                 {
                     this->short_amount = (int)(this->short_balance / this->max_open_trade);
                     if (this->short_amount <= this->minNotional)
-                        this->short_amount = this->minNotional;
+                        this->short_amount = this->minNotional + 2;
                 } else {
                     this->short_amount = 0;
                 }
@@ -1718,7 +1720,7 @@ namespace Workers::Implementors
                 cout
                     << "[+] Binance status" << endl
                     << "    Long balance: " << this->long_balance << ' ' << this->long_symbol << endl
-                    << "    Short: " << this->short_balance << ' ' << this->short_symbol << endl
+                    << "    Short balance: " << this->short_balance << ' ' << this->short_symbol << endl
                     << "    stepSize: " << this->stepSize << endl
                     << "    minNotional: " << this->minNotional
                 << endl;
@@ -1760,6 +1762,13 @@ namespace Workers::Implementors
                 map<string, bool> &signals
             ) {
                 // TODO: scalping
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
+                this->long_amount = 21;
+                this->short_amount = 25;
+
                 if (
                     signals["long_open"] &&
                     (
@@ -1792,10 +1801,13 @@ namespace Workers::Implementors
                             "SELL",
                             std::to_string(key)
                         );
-                        cout << this->response << endl;
+                        cout
+                            << "[+] New executed order" << endl
+                            << this->response << endl
+                        << endl;
                     }
                     this->long_quantities.clear();
-                    this->binapi_setup_amounts();
+                    // this->binapi_setup_amounts();
                 }
                 if (
                     signals["short_open"] &&
@@ -1829,11 +1841,15 @@ namespace Workers::Implementors
                             "BUY",
                             std::to_string(key)
                         );
-                        cout << response << endl;
+                        cout
+                            << "[+] New executed order" << endl
+                            << this->response << endl
+                        << endl;
                     }
                     this->short_quantities.clear();
-                    this->binapi_setup_amounts();
+                    // this->binapi_setup_amounts();
                 }
+                this->binapi_setup_amounts();
             }
     };
 
@@ -2261,12 +2277,16 @@ namespace Workers::Customs
             void start()
             {
                 unsigned long candle_close_time;
+                unsigned long candle_duration = this->candle_watcher->get_candle_duration();
 
                 uint64_t now_epoch;
+                uint64_t delay;
 
                 vector<Candle_T> candles;
 
                 map<string, bool> signals;
+
+                bool got_candle = false;
 
                 this->newest_initialize(
                     this->strateger,
@@ -2279,11 +2299,9 @@ namespace Workers::Customs
                     std::chrono::system_clock::now().time_since_epoch()
                 ).count();
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(
-                    this->candle_watcher->get_last_candle_close_time() + 1 +
-                    this->candle_watcher->get_candle_duration() -
-                    now_epoch
-                ));
+                candle_close_time = this->candle_watcher->get_last_candle_close_time();
+                delay = candle_close_time + 1 + candle_duration - now_epoch;
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 
                 while (1)
                 {
@@ -2298,6 +2316,7 @@ namespace Workers::Customs
 
                     for (Candle_T& candle : candles)
                     {
+                        got_candle = true;
                         candle_close_time = candle.get_close_time();
 
                         this->candle_watcher->set_last_candle_close_time(
@@ -2312,22 +2331,28 @@ namespace Workers::Customs
                             << "    Candle open price: " << candle.get_open_price() << endl
                             << "    Candle close time: " << candle.get_close_time() << endl
                             << "    Candle close price: " << candle.get_close_price() << endl
-                            << "    Params: " << this->strateger->get_params() << endl
+                            << "    Params: " << this->strateger->get_params()
                         << endl;
                     }
 
                     signals = this->strateger->get_signals();
 
-                    this->online_trader->resolve(signals, this->candle_watcher->get_current_price_online());
+                    if (got_candle)
+                    {
+                        this->online_trader->resolve(signals);
+                        got_candle = false;
+                    }
 
                     now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
                     ).count();
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds(
-                        this->candle_watcher->get_last_candle_close_time() + 1501 + 
-                        this->candle_watcher->get_candle_duration() - now_epoch
-                    ));
+                    candle_close_time = this->candle_watcher->get_last_candle_close_time();
+                    delay = candle_close_time + 1 + candle_duration - now_epoch;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+                    // std::this_thread::sleep_until(
+                    //     std::chrono::steady_clock::now() + 
+                    // )
                 }
             }
     };

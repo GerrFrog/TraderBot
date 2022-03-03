@@ -20,7 +20,7 @@ set( EXCEPTIONS_FILES src/exceptions )
 set( TESTER_FILES src/tester )
 set( CANDLES_FILES src/candles )
 set( TGBOT_FILES src/tgbot )
-set( BINAPI_FILES src/binapi )
+set( EXCHANGES_FILES src/exchanges )
 set( LIBS_FILES src/libs )
 ############# END VARIABLES ############################
 
@@ -38,7 +38,7 @@ set(
     ${TESTER_FILES}/inc/tester.hpp
     ${CANDLES_FILES}/inc/candles.hpp
     ${TGBOT_FILES}/inc/tgbot.hpp
-    ${BINAPI_FILES}/inc/binapi.hpp
+    ${EXCHANGES_FILES}/inc/exchanges.hpp
 )
 set(
     IMPLEMENTED_FILES
@@ -53,7 +53,7 @@ set(
     ${TESTER_FILES}/src/tester.cpp
     ${CANDLES_FILES}/src/candles.cpp
     ${TGBOT_FILES}/src/tgbot.cpp
-    ${BINAPI_FILES}/src/binapi.cpp
+    ${EXCHANGES_FILES}/src/exchanges.cpp
 )
 
 set(

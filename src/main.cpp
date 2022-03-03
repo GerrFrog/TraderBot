@@ -10,27 +10,9 @@ int main(int argc, char *argv[]) {
     nlohmann::json jf = nlohmann::json::parse(ifs);
     nlohmann::json worker_configuration = jf["workers"]["worker_1"];
     nlohmann::json exchange = jf["exchange"];
-    nlohmann::json indicator_params = {
-        {"interval", "1d"},
-        {"period", 14},
-        {"smoothed", "RMA"},
-        {"dmi_period", 14},
-        {"dmi_smoothed", "RMA"},
-        {"dmi_atr_smoothed", "RMA"},
-        {"length", 14},
-        {"src", "Close"}
-    };
-    nlohmann::json indicator_params2 = {
-        {"interval", "1d"},
-        {"type", "WMA"},
-        {"sma", 12},
-        {"lma", 21},
-        {"tsp", 9},
-        {"np", 50}
-    };
 
-    const string dir = "../data/";
     const string mode = dotenv::get("mode");
+    const string dir = "../data/";
     const string pk = jf["exchange"]["binance"]["private_key"];
     const string sk = jf["exchange"]["binance"]["secret_key"];
 
@@ -42,39 +24,11 @@ int main(int argc, char *argv[]) {
         exchange,
         dir
     );
-    Exchanges::Binance::Binance_API binapi(pk, sk);
 
     Tester tester;
 
     // // ONLINE TRADING FOR REAL MONEY WITH WORKER
-    // worker.start(dir);
-
-    // // BINANCE API
-    // nlohmann::json account_info = binapi.account_info();
-    // cout << account_info << endl;
-    // cout << binapi.open_new_order(
-    //     "ALGOUSDT",
-    //     "SELL",
-    //     "25"
-    // ) << endl;
-    // cout << binapi.exchange_info("ALGOUSDT") << endl;
-    // cout << binapi.get_balance("ALGO") << endl;
-
-    // // TELEGRAM BOT
-    // map<string, string> message_params;
-    // TG_Bot tg_bot(jf["telegram"]["token"]);
-    // message_params["hello"] = "world";
-    // tg_bot.initialize();
-    // tg_bot.set_message_params(message_params);
-    // tg_bot.run();
-
-    // // ONLINE TEST TRADING FOR MANAGER
-    // trade_manager.describe_workers();
-    // trade_manager.online_backtest(
-    //     dir,
-    //     usdt_balance,
-    //     symbol_balance
-    // );
+    worker.start();
 
     // // ONLINE TRADING FOR WORKER
     // worker.online_backtest(
@@ -102,6 +56,14 @@ int main(int argc, char *argv[]) {
     //     "1d",
     //     dir
     // );
+
+    // // TELEGRAM BOT
+    // map<string, string> message_params;
+    // TG_Bot tg_bot(jf["telegram"]["token"]);
+    // message_params["hello"] = "world";
+    // tg_bot.initialize();
+    // tg_bot.set_message_params(message_params);
+    // tg_bot.run();
 
     return EXIT_SUCCESS;
 }

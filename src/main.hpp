@@ -11,6 +11,6 @@
 #include "libs/csv/csv.hpp"
 #include "tgbot/inc/tgbot.hpp"
 #include "tester/inc/tester.hpp"
-#include "binapi/inc/binapi.hpp"
+#include "exchanges/inc/exchanges.hpp"
 
 int main(int argc, char *argv[]);
