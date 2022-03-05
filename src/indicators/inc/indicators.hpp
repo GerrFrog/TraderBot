@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <memory>
 
 #include "../../exceptions/inc/exceptions.hpp"
 #include "../../request/inc/request.hpp"
@@ -1270,6 +1271,217 @@ namespace Indicators::Integral
                 this->adx = 100 * this->rma(this->last_rmas, this->last_rma, param);
 
                 this->ret["value"] = this->adx;
+            }
+    };
+
+    /**
+     * @brief Hull Moving Average
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class HMA : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief Last candles for WMA 1
+             */
+            vector<Candle_T> wma_1_candles;
+
+            /**
+             * @brief Last candles for WMA 2
+             */
+            vector<Candle_T> wma_2_candles;
+
+            /**
+             * @brief Values for Hull calculation
+             */
+            vector<double> values;
+
+            /**
+             * @brief Calculate WMA for candles array
+             * 
+             * @param candles Vector of candles
+             */
+            double calc_wma(vector<Candle_T> &candles)
+            {
+                double wma = 0;
+                int length = candles.size();
+
+                for (int i = 0; i < length; i++)
+                    wma += candles[i].get_close_price() * (i + 1);
+                wma /= length * (length + 1) / 2;
+
+                return wma;
+            }
+
+            /**
+             * @brief Calculate WMA for values array
+             * 
+             * @param values Vector of values
+             */
+            double calc_wma(vector<double> &values)
+            {
+                double wma = 0;
+                int length = values.size();
+
+                for (int i = 0; i < length; i++)
+                    wma += values[i] * (i + 1);
+                wma /= length * (length + 1) / 2;
+
+                return wma;
+            }
+
+        public:
+            /**
+             * @brief Construct a new Hull object
+             */
+            HMA() = default;
+
+            /**
+             * @brief Construct a new Hull object
+             * 
+             * @param indicator_params Params for Hull
+             */
+            HMA(
+                nlohmann::json &indicator_params
+            ) {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Destroy the Hull object
+             */
+            virtual ~HMA() = default;
+
+            /**
+             * @brief Resolve Hull indicator for Candle
+             * 
+             * @param candle Candle object
+             */
+            void resolve(Candle_T &candle)
+            {
+                int wma_1_period = this->period / 2;
+                int values_period = round(sqrt(this->period));
+
+                if (this->wma_1_candles.size() < wma_1_period) {
+                    this->wma_1_candles.push_back(candle);
+                } else {
+                    this->wma_1_candles.push_back(candle);
+                    this->wma_1_candles.erase(this->wma_1_candles.begin());
+                }
+
+                if (this->wma_2_candles.size() < this->period) {
+                    this->wma_2_candles.push_back(candle);
+                } else {
+                    this->wma_2_candles.push_back(candle);
+                    this->wma_2_candles.erase(this->wma_2_candles.begin());
+                }
+
+                double wma_1 = this->calc_wma(this->wma_1_candles);
+                double wma_2 = this->calc_wma(this->wma_2_candles);
+
+                double value = 2 * wma_1 - wma_2;
+
+                if (this->values.size() < values_period) {
+                    this->values.push_back(value);
+                } else {
+                    this->values.push_back(value);
+                    this->values.erase(this->values.begin());
+                }
+
+                this->ret["value"] = this->calc_wma(this->values);
+            }
+    };
+
+    /**
+     * @brief Commodity Channel Index
+     * 
+     * @tparam Candle_T Type of Candle
+     */
+    template <class Candle_T>
+    class CCI : public Indicators::Integral_Indicator<Candle_T>
+    {
+        private:
+            /**
+             * @brief Calculate Simple Moving Average
+             * 
+             * @param candles Array of Candles
+             * @return double 
+             */
+            double calc_sma(vector<Candle_T> &candles)
+            {
+                double sum = 0;
+                double size = candles.size();
+
+                for (auto& candle : candles)
+                    sum += candle.get_typical_price() / size;
+
+                return sum;
+            }
+            
+            /**
+             * @brief Calculate Mean Deviation
+             * 
+             * @param candles Array of Candles
+             * @param ma Moving Average value
+             * @return double 
+             */
+            double calc_md(vector<Candle_T> &candles, double ma)
+            {
+                double sum = 0;
+                double size = candles.size();
+
+                for (auto& candle : candles)
+                    sum += (abs(candle.get_typical_price() - ma)) / size;
+
+                return sum;
+            }
+
+        public:
+            /**
+             * @brief Construct a new CCI object
+             */
+            CCI() = default;
+
+            /**
+             * @brief Construct a new CCI object
+             * 
+             * @param indicator_params Parameters for indicator
+             */
+            CCI(
+                nlohmann::json &indicator_params
+            ) {
+                this->description = indicator_params;
+                this->period = indicator_params["period"];
+            }
+
+            /**
+             * @brief Destroy the CCI object
+             */
+            virtual ~CCI() = default;
+
+            /**
+             * @brief Resolve the CCI indicator
+             * 
+             * @param candle Candle
+             */
+            void resolve(Candle_T &candle)
+            {
+                if (this->last_candles.size() < this->period)
+                {
+                    this->last_candles.push_back(candle);
+                } else {
+                    this->last_candles.push_back(candle);
+                    this->last_candles.erase(this->last_candles.begin());
+                }
+
+                double ma = this->calc_sma(this->last_candles);
+                double cci = (candle.get_typical_price() - ma) /
+                    (0.015 * this->calc_md(this->last_candles, ma));
+                
+                this->ret["value"] = cci;
             }
     };
 }

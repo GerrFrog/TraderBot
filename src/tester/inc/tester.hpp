@@ -115,7 +115,7 @@ class Tester
                 data_dir + sym + '_' + interval +".csv"               
             );
 
-            Workers::Watchers::Candle_Watcher<Candle_T> candle_watcher(symbol, interval);
+            Workers::Watchers::Candle_Watcher<Candle_T> candle_watcher(symbol, interval, data_dir);
 
             Candle_T candle;
 
@@ -129,8 +129,8 @@ class Tester
 
             indicator.set_indicator_params(config);
 
-            candle_watcher.read_file_once(data_file);
-            while(candle_watcher.read_file_once(data_file))
+            candle_watcher.read_file_once();
+            while(candle_watcher.read_file_once())
             {
                 close_price = candle_watcher.get_candle().get_close_price();
                 candle = candle_watcher.get_candle();

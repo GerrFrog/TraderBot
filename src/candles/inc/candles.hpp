@@ -90,9 +90,9 @@ namespace Candles
             double taker_buy_quote_asset_volume;
             
             /**
-             * @brief High-Low-Close mean
+             * @brief Typical price (High-Low-Close mean)
              */
-            double hlc3;
+            double typical_price;
 
         public:
             /**
@@ -162,6 +162,13 @@ namespace Candles
              * @return double 
              */
             double get_high_price() { return this->high_price; }
+
+            /**
+             * @brief Get the typical price object
+             * 
+             * @return double 
+             */
+            double get_typical_price() { return this->typical_price; }
 
             /**
              * @brief Get the change absolute
@@ -304,7 +311,7 @@ namespace Candles
                     this->change_absolute = open_price - close_price;
                 }
 
-                this->hlc3 = (this->high_price + 
+                this->typical_price = (this->high_price + 
                     this->low_price + this->close_price) / 3;
             }
 
@@ -371,7 +378,7 @@ namespace Candles
                     this->change_absolute = open_price - close_price;
                 }
 
-                this->hlc3 = (this->high_price + 
+                this->typical_price = (this->high_price + 
                     this->low_price + this->close_price) / 3;
             }
     };
@@ -455,7 +462,7 @@ namespace Candles
                     this->change_absolute = open_price - close_price;
                 }
 
-                this->hlc3 = (this->high_price + 
+                this->typical_price = (this->high_price + 
                     this->low_price + this->close_price) / 3;
             }
 
@@ -530,7 +537,7 @@ namespace Candles
                     this->change_absolute = open_price - close_price;
                 }
 
-                this->hlc3 = (this->high_price + 
+                this->typical_price = (this->high_price + 
                     this->low_price + this->close_price) / 3;
             }
     };

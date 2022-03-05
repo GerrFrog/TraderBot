@@ -392,6 +392,16 @@ namespace Workers::Watchers
             vector<Indicators::Integral::ADX<Candle_T>> all_adx;
 
             /**
+             * @brief All HMA indicators
+             */
+            vector<Indicators::Integral::HMA<Candle_T>> all_hma;
+
+            /**
+             * @brief All CCI indicators
+             */
+            vector<Indicators::Integral::CCI<Candle_T>> all_cci;
+
+            /**
              * @brief All Normalized_MACD indicators
              */
             vector<Indicators::TradingView::Normalized_MACD<Candle_T>> all_normalized_macd;
@@ -488,6 +498,18 @@ namespace Workers::Watchers
                                 val
                             )
                         );
+                    if (val["indicator"] == "HMA")
+                        this->all_hma.push_back(
+                            Indicators::Integral::HMA<Candle_T>(
+                                val
+                            )
+                        );
+                    if (val["indicator"] == "CCI")
+                        this->all_cci.push_back(
+                            Indicators::Integral::CCI<Candle_T>(
+                                val
+                            )
+                        );
                     if (val["indicator"] == "Normalized_MACD")
                         this->all_normalized_macd.push_back(
                             Indicators::TradingView::Normalized_MACD<Candle_T>(
@@ -526,6 +548,10 @@ namespace Workers::Watchers
                     cout << "DMI: " << dmi.get_description() << endl;
                 for (auto& adx : this->all_adx)
                     cout << "ADX: " << adx.get_description() << endl;
+                for (auto& hma : this->all_hma)
+                    cout << "HMA: " << hma.get_description() << endl;
+                for (auto& cci : this->all_cci)
+                    cout << "CCI: " << cci.get_description() << endl;
                 for (auto& n_macd : this->all_normalized_macd)
                     cout << "Normalized MACD: " << n_macd.get_description() << endl;
                 for (auto& rsx : this->all_rsxc_lb)
@@ -557,6 +583,10 @@ namespace Workers::Watchers
                     dmi.resolve(candle);
                 for (auto& adx : this->all_adx)
                     adx.resolve(candle);
+                for (auto& hma : this->all_hma)
+                    hma.resolve(candle);
+                for (auto& cci : this->all_cci)
+                    cci.resolve(candle);
                 for (auto& n_macd : this->all_normalized_macd)
                     n_macd.resolve(candle);
                 for (auto& rsx : this->all_rsxc_lb)
@@ -660,6 +690,16 @@ namespace Workers::Watchers
                                 for (auto &adx : this->all_adx)
                                     if (adx.get_description() == val)
                                         params[key] = adx.get();
+                        if (indicator == "HMA")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &hma : this->all_hma)
+                                    if (hma.get_description() == val)
+                                        params[key] = hma.get();
+                        if (indicator == "CCI")
+                            for (auto& [key, val] : strategy_params.items())
+                                for (auto &cci : this->all_cci)
+                                    if (cci.get_description() == val)
+                                        params[key] = cci.get();
 
                     }
                     if (type == "Indicators::TradingView" || backtest)
@@ -834,7 +874,7 @@ namespace Workers::Watchers
              * @return true 
              * @return false 
              */
-            bool operator ==(const Workers::Watchers::Candle_Watcher<Candle_T>& cw)
+            bool operator == (const Workers::Watchers::Candle_Watcher<Candle_T>& cw)
             {
                 if (
                     cw.pair == this->pair && 
@@ -978,7 +1018,7 @@ namespace Workers::Watchers
              * 
              * @return double 
              */
-            double get_current_price_online()
+            double get_current_price()
             {
                 map<string, string> params;
 
@@ -1267,10 +1307,9 @@ namespace Workers::Implementors
 
                     this->ttl_shrt_trds++;
 
-                    if ((trade.get_per_profit() + 100) / 100 >= 1)
-                    {
+                    if ((trade.get_per_profit() + 100) / 100 > 1) {
                         this->wins_short++;
-                    } else {
+                    } else if ((trade.get_per_profit() + 100) / 100 < 1) {
                         this->loses_short++;
                     }
                 }
@@ -1630,6 +1669,11 @@ namespace Workers::Implementors
             std::unique_ptr<Exchanges::Binance::Binance_API> binapi;
 
             /**
+             * @brief Exchange parameters
+             */
+            nlohmann::json exchange_params;
+
+            /**
              * @brief Response from Stock Market
              */
             nlohmann::json response;
@@ -1637,12 +1681,12 @@ namespace Workers::Implementors
             /**
              * @brief Quantities of long trade (in Symbol)
              */
-            vector<int> long_quantities;
+            vector<double> long_quantities;
 
             /**
              * @brief Quantities of short trade (in USDT)
              */
-            vector<int> short_quantities;
+            vector<double> short_quantities;
 
             /**
              * @brief Quantity in string
@@ -1652,7 +1696,7 @@ namespace Workers::Implementors
             /**
              * @brief Quantity in order
              */
-            int quantity;
+            double quantity;
 
             /**
              * @brief Step Size for open Trade (LOT_SIZE Binance API Error)
@@ -1671,26 +1715,69 @@ namespace Workers::Implementors
             {
                 cout << "[+] Start setup amounts" << endl;
 
+                this->binapi.reset();
+
+                // TODO: Remake without this shit
+                this->binapi = std::make_unique<Exchanges::Binance::Binance_API>(
+                    (string)this->exchange_params["binance"]["private_key"],
+                    (string)this->exchange_params["binance"]["secret_key"]
+                );
+
                 string fs_balance = this->binapi->get_balance(this->long_symbol)["free"];
                 string ss_balance = this->binapi->get_balance(this->short_symbol)["free"];
+
+                string price_str = this->binapi->get_current_price(this->erased_pair)["price"];
+                double price = std::stod(price_str);
 
                 this->long_balance = std::stod(fs_balance);
                 this->short_balance = std::stod(ss_balance);
 
-                // TODO: minNotional in USDT. Check if amount(symbol) * price >= minNotional
-                if (this->long_balance >= this->minNotional + 2)
+                if (this->long_balance >= this->minNotional)
                 {
-                    this->long_amount = (int)(this->long_balance / this->max_open_trade);
-                    if (this->long_amount <= this->minNotional)
-                        this->long_amount = this->minNotional + 2;
+                    if (this->long_balance / this->max_open_trade <= this->minNotional) {
+                        this->long_amount = this->minNotional;
+                    } else {
+                        this->long_amount = this->long_balance / this->max_open_trade;
+                    }
+
+                    double var1 = this->long_amount;
+                    double var2 = 2 * this->stepSize;
+
+                    while (var1 - this->stepSize > this->stepSize)
+                    {
+                        var2 += this->stepSize;
+                        var1 -= this->stepSize;
+                    }
+
+                    this->long_amount = var2;
+
+                    if (this->long_amount > this->long_balance)
+                        this->long_amount = 0;
                 } else {
                     this->long_amount = 0;
                 }
-                if (this->short_balance >= this->minNotional + 2)
+
+                if (this->short_balance * price >= this->minNotional)
                 {
-                    this->short_amount = (int)(this->short_balance / this->max_open_trade);
-                    if (this->short_amount <= this->minNotional)
-                        this->short_amount = this->minNotional + 2;
+                    if (this->short_amount / this->max_open_trade * price <= this->minNotional) {
+                        this->short_amount = this->minNotional / price;
+                    } else {
+                        this->short_amount = this->short_amount / this->max_open_trade;
+                    }
+
+                    double var1 = this->short_amount;
+                    double var2 = 2 * this->stepSize;
+
+                    while (var1 - this->stepSize > this->stepSize)
+                    {
+                        var2 += this->stepSize;
+                        var1 -= this->stepSize;
+                    }
+
+                    this->short_amount = var2;
+
+                    if (this->short_amount > this->short_balance)
+                        this->short_amount = 0;
                 } else {
                     this->short_amount = 0;
                 }
@@ -1736,7 +1823,8 @@ namespace Workers::Implementors
             Online_Trader(
                 nlohmann::json &trader_params,
                 nlohmann::json &exchange_params
-            ) : Trader_Abstract(trader_params)
+            ) : Trader_Abstract(trader_params),
+                exchange_params(exchange_params)
             {
                 if (this->exchange == "binance")
                 {
@@ -1761,21 +1849,21 @@ namespace Workers::Implementors
             void resolve(
                 map<string, bool> &signals
             ) {
-                // TODO: scalping
-                signals["long_open"] = false;
-                signals["long_close"] = false;
-                signals["short_open"] = false;
-                signals["short_close"] = false;
-                this->long_amount = 21;
-                this->short_amount = 25;
+                // signals["long_open"] = false;
+                // signals["long_close"] = false;
+                // signals["short_open"] = true;
+                // signals["short_close"] = false;
+                // this->long_amount = 21;
+                // this->short_amount = 23;
 
+                // TODO: scalping
                 if (
                     signals["long_open"] &&
                     (
                         this->positions == "both" ||
                         this->positions == "long"
                     ) &&
-                    this->long_amount > this->minNotional
+                    this->long_amount != 0
                 ) {
                     this->response = this->binapi->open_new_order(
                         this->erased_pair,
@@ -1789,25 +1877,28 @@ namespace Workers::Implementors
                     << endl;
 
                     this->str_quantity = response["executedQty"];
-                    this->quantity = (int)std::stod(this->str_quantity);
+                    this->quantity = std::stod(this->str_quantity);
                     this->long_quantities.push_back(this->quantity);
                 }
                 if (signals["long_close"])
                 {
-                    for (auto& key : this->long_quantities)
-                    {
-                        this->response = this->binapi->open_new_order(
-                            this->erased_pair,
-                            "SELL",
-                            std::to_string(key)
-                        );
-                        cout
-                            << "[+] New executed order" << endl
-                            << this->response << endl
-                        << endl;
-                    }
+                    double summ = 0;
+
+                    for (double& quant : this->long_quantities)
+                        summ += quant;
+
+                    this->response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "SELL",
+                        std::to_string(summ)
+                    );
+
+                    cout
+                        << "[+] New executed order" << endl
+                        << this->response << endl
+                    << endl;
+
                     this->long_quantities.clear();
-                    // this->binapi_setup_amounts();
                 }
                 if (
                     signals["short_open"] &&
@@ -1815,7 +1906,7 @@ namespace Workers::Implementors
                         this->positions == "both" ||
                         this->positions == "short"
                     ) &&
-                    this->short_amount > this->minNotional
+                    this->short_amount != 0.0
                 ) {
                     this->response = this->binapi->open_new_order(
                         this->erased_pair,
@@ -1829,25 +1920,28 @@ namespace Workers::Implementors
                     << endl;
 
                     this->str_quantity = response["cummulativeQuoteQty"];
-                    this->quantity = (int)std::stod(this->str_quantity);
+                    this->quantity = std::stod(this->str_quantity);
                     this->short_quantities.push_back(this->quantity);
                 }
                 if (signals["short_close"])
                 {
-                    for (auto& key : this->short_quantities)
-                    {
-                        response = this->binapi->open_new_order(
-                            this->erased_pair,
-                            "BUY",
-                            std::to_string(key)
-                        );
-                        cout
-                            << "[+] New executed order" << endl
-                            << this->response << endl
-                        << endl;
-                    }
+                    double summ = 0;
+
+                    for (double &quant : this->short_quantities)
+                        summ += quant;
+
+                    response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "BUY",
+                        std::to_string(summ)
+                    );
+
+                    cout
+                        << "[+] New executed order" << endl
+                        << this->response << endl
+                    << endl;
+
                     this->short_quantities.clear();
-                    // this->binapi_setup_amounts();
                 }
                 this->binapi_setup_amounts();
             }
@@ -2079,10 +2173,10 @@ namespace Workers::Customs
                     this->data_dir
                 );
 
-                this->file_initialize(
-                    this->strateger,
-                    this->candle_watcher
-                );
+                // this->file_initialize(
+                //     this->strateger,
+                //     this->candle_watcher
+                // );
             }
 
             /**
@@ -2188,7 +2282,7 @@ namespace Workers::Customs
 
                     signals = backtest_strateger->get_signals();
 
-                    backtest_trader->resolve(signals, backtest_candle_watcher->get_current_price_online());
+                    backtest_trader->resolve(signals, backtest_candle_watcher->get_current_price());
 
                     now_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch()
@@ -2335,10 +2429,9 @@ namespace Workers::Customs
                         << endl;
                     }
 
-                    signals = this->strateger->get_signals();
-
                     if (got_candle)
                     {
+                        signals = this->strateger->get_signals();
                         this->online_trader->resolve(signals);
                         got_candle = false;
                     }
@@ -2358,9 +2451,21 @@ namespace Workers::Customs
     };
 }
 
+/**
+ * @brief All workers with strategies from TradingView
+ */
 namespace Workers::TradingView
 {
+    /**
+     * @brief Worker with Heikin/Kaufman Strategy
+     * 
+     * @note by Marco
+     */
+    template <class Candle_T>
+    class Heikin_Kaufman_Worker
+    {
 
+    };
 }
 
 

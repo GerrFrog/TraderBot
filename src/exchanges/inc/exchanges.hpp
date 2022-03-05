@@ -297,6 +297,25 @@ namespace Exchanges::Binance
             }
 
             /**
+             * @brief Get the current price of cryptocurrency
+             * 
+             * @param pair Pair
+             * @return nlohmann::json 
+             */
+            nlohmann::json get_current_price(const string& pair)
+            {
+                std::unordered_map<string, string> parameters;
+
+                parameters.insert({
+                    {"symbol", pair}
+                });
+
+                sendPublicRequest("/api/v3/ticker/price", parameters);
+
+                return nlohmann::json::parse(this->content);
+            }
+
+            /**
              * @brief Get account info
              * 
              * @return nlohmann::json
