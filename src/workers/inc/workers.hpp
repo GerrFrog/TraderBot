@@ -1060,12 +1060,12 @@ namespace Workers::Implementors
             /**
              * @brief Current working trades
              */
-            vector<Trade> current_trades;
+            vector<Trades::Backtest_Trade> current_trades;
 
             /**
              * @brief Executed trades
              */
-            vector<Trade> executed_trades;
+            vector<Trades::Backtest_Trade> executed_trades;
 
             /**
              * @brief Absolute profit of long trades
@@ -1159,6 +1159,11 @@ namespace Workers::Implementors
             double mxmm_shrt_blnc = 0;
 
             /**
+             * @brief Unique ID for trade
+             */
+            unsigned int id = 1;
+
+            /**
              * @brief Total long trades
              */
             int ttl_lng_trds = 0;
@@ -1191,25 +1196,23 @@ namespace Workers::Implementors
             /**
              * @brief Initialize Trade as opened
              * 
-             * @param trade Trade object
              * @param position Trade position (long/short)
              * @param price Open price
              */
             void open_trade(
-                Trade &trade,
                 const string& position,
                 double price
-            )
-            {
-                // TODO: Unique ID for each Trade
-                trade.set_open_time(
-                    1, 
-                    this->pair, 
-                    position, 
-                    this->long_amount, 
-                    this->short_amount, 
-                    price 
-                );
+            ) {
+                this->current_trades.push_back(
+                    Trades::Backtest_Trade(
+                        this->id,
+                        this->long_amount,
+                        this->short_amount,
+                        price,
+                        this->pair,
+                        position
+                    )
+                ); id++;
             }
 
             /**
@@ -1219,18 +1222,25 @@ namespace Workers::Implementors
              * @param price Close price
              */
             void close_trade(
-                Trade &trade,
+                Trades::Backtest_Trade &trade,
                 double price
-            )
-            {
-                if (trade.get_position() == "short")
-                    trade.set_close_time(
-                        price
-                    );
-                if (trade.get_position() == "long")
-                    trade.set_close_time(
-                        price
-                    );
+            ) {
+                trade.close_trade(
+                    price
+                );
+
+                this->update_statistic(trade);
+
+                this->executed_trades.push_back(trade);
+
+                this->current_trades.erase(
+                    std::remove(
+                        this->current_trades.begin(),
+                        this->current_trades.end(),
+                        trade
+                    ),
+                    this->current_trades.end()
+                );
             }
 
             /**
@@ -1239,7 +1249,7 @@ namespace Workers::Implementors
              * @param trade Trade object
              * @param verbose More information about trades
              */
-            void update_statistic(Trade& trade)
+            void update_statistic(Trades::Backtest_Trade& trade)
             {
                 if (trade.get_position() == "long")
                 {
@@ -1325,7 +1335,7 @@ namespace Workers::Implementors
                         << "Percentage profit: " << trade.get_per_profit() << " %" << endl
                         << "Open price: " << trade.get_open_price() << " $" << endl
                         << "Close price: " << trade.get_close_price() << " $" << endl
-                        << "Long amount: " << trade.get_stake_amount() << " " + this->long_symbol << endl
+                        << "Long amount: " << trade.get_long_amount() << " " + this->long_symbol << endl
                         << "Current long balance: " << this->long_balance << " " + this->long_symbol << endl
                         << "Current short balance: " << this->short_balance << " " + this->short_symbol << endl
                     << endl;
@@ -1336,7 +1346,7 @@ namespace Workers::Implementors
                         << "Percentage profit: " << trade.get_per_profit() << " %" << endl
                         << "Open price: " << trade.get_open_price() << " $" << endl
                         << "Close price: " << trade.get_close_price() << " $" << endl
-                        << "Short amount: " << trade.get_stake_amount() << " " + this->short_symbol << endl
+                        << "Short amount: " << trade.get_short_amount() << " " + this->short_symbol << endl
                         << "Current long balance: " << this->long_balance << " " + this->long_symbol << endl
                         << "Current short balance: " << this->short_balance << " " + this->short_symbol << endl
                     << endl;
@@ -1407,92 +1417,51 @@ namespace Workers::Implementors
             {
                 if (this->type == "position")
                 {
+                    if (signals["long_close"])
+                        for (Trades::Backtest_Trade& trade : this->current_trades)
+                            if (trade.get_position() == "long")
+                                this->close_trade(trade, price);
+                    if (signals["short_close"])
+                        for (Trades::Backtest_Trade& trade : this->current_trades)
+                            if (trade.get_position() == "short")
+                                this->close_trade(trade, price);
+
                     if (
                         signals["long_open"] &&
                         (
                             this->positions == "both" ||
                             this->positions == "long"
-                        )
-                    ) {
-                        if (
+                        ) &&
+                        (
                             this->current_trades.size() <= this->max_open_trade ||
                             this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade, 
-                                (string)"long",
-                                price
-                            );
-                            this->current_trades.push_back(trade);
-                        }
-                    }
-                    if (signals["long_close"])
-                    {
-                        for (Trade& trade : this->current_trades)
-                            if (trade.get_position() == "long")
-                            {
-                                this->close_trade(trade, price);
-
-                                this->update_statistic(trade);
-
-                                this->executed_trades.push_back(trade);
-
-                                this->current_trades.erase(
-                                    std::remove(
-                                        this->current_trades.begin(),
-                                        this->current_trades.end(),
-                                        trade
-                                    ),
-                                    this->current_trades.end()
-                                );
-                            }
+                        )
+                    ) {
+                        this->open_trade(
+                            "long",
+                            price
+                        );
                     }
                     if (
                         signals["short_open"] &&
                         (
                             this->positions == "both" ||
                             this->positions == "short"
-                        )
-                    ) {
-                        if (
+                        ) &&
+                        (
                             this->current_trades.size() <= this->max_open_trade ||
                             this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade,
-                                (string)"short",
-                                price
-                            );
-                            this->current_trades.push_back(trade);
-                        }
-                    }
-                    if (signals["short_close"])
-                    {
-                        for (Trade& trade : this->current_trades)
-                            if (trade.get_position() == "short")
-                            {
-                                this->close_trade(trade, price);
-
-                                this->update_statistic(trade);
-
-                                this->executed_trades.push_back(trade);
-
-                                this->current_trades.erase(
-                                    std::remove(
-                                        this->current_trades.begin(),
-                                        this->current_trades.end(),
-                                        trade
-                                    ),
-                                    this->current_trades.end()
-                                );
-                            }
+                        )
+                    ) {
+                        this->open_trade(
+                            "short",
+                            price
+                        );
                     }
                 } else if (this->type == "scalping") {
                     double opened_price;
                     double percent;
-                    for (Trade& trade : this->current_trades)
+                    for (Trades::Backtest_Trade& trade : this->current_trades)
                     {
                         opened_price = trade.get_open_price();
                         if (trade.get_position() == "long")
@@ -1503,19 +1472,6 @@ namespace Workers::Implementors
                                 this->stop_loss >= percent
                             ) {
                                 this->close_trade(trade, price);
-
-                                this->update_statistic(trade);
-
-                                this->executed_trades.push_back(trade);
-
-                                this->current_trades.erase(
-                                    std::remove(
-                                        this->current_trades.begin(),
-                                        this->current_trades.end(),
-                                        trade
-                                    ),
-                                    this->current_trades.end()
-                                );
                             }
                         } else if (trade.get_position() == "short") {
                             percent = (opened_price / price - 1) * 100;
@@ -1524,19 +1480,6 @@ namespace Workers::Implementors
                                 this->stop_loss >= percent
                             ) {
                                 this->close_trade(trade, price);
-
-                                this->update_statistic(trade);
-
-                                this->executed_trades.push_back(trade);
-
-                                this->current_trades.erase(
-                                    std::remove(
-                                        this->current_trades.begin(),
-                                        this->current_trades.end(),
-                                        trade
-                                    ),
-                                    this->current_trades.end()
-                                );
                             }
                         }
                     }
@@ -1545,40 +1488,33 @@ namespace Workers::Implementors
                         (
                             this->positions == "both" ||
                             this->positions == "long"
-                        )
-                    ) {
-                        if (
+                        ) && 
+                        (
                             this->current_trades.size() <= this->max_open_trade ||
                             this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade,
-                                (string)"long",
-                                price
-                            );
-                            this->current_trades.push_back(trade);
-                        }
+                        )
+                    ) {
+                        this->open_trade(
+                            "long",
+                            price
+                        );
                     }
+
                     if (
                         signals["short_open"] &&
                         (
                             this->positions == "both" ||
                             this->positions == "short"
-                        )
-                    ) {
-                        if (
+                        ) &&
+                        (
                             this->current_trades.size() <= this->max_open_trade ||
                             this->max_open_trade == -1.0
-                        ) {
-                            Trade trade;
-                            this->open_trade(
-                                trade, 
-                                (string)"short",
-                                price
-                            );
-                            this->current_trades.push_back(trade);
-                        }
+                        )
+                    ) {
+                        this->open_trade(
+                            "short",
+                            price
+                        );
                     }
                 }
             }
@@ -1674,29 +1610,14 @@ namespace Workers::Implementors
             nlohmann::json exchange_params;
 
             /**
-             * @brief Response from Stock Market
+             * @brief All current (working) trades
              */
-            nlohmann::json response;
+            vector<Trades::Online_Trade> current_trades;
 
             /**
-             * @brief Quantities of long trade (in Symbol)
+             * @brief All executed trades
              */
-            vector<double> long_quantities;
-
-            /**
-             * @brief Quantities of short trade (in USDT)
-             */
-            vector<double> short_quantities;
-
-            /**
-             * @brief Quantity in string
-             */
-            string str_quantity;
-
-            /**
-             * @brief Quantity in order
-             */
-            double quantity;
+            vector<Trades::Online_Trade> executed_trades;
 
             /**
              * @brief Step Size for open Trade (LOT_SIZE Binance API Error)
@@ -1709,28 +1630,116 @@ namespace Workers::Implementors
             double minNotional;
 
             /**
+             * @brief Open new trade
+             * 
+             * @param position Trade position
+             */
+            void open_trade(const string &position)
+            {
+                nlohmann::json response;
+
+                if (position == "long" && this->long_amount > 0)
+                    response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "BUY",
+                        std::to_string(this->long_amount)
+                    );
+
+                if (position == "short" && this->short_amount > 0)
+                    response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "SELL",
+                        std::to_string(this->short_amount)
+                    );
+
+                if (response.contains("clientOrderId"))
+                {
+                    this->current_trades.push_back(
+                        Trades::Online_Trade(
+                            (unsigned int)response["orderId"],
+                            this->long_amount,
+                            this->short_amount,
+                            std::stod((string)response["fills"][0]["price"]),
+                            this->pair,
+                            position,
+                            std::stod((string)response["cummulativeQuoteQty"]),
+                            std::stod((string)response["executedQty"]),
+                            std::stod((string)response["fills"][0]["commission"]),
+                            std::stod((string)response["executedQty"]),
+                            std::stod((string)response["cummulativeQuoteQty"])
+                        )
+                    );
+                    cout << "[+] Opened new trade" << endl;
+                } else {
+                    cout << response << endl;
+                }
+            }
+
+            /**
+             * @brief Close working trade
+             * 
+             * @param trade Trade object
+             */
+            void close_trade(Trades::Online_Trade& trade)
+            {
+                nlohmann::json response;
+
+                if (trade.get_position() == "long")
+                    response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "SELL",
+                        std::to_string(trade.get_long_holding())
+                    );
+
+                if (trade.get_position() == "short")
+                    response = this->binapi->open_new_order(
+                        this->erased_pair,
+                        "BUY",
+                        std::to_string(trade.get_short_holding())
+                    );
+
+                if (response.contains("clientOrderId"))
+                {
+                    this->executed_trades.push_back(trade);
+
+                    this->current_trades.erase(
+                        std::remove(
+                            this->current_trades.begin(),
+                            this->current_trades.end(),
+                            trade
+                        ),
+                        this->current_trades.end()
+                    );
+                    cout << "[+] Trade is closed" << endl;
+                } else {
+                    cout << response << endl;
+                }
+            }
+
+            /**
              * @brief Set the up amounts to open Trade
              */
             void binapi_setup_amounts()
             {
                 cout << "[+] Start setup amounts" << endl;
 
-                this->binapi.reset();
-
                 // TODO: Remake without this shit
+                this->binapi.reset();
                 this->binapi = std::make_unique<Exchanges::Binance::Binance_API>(
                     (string)this->exchange_params["binance"]["private_key"],
                     (string)this->exchange_params["binance"]["secret_key"]
                 );
 
-                string fs_balance = this->binapi->get_balance(this->long_symbol)["free"];
-                string ss_balance = this->binapi->get_balance(this->short_symbol)["free"];
+                this->long_balance = std::stod(
+                    (string)this->binapi->get_balance(this->long_symbol)["free"]
+                );
+                this->short_balance = std::stod(
+                    (string)this->binapi->get_balance(this->short_symbol)["free"]
+                );
 
-                string price_str = this->binapi->get_current_price(this->erased_pair)["price"];
-                double price = std::stod(price_str);
-
-                this->long_balance = std::stod(fs_balance);
-                this->short_balance = std::stod(ss_balance);
+                double price = std::stod(
+                    (string)this->binapi->get_current_price(this->erased_pair)["price"]
+                );
 
                 if (this->long_balance >= this->minNotional)
                 {
@@ -1799,8 +1808,20 @@ namespace Workers::Implementors
                     this->erased_pair
                 )["symbols"][0]["filters"];
 
-                this->stepSize = std::stod((string)ex_in[2]["stepSize"]);
-                this->minNotional = std::stod((string)ex_in[3]["minNotional"]);
+                this->long_balance = std::stod(
+                    (string)this->binapi->get_balance(this->long_symbol)["free"]
+                );
+                this->short_balance = std::stod(
+                    (string)this->binapi->get_balance(this->short_symbol)["free"]
+                );
+
+                this->stepSize = std::stod(
+                    (string)ex_in[2]["stepSize"]
+                );
+
+                this->minNotional = std::stod(
+                    (string)ex_in[3]["minNotional"]
+                );
 
                 this->binapi_setup_amounts();
 
@@ -1856,50 +1877,26 @@ namespace Workers::Implementors
                 // this->long_amount = 21;
                 // this->short_amount = 23;
 
-                // TODO: scalping
+                if (signals["long_close"])
+                    for (auto& trade : this->current_trades)
+                        if (trade.get_position() == "long")
+                            this->close_trade(trade);
+                if (signals["short_close"])
+                    for (auto& trade : this->current_trades)
+                        if (trade.get_position() == "short")
+                            this->close_trade(trade);
+
                 if (
                     signals["long_open"] &&
                     (
                         this->positions == "both" ||
                         this->positions == "long"
                     ) &&
-                    this->long_amount != 0
+                    this->long_amount != 0.0
                 ) {
-                    this->response = this->binapi->open_new_order(
-                        this->erased_pair,
-                        "BUY",
-                        std::to_string(this->long_amount)
-                    );
-
-                    cout
-                        << "[+] New executed order" << endl
-                        << this->response << endl
-                    << endl;
-
-                    this->str_quantity = response["executedQty"];
-                    this->quantity = std::stod(this->str_quantity);
-                    this->long_quantities.push_back(this->quantity);
+                    this->open_trade("long");
                 }
-                if (signals["long_close"])
-                {
-                    double summ = 0;
 
-                    for (double& quant : this->long_quantities)
-                        summ += quant;
-
-                    this->response = this->binapi->open_new_order(
-                        this->erased_pair,
-                        "SELL",
-                        std::to_string(summ)
-                    );
-
-                    cout
-                        << "[+] New executed order" << endl
-                        << this->response << endl
-                    << endl;
-
-                    this->long_quantities.clear();
-                }
                 if (
                     signals["short_open"] &&
                     (
@@ -1908,41 +1905,11 @@ namespace Workers::Implementors
                     ) &&
                     this->short_amount != 0.0
                 ) {
-                    this->response = this->binapi->open_new_order(
-                        this->erased_pair,
-                        "SELL",
-                        std::to_string(this->short_amount)
-                    );
-
-                    cout
-                        << "[+] New executed order" << endl
-                        << this->response << endl
-                    << endl;
-
-                    this->str_quantity = response["cummulativeQuoteQty"];
-                    this->quantity = std::stod(this->str_quantity);
-                    this->short_quantities.push_back(this->quantity);
+                    this->open_trade("short");
                 }
-                if (signals["short_close"])
-                {
-                    double summ = 0;
 
-                    for (double &quant : this->short_quantities)
-                        summ += quant;
+                // TODO: scalping
 
-                    response = this->binapi->open_new_order(
-                        this->erased_pair,
-                        "BUY",
-                        std::to_string(summ)
-                    );
-
-                    cout
-                        << "[+] New executed order" << endl
-                        << this->response << endl
-                    << endl;
-
-                    this->short_quantities.clear();
-                }
                 this->binapi_setup_amounts();
             }
     };
@@ -2173,10 +2140,10 @@ namespace Workers::Customs
                     this->data_dir
                 );
 
-                // this->file_initialize(
-                //     this->strateger,
-                //     this->candle_watcher
-                // );
+                this->file_initialize(
+                    this->strateger,
+                    this->candle_watcher
+                );
             }
 
             /**

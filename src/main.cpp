@@ -20,11 +20,11 @@ int main(int argc, char *argv[]) {
     double usdt_balance = 10000.0;
     double symbol_balance = 20.0;
 
-    // Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Strategy, Candles::Candle> worker_1(
-    //     worker_configuration_1,
-    //     exchange,
-    //     dir
-    // );
+    Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Strategy, Candles::Candle> worker_1(
+        worker_configuration_1,
+        exchange,
+        dir
+    );
     // Workers::Customs::Worker<Strategies::Customs::HMA_CCI_Strategy, Candles::Candle> worker_2(
     //     worker_configuration_2,
     //     exchange,
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     Tester tester;
 
     // // ONLINE TRADING FOR REAL MONEY WITH WORKER
-    // worker_1.start();
+    worker_1.start();
     // worker_2.start();
 
     // // ONLINE TRADING FOR WORKER
@@ -82,6 +82,19 @@ int main(int argc, char *argv[]) {
     // tg_bot.initialize();
     // tg_bot.set_message_params(message_params);
     // tg_bot.run();
+
+    // Exchanges::Binance::Binance_API binapi(
+    //     pk,
+    //     sk
+    // );
+
+    // nlohmann::json response = binapi.open_new_order(
+    //     "ALGOUSDT",
+    //     "SELL",
+    //     "19"
+    // );
+
+    // cout << response << endl;
 
     return EXIT_SUCCESS;
 }
