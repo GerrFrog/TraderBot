@@ -1671,6 +1671,7 @@ namespace Workers::Implementors
                     );
                     cout << "[+] Opened new trade" << endl;
                 } else {
+                    cout << "[-] New trade is not opened" << endl;
                     cout << response << endl;
                 }
             }
@@ -1700,20 +1701,30 @@ namespace Workers::Implementors
 
                 if (response.contains("clientOrderId"))
                 {
-                    this->executed_trades.push_back(trade);
-
-                    this->current_trades.erase(
-                        std::remove(
-                            this->current_trades.begin(),
-                            this->current_trades.end(),
-                            trade
-                        ),
-                        this->current_trades.end()
+                    trade.close_trade(
+                        std::stod((string)response["fills"][0]["price"]),
+                        std::stod((string)response["cummulativeQuoteQty"]),
+                        std::stod((string)response["executedQty"]),
+                        std::stod((string)response["fills"][0]["commission"])
                     );
+
                     cout << "[+] Trade is closed" << endl;
                 } else {
+                    trade.close_trade(0, 0, 0, 0);
+
+                    cout << "[-] Trade is not closed" << endl;
                     cout << response << endl;
                 }
+                this->executed_trades.push_back(trade);
+
+                this->current_trades.erase(
+                    std::remove(
+                        this->current_trades.begin(),
+                        this->current_trades.end(),
+                        trade
+                    ),
+                    this->current_trades.end()
+                );
             }
 
             /**
@@ -1870,11 +1881,11 @@ namespace Workers::Implementors
             void resolve(
                 map<string, bool> &signals
             ) {
-                // signals["long_open"] = false;
-                // signals["long_close"] = false;
+                // signals["long_open"] = true;
+                // signals["long_close"] = true;
                 // signals["short_open"] = true;
                 // signals["short_close"] = false;
-                // this->long_amount = 21;
+                // this->long_amount = 20;
                 // this->short_amount = 23;
 
                 if (signals["long_close"])
@@ -2140,10 +2151,10 @@ namespace Workers::Customs
                     this->data_dir
                 );
 
-                this->file_initialize(
-                    this->strateger,
-                    this->candle_watcher
-                );
+                // this->file_initialize(
+                //     this->strateger,
+                //     this->candle_watcher
+                // );
             }
 
             /**

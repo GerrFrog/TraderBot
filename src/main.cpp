@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
     nlohmann::json jf = nlohmann::json::parse(ifs);
     nlohmann::json worker_configuration_1 = jf["workers"]["worker_1"];
     nlohmann::json worker_configuration_2 = jf["workers"]["worker_2"];
+    nlohmann::json worker_configuration_3 = jf["workers"]["worker_3"];
     nlohmann::json exchange = jf["exchange"];
 
     const string mode = dotenv::get("mode");
@@ -20,13 +21,18 @@ int main(int argc, char *argv[]) {
     double usdt_balance = 10000.0;
     double symbol_balance = 20.0;
 
-    Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Strategy, Candles::Candle> worker_1(
-        worker_configuration_1,
+    // Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Accurate_Strategy, Candles::Candle> worker(
+    //     worker_configuration_1,
+    //     exchange,
+    //     dir
+    // );
+    Workers::Customs::Worker<Strategies::Customs::HMA_CCI_Strategy, Candles::Candle> worker(
+        worker_configuration_2,
         exchange,
         dir
     );
-    // Workers::Customs::Worker<Strategies::Customs::HMA_CCI_Strategy, Candles::Candle> worker_2(
-    //     worker_configuration_2,
+    // Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Scalping_Strategy, Candles::Candle> worker(
+    //     worker_configuration_3,
     //     exchange,
     //     dir
     // );
@@ -34,28 +40,19 @@ int main(int argc, char *argv[]) {
     Tester tester;
 
     // // ONLINE TRADING FOR REAL MONEY WITH WORKER
-    worker_1.start();
-    // worker_2.start();
+    // worker.start();
 
     // // ONLINE TRADING FOR WORKER
-    // worker_1.online_backtest(
-    //     usdt_balance,
-    //     symbol_balance
-    // );
-    // worker_2.online_backtest(
+    // worker.online_backtest(
     //     usdt_balance,
     //     symbol_balance
     // );
 
     // // STRATEGY BACKTEST FOR WORKER
-    // worker_1.file_backtest(
-    //     usdt_balance,
-    //     symbol_balance
-    // );
-    // worker_2.file_backtest(
-    //     usdt_balance,
-    //     symbol_balance
-    // );
+    worker.file_backtest(
+        usdt_balance,
+        symbol_balance
+    );
 
     // // BACKTEST CANDLE
     // tester.backtest_candle<Candles::Heikin_Ashi>(

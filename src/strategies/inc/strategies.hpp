@@ -289,42 +289,47 @@ namespace Strategies::Customs
     };
 
     /**
-     * @brief RSXC + ADX strategy
+     * @brief RSXC + ADX scalping strategy
      */
-    class RSXC_ADX_Strategy
+    class RSXC_ADX_Scalping_Strategy
     {
         private:
             /**
              * @brief ADX line
              */
-            double adx_line = 22.0;
+            double adx_line = 25.0; // 25
 
             /**
-             * @brief RSXC_LB low line
+             * @brief RSXC_LB long open line
              */
-            double rsxc_lb_low_line = 30.0;
+            double rsxc_lb_long_open_line = 25.0;
 
             /**
-             * @brief RSXC_LB middle line
+             * @brief RSXC_LB long close line
              */
-            double rsxc_lb_middle_line = 50.0;
+            double rsxc_lb_long_close_line = 70.0;
 
             /**
-             * @brief RSXC_LB high line
+             * @brief RSXC_LB short open line
              */
-            double rsxc_lb_high_line = 70.0;
+            double rsxc_lb_short_open_line = 75.0;
+
+            /**
+             * @brief RSXC_LB short close line
+             */
+            double rsxc_lb_short_close_line = 30.0;
 
         public:
             /**
              * @brief Construct a new rsx adx object
              */
-            RSXC_ADX_Strategy() = default;
+            RSXC_ADX_Scalping_Strategy() = default;
 
             /**
              * @brief Destroy the rsx adx object
              * 
              */
-            ~RSXC_ADX_Strategy() = default;
+            ~RSXC_ADX_Scalping_Strategy() = default;
 
              /**
              * @brief Resolve Strategy
@@ -340,21 +345,99 @@ namespace Strategies::Customs
                 signals["short_close"] = false;
 
                 if (
-                    params["rsxc_lb"]["value"] <= this->rsxc_lb_low_line &&
-                    params["adx"]["value"] >= this->adx_line 
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_long_open_line &&
+                    params["adx"]["value"] >= this->adx_line
                 )
                     signals["long_open"] = true;
                 if (
-                    params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_long_close_line
                 )
                     signals["long_close"] = true;
                 if (
-                    params["rsxc_lb"]["value"] >= this->rsxc_lb_high_line &&
-                    params["adx"]["value"] >= this->adx_line 
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_short_open_line &&
+                    params["adx"]["value"] >= this->adx_line
                 )
                     signals["short_open"] = true;
                 if (
-                    params["rsxc_lb"]["value"] <= this->rsxc_lb_low_line
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_short_close_line
+                )
+                    signals["short_close"] = true;
+            }
+    };
+
+    /**
+     * @brief RSXC + ADX accurate strategy
+     */
+    class RSXC_ADX_Accurate_Strategy
+    {
+        private:
+            /**
+             * @brief ADX line
+             */
+            double adx_line = 25.0; // 25
+
+            /**
+             * @brief RSXC_LB long open line
+             */
+            double rsxc_lb_long_open_line = 25.0;
+
+            /**
+             * @brief RSXC_LB long close line
+             */
+            double rsxc_lb_long_close_line = 70.0;
+
+            /**
+             * @brief RSXC_LB short open line
+             */
+            double rsxc_lb_short_open_line = 75.0;
+
+            /**
+             * @brief RSXC_LB short close line
+             */
+            double rsxc_lb_short_close_line = 30.0;
+
+        public:
+            /**
+             * @brief Construct a new rsx adx object
+             */
+            RSXC_ADX_Accurate_Strategy() = default;
+
+            /**
+             * @brief Destroy the rsx adx object
+             * 
+             */
+            ~RSXC_ADX_Accurate_Strategy() = default;
+
+             /**
+             * @brief Resolve Strategy
+             * 
+             * @param params Parameters for strategy (indicators value)
+             * @param signals Signals of resolving (sell or buy)
+             */
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
+            {
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
+
+                if (
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_long_open_line &&
+                    params["adx"]["value"] >= this->adx_line
+                )
+                    signals["long_open"] = true;
+                if (
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_long_close_line
+                )
+                    signals["long_close"] = true;
+                if (
+                    params["rsxc_lb"]["value"] >= this->rsxc_lb_short_open_line &&
+                    params["adx"]["value"] >= this->adx_line 
+                    // params["ema"]["value"] > params["close"]
+                )
+                    signals["short_open"] = true;
+                if (
+                    params["rsxc_lb"]["value"] <= this->rsxc_lb_short_close_line
                 )
                     signals["short_close"] = true;
             }
