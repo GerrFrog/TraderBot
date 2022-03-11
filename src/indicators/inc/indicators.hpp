@@ -26,7 +26,7 @@ using std::vector;
 /**
  * @brief Abstract classes for Indicators
  */
-namespace Indicators
+namespace Indicators::Abstracts
 {
     /**
      * @brief Abstract class for Integral Indicators
@@ -64,9 +64,20 @@ namespace Indicators
             Integral_Indicator() = default;
 
             /**
+             * @brief Construct a new Integral_Indicator object
+             * 
+             * @param indicator_params Indicator parameters
+             */
+            Integral_Indicator(
+                nlohmann::json &indicator_params
+            ) : description(indicator_params),
+                period((int)indicator_params["period"])
+            { }
+
+            /**
              * @brief Destroy the Integral_Indicator object
              */
-            virtual ~Integral_Indicator() = default;
+            ~Integral_Indicator() = default;
 
             /**
              * @brief Set the indicator params 
@@ -132,9 +143,19 @@ namespace Indicators
 
         public:
             /**
-             * @brief Construct a new Integral_Indicator object
+             * @brief Construct a new TradingView_Indicator object
              */
             TradingView_Indicator() = default;
+        
+            /**
+             * @brief Construct a new TradingView_Indicator object
+             * 
+             * @param indicator_params Parameters for Indicator
+             */
+            TradingView_Indicator(
+                nlohmann::json &indicator_params
+            ) : description(indicator_params)
+            { }
 
             /**
              * @brief Destroy the Integral_Indicator object
@@ -231,9 +252,8 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class EMA : public Indicators::Integral_Indicator<Candle_T>
+    class EMA : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
-        // TODO: EMA with different sources (close, low, high...)
         private:
             /**
              * @brief Last EMA value
@@ -258,7 +278,7 @@ namespace Indicators::Integral
              */
             EMA(
                 nlohmann::json &indicator_params
-            )
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
             { 
                 this->description = indicator_params;
                 this->period = indicator_params["period"];
@@ -276,14 +296,15 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                if (size < this->period)
                 {
                     double curr = 0;
 
                     this->last_candles.push_back(candle);
 
                     for (Candle_T &last_candle : this->last_candles)
-                        curr += last_candle.get_close_price() / this->last_candles.size();
+                        curr += last_candle.get_close_price() / (double)size;
 
                     this->ema = curr;
                     this->last_ema = curr;
@@ -304,7 +325,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class WMA : public Indicators::Integral_Indicator<Candle_T>
+    class WMA : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         // TODO: WMA with different source (close, low, high...)
         private:
@@ -326,11 +347,8 @@ namespace Indicators::Integral
              */
             WMA(
                 nlohmann::json &indicator_params
-            )
-            {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the WMA object
@@ -344,7 +362,8 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                if (size < this->period)
                 {
                     this->last_candles.push_back(candle);
                 } else {
@@ -366,7 +385,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Typeo of Candle
      */
     template <class Candle_T>
-    class SMA : public Indicators::Integral_Indicator<Candle_T>
+    class SMA : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         // TODO: SMA with different source (close, high, low...)
         private:
@@ -388,11 +407,8 @@ namespace Indicators::Integral
              */
             SMA(
                 nlohmann::json &indicator_params
-            )
-            {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the SMA object
@@ -406,7 +422,8 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                if (size < this->period)
                 {
                     this->last_candles.push_back(candle);
                 } else {
@@ -428,7 +445,7 @@ namespace Indicators::Integral
      * @param Candle_T Type of Candle
      */
     template <class Candle_T>
-    class SSMA : public Indicators::Integral_Indicator<Candle_T>
+    class SSMA : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -454,11 +471,8 @@ namespace Indicators::Integral
              */
             SSMA(
                 nlohmann::json &indicator_params
-            )
-            { 
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the SSMA object
@@ -472,7 +486,8 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                if (size < this->period)
                 {
                     double curr = 0;
 
@@ -500,7 +515,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class RSI : public Indicators::Integral_Indicator<Candle_T>
+    class RSI : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         // TODO: Bad for Heikin_Ashi candle
         private:
@@ -532,11 +547,8 @@ namespace Indicators::Integral
              */
             RSI(
                 nlohmann::json &indicator_params
-            )
-            {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the RSI object
@@ -552,7 +564,9 @@ namespace Indicators::Integral
             {
                 double rs;
                 
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                
+                if (size < this->period)
                 {
                     this->last_candles.push_back(candle);
 
@@ -565,8 +579,8 @@ namespace Indicators::Integral
                         }
                     }
 
-                    this->avgGain /= this->last_candles.size();
-                    this->avgLoss /= this->last_candles.size();
+                    this->avgGain /= size;
+                    this->avgLoss /= size;
 
                     this->ret["value"] = NULL;                    
                 } else {
@@ -592,7 +606,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class TR : public Indicators::Integral_Indicator<Candle_T>
+    class TR : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -629,11 +643,8 @@ namespace Indicators::Integral
              */
             TR(
                 nlohmann::json &indicator_params
-            )
-            {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the TR object
@@ -662,7 +673,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class ATR : public Indicators::Integral_Indicator<Candle_T>
+    class ATR : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -718,14 +729,15 @@ namespace Indicators::Integral
              */
             void rma(double param)
             {
-                if (this->last_rmas.size() < this->period)
+                int size = this->last_rmas.size();
+                if (size < this->period)
                 {
                     double curr = 0;
 
                     this->last_rmas.push_back(param);
 
                     for (double &par : this->last_rmas)
-                        curr += par / this->last_rmas.size();
+                        curr += par / size;
 
                     this->atr = curr;
                     this->last_rma = curr;
@@ -746,14 +758,16 @@ namespace Indicators::Integral
              */
             void ema(double param)
             {
+                int size = this->last_emas.size();
+
                 this->last_emas.push_back(param);
 
-                if (this->last_emas.size() < this->period)
+                if (size < this->period)
                 {
                     double curr = 0;
 
                     for (double &last_val : this->last_emas)
-                        curr += last_val / this->last_emas.size();
+                        curr += last_val / size;
 
                     this->atr = curr;
                     this->last_ema = curr;
@@ -775,13 +789,15 @@ namespace Indicators::Integral
             void sma(double param)
             {
                 double calc = 0.0;
+                int size = this->last_smas.size();
 
                 this->last_smas.push_back(param);
-                if (this->last_smas.size() > this->period)
+                if (size > this->period)
                     this->last_smas.erase(this->last_smas.begin());
 
+                size = this->last_smas.size();
                 for (double& sma : this->last_smas)
-                    calc += sma / this->last_smas.size();
+                    calc += sma / size;
                 
                 this->atr = calc;
             }
@@ -798,9 +814,10 @@ namespace Indicators::Integral
                 int length = this->last_wmas.size();
 
                 this->last_wmas.push_back(param);
-                if (this->last_wmas.size() > this->period)
+                if (length > this->period)
                     this->last_wmas.erase(this->last_wmas.begin());
 
+                length = this->last_wmas.size();
                 for (int i = length - 1; i >= 0; i--) 
                     calc += this->last_wmas[i] * (i + 1);
                 this->atr = calc / (length * (length + 1) / 2);
@@ -819,12 +836,13 @@ namespace Indicators::Integral
              */
             ATR(
                 nlohmann::json &indicator_params
-            )
-            {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-                this->smoothed = indicator_params["smoothed"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
+
+            /**
+             * @brief Destroy the ATR object
+             */
+            virtual ~ATR() = default;
 
             /**
              * @brief Set the indicator params 
@@ -849,8 +867,10 @@ namespace Indicators::Integral
                 this->tr_ind.set_indicator_params(this->description);
                 double curr_tr;
 
+                int size = this->last_candles.size();
+
                 this->last_candles.push_back(candle);
-                if (this->last_candles.size() > this->period)
+                if (size > this->period)
                     this->last_candles.erase(
                         this->last_candles.begin()
                     );
@@ -895,7 +915,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class DMI : public Indicators::Integral_Indicator<Candle_T>
+    class DMI : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -944,11 +964,12 @@ namespace Indicators::Integral
             double ema(vector<double> &last_emas, double &last_ema, double param)
             {
                 double curr = 0;
+                int size = last_emas.size();
 
-                if (last_emas.size() < this->period)
+                if (size < this->period)
                 {
                     for (double &last_val : last_emas)
-                        curr += last_val / last_emas.size();
+                        curr += last_val / size;
 
                     last_ema = curr;
                     
@@ -988,12 +1009,13 @@ namespace Indicators::Integral
             double rma(vector<double> &last_rmas, double &last_rma, double param)
             {
                 double curr = 0;
-                if (last_rmas.size() < this->period)
+                int size = last_rmas.size();
+                if (size < this->period)
                 {
                     last_rmas.push_back(param);
 
                     for (double &par : last_rmas)
-                        curr += par / last_rmas.size();
+                        curr += par / (double)size;
 
                     last_rma = curr;
                     return curr;
@@ -1020,10 +1042,8 @@ namespace Indicators::Integral
              */
             DMI(
                 nlohmann::json &indicator_params
-            )
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
             {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
                 this->smoothed = indicator_params["smoothed"];
 
                 nlohmann::json atr_params = {
@@ -1036,7 +1056,7 @@ namespace Indicators::Integral
             /**
              * @brief Destroy the DM object
              */
-            ~DMI() = default;
+            virtual ~DMI() = default;
 
             /**
              * @brief Set the indicator params 
@@ -1063,11 +1083,13 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                double upmove;
-                double downmove;
-                double atr_value;
+                double upmove = 0;
+                double downmove = 0;
+                double atr_value = 0;
+                
+                int size = this->last_candles.size();
 
-                if (this->last_candles.size() == 0)
+                if (size == 0)
                 {
                     this->last_candles.push_back(candle);
                     this->ret["+DI"] = NULL;
@@ -1093,7 +1115,8 @@ namespace Indicators::Integral
                     upmove = 0;
                 }
 
-                if (this->upmoves.size() < this->period)
+                int upmove_size = this->upmoves.size();
+                if (upmove_size < this->period)
                 {
                     this->upmoves.push_back(upmove);
                     this->downmoves.push_back(downmove);
@@ -1141,7 +1164,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class ADX : public Indicators::Integral_Indicator<Candle_T>
+    class ADX : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -1173,12 +1196,13 @@ namespace Indicators::Integral
             double rma(vector<double> &last_rmas, double &last_rma, double param)
             {
                 double curr = 0;
-                if (last_rmas.size() < this->period)
+                int size = last_rmas.size();
+                if (size < this->period)
                 {
                     last_rmas.push_back(param);
 
                     for (double &par : last_rmas)
-                        curr += par / last_rmas.size();
+                        curr += par / size;
 
                     last_rma = curr;
                     return curr;
@@ -1205,11 +1229,8 @@ namespace Indicators::Integral
              */
             ADX(
                 nlohmann::json &indicator_params
-            )
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
             {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-
                 nlohmann::json dmi_params = {
                     {"period", indicator_params["dmi_period"]},
                     {"smoothed", indicator_params["dmi_smoothed"]},
@@ -1252,18 +1273,19 @@ namespace Indicators::Integral
                 nlohmann::json dmi_ret = dmi.get();
                 double di_plus = dmi_ret["+DI"];
                 double di_minus = dmi_ret["-DI"];
-                if (di_plus == NULL || di_minus == NULL)
+                if (!di_plus || !di_minus)
                 {
                     this->ret["value"] = NULL;
                     return;
                 }
 
                 double sum = di_plus + di_minus;
-                sum = sum == 0.0 ? 1 : sum;
+                sum = sum == 0.0 ? 1.0 : sum;
 
                 double param = abs(di_plus - di_minus) / sum;
                 this->last_rmas.push_back(param);
-                if (this->last_rmas.size() > this->period)
+                int size = this->last_rmas.size();
+                if (size > this->period)
                     this->last_rmas.erase(
                         this->last_rmas.begin()
                     );
@@ -1280,7 +1302,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class HMA : public Indicators::Integral_Indicator<Candle_T>
+    class HMA : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -1345,10 +1367,8 @@ namespace Indicators::Integral
              */
             HMA(
                 nlohmann::json &indicator_params
-            ) {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the Hull object
@@ -1362,17 +1382,19 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                int wma_1_period = this->period / 2;
                 int values_period = round(sqrt(this->period));
+                int wma_1_period = this->period / 2;
+                int wma_1_size = this->wma_1_candles.size();
+                int wma_2_size = this->wma_2_candles.size();
 
-                if (this->wma_1_candles.size() < wma_1_period) {
+                if (wma_1_size < wma_1_period) {
                     this->wma_1_candles.push_back(candle);
                 } else {
                     this->wma_1_candles.push_back(candle);
                     this->wma_1_candles.erase(this->wma_1_candles.begin());
                 }
 
-                if (this->wma_2_candles.size() < this->period) {
+                if (wma_2_size < this->period) {
                     this->wma_2_candles.push_back(candle);
                 } else {
                     this->wma_2_candles.push_back(candle);
@@ -1384,7 +1406,8 @@ namespace Indicators::Integral
 
                 double value = 2 * wma_1 - wma_2;
 
-                if (this->values.size() < values_period) {
+                int size = this->values.size();
+                if (size < values_period) {
                     this->values.push_back(value);
                 } else {
                     this->values.push_back(value);
@@ -1401,7 +1424,7 @@ namespace Indicators::Integral
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class CCI : public Indicators::Integral_Indicator<Candle_T>
+    class CCI : virtual public Indicators::Abstracts::Integral_Indicator<Candle_T>
     {
         private:
             /**
@@ -1452,10 +1475,8 @@ namespace Indicators::Integral
              */
             CCI(
                 nlohmann::json &indicator_params
-            ) {
-                this->description = indicator_params;
-                this->period = indicator_params["period"];
-            }
+            ) : Indicators::Abstracts::Integral_Indicator<Candle_T>(indicator_params)
+            { }
 
             /**
              * @brief Destroy the CCI object
@@ -1469,7 +1490,8 @@ namespace Indicators::Integral
              */
             void resolve(Candle_T &candle)
             {
-                if (this->last_candles.size() < this->period)
+                int size = this->last_candles.size();
+                if (size < this->period)
                 {
                     this->last_candles.push_back(candle);
                 } else {
@@ -1499,7 +1521,7 @@ namespace Indicators::TradingView
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class Normalized_MACD : public Indicators::TradingView_Indicator<Candle_T>
+    class Normalized_MACD : virtual public Indicators::Abstracts::TradingView_Indicator<Candle_T>
     {
         // TODO: Bad for Heikin_Ashi candle
         // TODO: Rewrite with pointer function
@@ -1662,10 +1684,8 @@ namespace Indicators::TradingView
              */
             Normalized_MACD(
                 nlohmann::json &indicator_params
-            )
+            ) : Indicators::Abstracts::TradingView_Indicator<Candle_T>(indicator_params)
             {
-                this->description = indicator_params;
-
                 this->sma = indicator_params["sma"];
                 this->lma = indicator_params["lma"];
                 this->tsp = indicator_params["tsp"];
@@ -1762,7 +1782,8 @@ namespace Indicators::TradingView
                 double ratio = this->min(sh, lon) / this->max(sh, lon);
                 double mac = (sh > lon ? 2 - ratio : ratio) - 1;
 
-                if (this->macs.size() < this->np)
+                int macs_size = this->macs.size();
+                if (macs_size < this->np)
                     this->macs.push_back(mac);
                 else {
                     this->macs.erase(this->macs.begin());
@@ -1775,7 +1796,8 @@ namespace Indicators::TradingView
 
                 this->macnorm2 = this->np < 2 ? mac : macnorm;
                 
-                if (this->macnorm2s.size() < this->tsp)
+                int macnorm2s_size = this->macnorm2s.size();
+                if (macnorm2s_size < this->tsp)
                     this->macnorm2s.push_back(this->macnorm2);
                 else {
                     this->macnorm2s.erase(this->macnorm2s.begin());
@@ -1797,7 +1819,7 @@ namespace Indicators::TradingView
      * @tparam Candle_T Type of Candle
      */
     template <class Candle_T>
-    class RSXC_LB : public Indicators::TradingView_Indicator<Candle_T>
+    class RSXC_LB : virtual public Indicators::Abstracts::TradingView_Indicator<Candle_T>
     {
         private:
             /**
@@ -1815,34 +1837,79 @@ namespace Indicators::TradingView
              */
             string src;
 
+            /**
+             * @brief Last value of f90
+             */
             double last_f90_ = 0.0;
 
+            /**
+             * @brief Last value of f88
+             */
             double last_f88 = 0.0;
 
+            /**
+             * @brief Last value of f8
+             */
             double last_f8 = 0.0;;
 
+            /**
+             * @brief Last value of f28
+             */
             double last_f28 = 0.0;
 
+            /**
+             * @brief Last value of f30
+             */
             double last_f30 = 0.0;
 
+            /**
+             * @brief Last value of f38
+             */
             double last_f38 = 0.0;
 
+            /**
+             * @brief Last value of f40
+             */
             double last_f40 = 0.0;
 
+            /**
+             * @brief Last value of f48
+             */
             double last_f48 = 0.0;
 
+            /**
+             * @brief Last value of f50
+             */
             double last_f50 = 0.0;
 
+            /**
+             * @brief Last value of f58
+             */
             double last_f58 = 0.0;
 
+            /**
+             * @brief Last value of f60
+             */
             double last_f60 = 0.0;
 
+            /**
+             * @brief Last value of f68
+             */
             double last_f68 = 0.0;
 
+            /**
+             * @brief Last value of f70
+             */
             double last_f70 = 0.0;
 
+            /**
+             * @brief Last value of f78
+             */
             double last_f78 = 0.0;
 
+            /**
+             * @brief Last value of f80
+             */
             double last_f80 = 0.0;
 
         public:
@@ -1858,10 +1925,8 @@ namespace Indicators::TradingView
              */
             RSXC_LB(
                 nlohmann::json &indicator_params
-            )
+            ) : Indicators::Abstracts::TradingView_Indicator<Candle_T>(indicator_params)
             {
-                this->description = indicator_params;
-
                 this->length = indicator_params["length"];
                 this->src = indicator_params["src"];
             }

@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 
 using std::string, std::cout, std::endl;
 
@@ -136,6 +137,7 @@ namespace Candles
                 close_price(close_price),
                 volume(volume),
                 quote_asset_volume(quote),
+                trades_count(trades_count),
                 taker_buy_base_asset_volume(tbbav),
                 taker_buy_quote_asset_volume(tbqav)
             { }
@@ -251,39 +253,6 @@ namespace Candles
              * @return double 
              */
             double get_tbqav() { return this->taker_buy_quote_asset_volume; }
-
-            /**
-             * @brief Construct a new Kline object
-             * 
-             * @param open_time Open time
-             * @param close_time Close time
-             * @param open_price Open price
-             * @param high_price High price
-             * @param low_price Low price
-             * @param close_price Close price
-             * @param volume Volume 
-             * @param quote Quote asset volume
-             * @param trades_count Number of trades
-             * @param tbbav Taker buy base asset volume
-             * @param tbqav Taker buy quote asset volume
-             * @param close_prev Previous candle close price
-             * @param open_prev Previous candle open price
-             */
-            virtual void construct(
-                unsigned long open_time,
-                unsigned long close_time,
-                double open_price,
-                double high_price,
-                double low_price,
-                double close_price,
-                double volume,
-                double quote,
-                double trades_count,
-                double tbbav,
-                double tbqav,
-                double close_prev = 0,
-                double open_prev = 0
-            ) = 0;
     };
 
     /**
@@ -361,7 +330,7 @@ namespace Candles
              * @param close_prev Previous candle close price
              * @param open_prev Previous candle open price
              */
-            virtual void construct(
+            void construct(
                 unsigned long open_time,
                 unsigned long close_time,
                 double open_price,
@@ -373,8 +342,8 @@ namespace Candles
                 double trades_count,
                 double tbbav,
                 double tbqav,
-                double close_prev = 0,
-                double open_prev = 0
+                double,
+                double
             )
             {
                 this->open_time = open_time;

@@ -112,12 +112,12 @@ namespace Trades::Abstract
                 double open_price, 
                 const string &symbol,
                 const string &position
-            ) : long_amount(long_amount), 
-                short_amount(short_amount),
-                open_price(open_price), 
+            ) : id(id),
                 symbol(symbol), 
                 position(position),
-                id(id)
+                long_amount(long_amount),
+                short_amount(short_amount),
+                open_price(open_price)
             { 
                 this->active = true;
                 this->completed = false;
@@ -228,21 +228,6 @@ namespace Trades::Abstract
                     << "Long amount: " << this->long_amount << endl
                     << "Short amount: " << this->short_amount << endl;
             }
-
-            /**
-             * @brief Close trade
-             * 
-             * @param close_p Close price
-             * @param cummulative_qty Cummulative quote quantity
-             * @param executed_qty Executed quantity
-             * @param commission Commission
-             */
-            virtual void close_trade(
-                double close_p,
-                double cummulative_qty = 0,
-                double executed_qty = 0,
-                double commission = 0
-            ) = 0;
     };
 }
 
@@ -277,13 +262,13 @@ namespace Trades
                 const string &symbol,
                 const string &position
             ) : Trade_Abstract(
-                id,
-                long_amount,
-                short_amount,
-                open_price,
-                symbol,
-                position
-            )
+                    id,
+                    long_amount,
+                    short_amount,
+                    open_price,
+                    symbol,
+                    position
+                )
             { }
 
             /**
@@ -300,10 +285,7 @@ namespace Trades
              * @param commission Commission
              */
             void close_trade(
-                double close_p,
-                double cummulative_qty = 0,
-                double executed_qty = 0,
-                double commission = 0
+                double close_p
             ) {
                 this->active = false;
                 this->completed = true;
@@ -416,11 +398,11 @@ namespace Trades
                     symbol,
                     position
                 ),
+                long_holding(long_hold),
+                short_holding(short_hold),
                 open_cummulativeQuoteQty(cummulative_qty),
                 open_executedQty(executed_qty),
-                open_commission(commission),
-                long_holding(long_hold),
-                short_holding(short_hold)
+                open_commission(commission)
             { }
 
             /**

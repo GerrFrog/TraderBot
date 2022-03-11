@@ -105,15 +105,14 @@ namespace Workers::Abstract
             Worker_Abstract(
                 nlohmann::json &config,
                 const string &data_dir
-            ) : worker_configuration(config),
-                data_dir(data_dir)
-            {
-                this->name = worker_configuration["name"];
-                this->strategy = worker_configuration["strategy"];
-                this->candle_type = worker_configuration["candle"];
-                this->interval = worker_configuration["interval"];
-                this->pair = worker_configuration["trader_params"]["pair"];
-            }
+            ) : name((string)config["name"]),
+                strategy((string)config["strategy"]),
+                candle_type((string)config["candle"]),
+                interval((string)config["interval"]),
+                pair((string)config["trader_params"]["pair"]),
+                data_dir(data_dir),
+                worker_configuration(config)
+            { }
 
             /**
              * @brief Describe worker
@@ -421,7 +420,8 @@ namespace Workers::Watchers
             Indicator_Watcher(
                 nlohmann::json &strategy_params,
                 const string &taapi_key
-            ) : taapi_key(taapi_key), strategy_params(strategy_params)
+            ) : strategy_params(strategy_params),
+                taapi_key(taapi_key)
             { }
 
             /**
@@ -597,13 +597,11 @@ namespace Workers::Watchers
              * @brief Get values for specified indicators
              * 
              * @param strategy_params strategy_params in config
-             * @param symbol Symbol (pair) to trade
              * @param backtest If backtest all Indicators will be calculated as Integral
              * @return nlohmann::json
              */
             nlohmann::json get(
                 nlohmann::json &strategy_params, 
-                const string &symbol,
                 bool backtest = false
             )
             {

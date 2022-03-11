@@ -15,7 +15,11 @@
 #include <string.h>
 #include <nlohmann/json.hpp>
 
-using std::string, std::cout, std::endl, std::unordered_map, std::to_string;
+using std::string; 
+using std::cout; 
+using std::endl;
+using std::unordered_map;
+using std::to_string;
 
 /**
  * @brief All API for Exchanges
@@ -249,9 +253,9 @@ namespace Exchanges::Binance
             Binance_API(
                 const string &pk,
                 const string &sk
-            ) : private_key(pk), 
-                secret_key(sk),
-                curlHandle(curl_easy_init(), &curl_easy_cleanup)
+            ) : curlHandle(curl_easy_init(), &curl_easy_cleanup),
+                private_key(pk), 
+                secret_key(sk)
             { 
         		this->chunk = curl_slist_append(this->chunk, ("X-MBX-APIKEY:" + this->private_key).c_str());
                 curl_easy_setopt(curlHandle.get(), CURLOPT_HTTPHEADER, this->chunk);
@@ -342,7 +346,8 @@ namespace Exchanges::Binance
         		sendSignedRequest("GET", "/api/v3/account", parameters);
 
                 nlohmann::json response = nlohmann::json::parse(this->content)["balances"];
-                for (int i = 0; i < response.size(); i++)
+                int size = response.size();
+                for (int i = 0; i < size; i++)
                 {
                     if (response[i]["asset"] == symbol)
                         return response[i];
