@@ -1891,11 +1891,14 @@ namespace Indicators::TradingView
              */
             void resolve(Candle_T &candle)
             {
-                double f8, f18, f20, f10, f90_, f88,
-                       v8, f28, f30, vC, f38, f40, v10,
-                       f48, f50, v14, f58, f60, v18,
-                       f68, f70, v1C, f78, f80, v20,
-                       f0, f90, v4_, rsx
+                double f8 = 0, f18 = 0, f20 = 0, f10 = 0, 
+                       f90_ = 0, f88 = 0, v8 = 0, f28 = 0, 
+                       f30 = 0, vC = 0, f38 = 0, f40 = 0, 
+                       v10 = 0, f48 = 0, f50 = 0, v14 = 0, 
+                       f58 = 0, f60 = 0, v18 = 0, f68 = 0, 
+                       f70 = 0, v1C = 0, f78 = 0, f80 = 0, 
+                       v20 = 0, f0 = 0, f90 = 0, v4_ = 0, 
+                       rsx = 0
                 ;
 
                 if (first) {

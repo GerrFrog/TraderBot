@@ -101,6 +101,46 @@ namespace Candles
             Kline() = default;
 
             /**
+             * @brief Construct a new Kline object
+             * 
+             * @param open_time Open time
+             * @param close_time Close time
+             * @param open_price Open price
+             * @param high_price High price
+             * @param low_price Low price
+             * @param close_price Close price
+             * @param volume Volume 
+             * @param quote Quote asset volume
+             * @param trades_count Number of trades
+             * @param tbbav Taker buy base asset volume
+             * @param tbqav Taker buy quote asset volume
+             */
+            Kline(
+                unsigned long open_time,
+                unsigned long close_time,
+                double open_price,
+                double high_price,
+                double low_price,
+                double close_price,
+                double volume,
+                double quote,
+                double trades_count,
+                double tbbav,
+                double tbqav
+            ) : set(true),
+                open_time(open_time),
+                close_time(close_time),
+                open_price(open_price),
+                high_price(high_price),
+                low_price(low_price),
+                close_price(close_price),
+                volume(volume),
+                quote_asset_volume(quote),
+                taker_buy_base_asset_volume(tbbav),
+                taker_buy_quote_asset_volume(tbqav)
+            { }
+
+            /**
              * @brief Destroy the Kline object
              */
             virtual ~Kline() = default;
@@ -284,36 +324,20 @@ namespace Candles
                 double trades_count,
                 double tbbav,
                 double tbqav
-            )
-            { 
-                this->open_time = open_time;
-                this->close_time = close_time;
-                this->open_price = open_price;
-                this->high_price = high_price;
-                this->low_price = low_price;
-                this->close_price = close_price;
-                this->volume = volume;
-                this->quote_asset_volume = quote;
-                this->trades_count = trades_count;
-                this->taker_buy_base_asset_volume = tbbav;
-                this->taker_buy_quote_asset_volume = tbqav;
-
-                this->set = true;
-                if (this->close_price >= this->open_price)
-                {
-                    this->green = true;
-                } else {
-                    this->green = false;
-                }
-                if (this->green) {
-                    this->change_absolute = close_price - open_price;
-                } else {
-                    this->change_absolute = open_price - close_price;
-                }
-
-                this->typical_price = (this->high_price + 
-                    this->low_price + this->close_price) / 3;
-            }
+            ) : Kline(
+                    open_time,
+                    close_time,
+                    open_price,
+                    high_price,
+                    low_price,
+                    close_price,
+                    volume,
+                    quote,
+                    trades_count,
+                    tbbav,
+                    tbqav
+                )
+            { }
 
             /**
              * @brief Destroy the Candle object
@@ -427,18 +451,20 @@ namespace Candles
                 double tbqav,
                 double close_prev,
                 double open_prev
-            )
+            ) : Kline(
+                    open_time,
+                    close_time,
+                    open_price,
+                    high_price,
+                    low_price,
+                    close_price,
+                    volume,
+                    quote,
+                    trades_count,
+                    tbbav,
+                    tbqav
+                )
             { 
-                this->open_time = open_time;
-                this->close_time = close_time;
-                this->volume = volume;
-                this->quote_asset_volume = quote;
-                this->trades_count = trades_count;
-                this->taker_buy_base_asset_volume = tbbav;
-                this->taker_buy_quote_asset_volume = tbqav;
-
-                this->set = true;
-
                 this->open_price = (open_prev + close_prev) / 2;
                 this->close_price = (
                     open_price + high_price +
