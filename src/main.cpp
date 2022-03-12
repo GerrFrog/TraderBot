@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     << endl;
 
     // TODO: Take strategy and candle type from config
-    if (mode == "online_backtest")
+    if (mode == "online-backtest")
     {
         if (worker_name == "worker_1")
         {
