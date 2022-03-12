@@ -1732,6 +1732,8 @@ namespace Workers::Implementors
             {
                 cout << "[+] Start setup amounts" << endl;
 
+                double holding;
+
                 // TODO: Remake without this shit
                 this->binapi.reset();
                 this->binapi = std::make_unique<Exchanges::Binance::Binance_API>(
@@ -1745,6 +1747,20 @@ namespace Workers::Implementors
                 this->short_balance = std::stod(
                     (string)this->binapi->get_balance(this->short_symbol)["free"]
                 );
+
+                for (auto trade : this->current_trades)
+                {
+                    if (trade.get_position() == "long")
+                    {
+                        holding = trade.get_long_holding();
+                        this->short_balance -= holding;
+                    }
+                    if (trade.get_position() == "short")
+                    {
+                        holding = trade.get_short_holding();
+                        this->long_balance -= holding;
+                    }
+                }
 
                 double price = std::stod(
                     (string)this->binapi->get_current_price(this->erased_pair)["price"]
