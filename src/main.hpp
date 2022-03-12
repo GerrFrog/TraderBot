@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <cxxopts.hpp>
 
 // #include "libs/binapi/include/binapi/api.hpp"
 #include "libs/dotenv/include/dotenv.hpp"

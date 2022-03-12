@@ -64,44 +64,6 @@
                     "period": 24
                 }
             }
-        },
-        "worker_3": {
-            "name": "Worker 1",
-            "strategy": "RSXC_ADX_Accurate_Strategy",
-            "candle": "Candle",
-            "interval": "1m",
-            "trader_params": {
-                "pair": "ALGO/USDT",
-                "positions": "both",
-                "type": "position",
-                "exchange": "binance",
-                "long_amount": -1.0,
-                "short_amount": -1.0,
-                "max_open_trade": 30,
-                "stop-loss": 1,
-                "target": 2
-            },
-            "strategy_params": {
-                "rsxc_lb": {
-                    "type": "Indicators::TradingView",
-                    "indicator": "RSXC_LB",
-                    "src": "Close",
-                    "length": 10
-                },
-                "adx": {
-                    "type": "Indicators::Integral",
-                    "indicator": "ADX",
-                    "period": 10,
-                    "dmi_period": 10,
-                    "dmi_smoothed": "RMA",
-                    "dmi_atr_smoothed": "RMA"
-                },
-                "ema": {
-                    "type": "Indicators::Integral",
-                    "indicator": "EMA",
-                    "period": 200
-                }
-            }
         }
     },
     "taapi": {
@@ -123,10 +85,7 @@
     "exchange": {
         "binance": {
             "private_key": "KSAeI8O7FNNHoYiJEbhCB2Rm1e7E05SZ7uQkj3dzl90orQDyfpN1f6W2DDWhXqhd",
-            "secret_key": "gNYSVslNacipFRitkP75puJCkxd9VeWwssVRLbe4Ca7n5dUaSo9Sn0oky2nS1iEl",
-            "tradable_pairs": [
-                "BTCUSDT"
-            ]
+            "secret_key": "gNYSVslNacipFRitkP75puJCkxd9VeWwssVRLbe4Ca7n5dUaSo9Sn0oky2nS1iEl"
         }
     }
 }

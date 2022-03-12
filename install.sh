@@ -6,9 +6,10 @@ mkdir data/
 mkdir backtest_results/
 
 # CMake
-sudo apt-get install extra-cmake-modules 
+apt-get install extra-cmake-modules 
 
 # cpr (for C++ requests)
+cd /tmp
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg 
 ./bootstrap-vcpkg.sh
@@ -17,32 +18,40 @@ cd vcpkg
 pip3 install conan
 ln -s ~/.local/bin/conan /usr/bin/conan
 
+# Arg Parser for C++
+cd /tmp
+git clone https://github.com/jarro2783/cxxopts.git
+cd cxxopts
+cmake .
+make -j8
+make install
+
 # curl
-sudo apt-get install curl libcurl3 libcurl3-dev
+apt-get install curl libcurl3 libcurl3-dev
 
 # json 
-sudo apt-get install libjsoncpp-dev -y
-sudo ln -s /usr/include/jsoncpp/json/ /usr/include/json
+apt-get install libjsoncpp-dev -y
+ln -s /usr/include/jsoncpp/json/ /usr/include/json
 
 # libcurl-dev
-sudo apt install libcurl4-gnutls-dev -y
-sudo apt install libcurl4-openssl-dev -y
-sudo apt install libcurl4-nss-dev -y
+apt install libcurl4-gnutls-dev -y
+apt install libcurl4-openssl-dev -y
+apt install libcurl4-nss-dev -y
 
 # web socket
-sudo apt install libwebsockets-dev -y
+apt install libwebsockets-dev -y
 
 # boost
-sudo apt install libboost-all-dev -y
+apt install libboost-all-dev -y
 
 # MySQL connector
-sudo apt-get install libmysqlcppconn-dev -y
-sudo apt install libmysqlclient-dev -y
-sudo apt install libmysql++-dev -y
+apt-get install libmysqlcppconn-dev -y
+apt install libmysqlclient-dev -y
+apt install libmysql++-dev -y
 
 # MySQL system
-sudo apt install mysql-server -y
-sudo systemctl start mysql
+apt install mysql-server -y
+systemctl start mysql
 
 # Telegram bot library
 cd /tmp/
@@ -51,19 +60,19 @@ cd tgbot-cpp
 mkdir bin/ && cd bin/
 cmake ..
 make -j4
-sudo make install
+make install
 cd /tmp/
 
 # Python for C++
-sudo apt install python3-dev -y
+apt install python3-dev -y
 
-echo "You should install mysql, if you haven't. Type 'sudo mysql_secure_installation'"
+echo "You should install mysql, if you haven't. Type 'mysql_secure_installation'"
 
 # Python packages 
 pip3 install -r requirements.txt
 
 # JSON C++
-sudo apt-get install nlohmann-json3-dev
+apt-get install nlohmann-json3-dev
 git clone https://github.com/nlohmann/json.git
 cd json
 mkdir bin && cd bin
