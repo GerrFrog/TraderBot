@@ -1,12 +1,47 @@
+#!/bin/bash
+set -eu -o pipefail
+
+sudo -n true
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 echo "Start installing dependencies"
 
-# Prepare directory
-mkdir bin/
-mkdir data/
-mkdir backtest_results/
+bin_dir="bin/"
+data_dir="data/"
+backtest_dir="backtest_results/"
 
-# CMake
-apt-get install extra-cmake-modules 
+[ ! -d "$bin_dir" ] && mkdir -p "$bin_dir"
+[ ! -d "$data_dir" ] && mkdir -p "$data_dir"
+[ ! -d "$backtest_dir" ] && mkdir -p "$backtest_dir"
+
+while read -r p ; do sudo apt-get install -y $p ; done < <(cat << "EOF"
+    cmake
+    extra-cmake-modules
+    curl
+    libcurl3-dev
+    libjsoncpp-dev
+    libcurl4-gnutls-dev
+    libcurl4-openssl-dev
+    libcurl4-nss-dev
+    libwebsockets-dev
+    libboost-all-dev
+    libmysqlcppconn-dev
+    libmysqlclient-dev
+    libmysql++-dev
+    mysql-server
+    python3-dev
+EOF
+)
+
+ln -s /usr/include/jsoncpp/json/ /usr/include/json
+
+systemctl start mysql
+
+pip3 install -r requirements.txt
 
 # cpr (for C++ requests)
 cd /tmp
@@ -26,50 +61,14 @@ cmake .
 make -j8
 make install
 
-# curl
-apt-get install curl libcurl3 libcurl3-dev
-
-# json 
-apt-get install libjsoncpp-dev -y
-ln -s /usr/include/jsoncpp/json/ /usr/include/json
-
-# libcurl-dev
-apt install libcurl4-gnutls-dev -y
-apt install libcurl4-openssl-dev -y
-apt install libcurl4-nss-dev -y
-
-# web socket
-apt install libwebsockets-dev -y
-
-# boost
-apt install libboost-all-dev -y
-
-# MySQL connector
-apt-get install libmysqlcppconn-dev -y
-apt install libmysqlclient-dev -y
-apt install libmysql++-dev -y
-
-# MySQL system
-apt install mysql-server -y
-systemctl start mysql
-
 # Telegram bot library
 cd /tmp/
 git clone https://github.com/reo7sp/tgbot-cpp
 cd tgbot-cpp
 mkdir bin/ && cd bin/
 cmake ..
-make -j4
+make -j8
 make install
-cd /tmp/
-
-# Python for C++
-apt install python3-dev -y
-
-echo "You should install mysql, if you haven't. Type 'mysql_secure_installation'"
-
-# Python packages 
-pip3 install -r requirements.txt
 
 # JSON C++
 apt-get install nlohmann-json3-dev
