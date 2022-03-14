@@ -13,31 +13,34 @@ echo "Start installing dependencies"
 bin_dir="bin/"
 data_dir="data/"
 backtest_dir="backtest_results/"
+json_link="usr/include/json"
 
 [ ! -d "$bin_dir" ] && mkdir -p "$bin_dir"
 [ ! -d "$data_dir" ] && mkdir -p "$data_dir"
 [ ! -d "$backtest_dir" ] && mkdir -p "$backtest_dir"
 
 while read -r p ; do sudo apt-get install -y $p ; done < <(cat << "EOF"
-    cmake
-    extra-cmake-modules
-    curl
-    libcurl3-dev
-    libjsoncpp-dev
-    libcurl4-gnutls-dev
-    libcurl4-openssl-dev
-    libcurl4-nss-dev
-    libwebsockets-dev
-    libboost-all-dev
-    libmysqlcppconn-dev
-    libmysqlclient-dev
-    libmysql++-dev
-    mysql-server
-    python3-dev
+  cmake
+  extra-cmake-modules
+  curl
+  libcurl3-dev
+  libjsoncpp-dev
+  libcurl4-gnutls-dev
+  libcurl4-openssl-dev
+  libcurl4-nss-dev
+  libwebsockets-dev
+  libboost-all-dev
+  libmysqlcppconn-dev
+  libmysqlclient-dev
+  libmysql++-dev
+  mysql-server
+  python3-dev
 EOF
 )
 
-ln -s /usr/include/jsoncpp/json/ /usr/include/json
+if [ ! -L $json_link]; then
+  ln -s /usr/include/jsoncpp/json/ /usr/include/json
+fi
 
 systemctl start mysql
 
