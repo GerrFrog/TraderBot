@@ -39,29 +39,21 @@ EOF
 )
 
 # Arg Parser for C++
-cd /tmp
-git clone https://github.com/jarro2783/cxxopts.git
-cd cxxopts
+cd ./depends/cxxopts
 cmake .
 make -j8
 make install
 
 # Telegram bot library
-cd /tmp/
-git clone https://github.com/reo7sp/tgbot-cpp
-cd tgbot-cpp
-mkdir bin/ && cd bin/
-cmake ..
+cd ./depends/tgbot-cpp
+cmake .
 make -j8
 make install
 
 # JSON C++
-apt-get install nlohmann-json3-dev
-git clone https://github.com/nlohmann/json.git
-cd json
-mkdir bin && cd bin
-cmake ..
-make -j4 
+cd ./depends/json
+cmake .
+make -j8 
 make install
 
 if [ ! -L $json_link]; then
