@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     // ;
 
     options.add_options()
-        ("m,mode", "Working mode: backtest, real, online_backtest", cxxopts::value<std::string>()->default_value("online_backtest"))
+        ("m,mode", "Working mode: backtest, real, online_backtest", cxxopts::value<std::string>()->default_value("online-backtest"))
         ("w,worker-name", "Worker name", cxxopts::value<string>()->default_value("worker_1"))
         ("d,dir", "Realtive path to directory with data", cxxopts::value<string>()->default_value("../data/"))
         ("l, long-balance", "Your start balance for long positions (e.g. BTC/USDT -> USDT balance)", cxxopts::value<double>()->default_value("10000.0"))
