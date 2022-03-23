@@ -38,24 +38,6 @@ while read -r p ; do sudo apt-get install -y $p ; done < <(cat << "EOF"
 EOF
 )
 
-if [ ! -L $json_link]; then
-  ln -s /usr/include/jsoncpp/json/ /usr/include/json
-fi
-
-systemctl start mysql
-
-pip3 install -r requirements.txt
-
-# cpr (for C++ requests)
-cd /tmp
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg 
-./bootstrap-vcpkg.sh
-./vcpkg integrate install
-./vcpkg install cpr
-pip3 install conan
-ln -s ~/.local/bin/conan /usr/bin/conan
-
 # Arg Parser for C++
 cd /tmp
 git clone https://github.com/jarro2783/cxxopts.git
@@ -81,3 +63,11 @@ mkdir bin && cd bin
 cmake ..
 make -j4 
 make install
+
+if [ ! -L $json_link]; then
+  ln -s /usr/include/jsoncpp/json/ /usr/include/json
+fi
+
+systemctl start mysql
+
+pip3 install -r requirements.txt
