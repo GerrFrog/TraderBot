@@ -1192,6 +1192,11 @@ namespace Workers::Implementors
             int loses_short = 0;
 
             /**
+             * @brief Maximum opened trades
+             */
+            int max_opened_trades;
+
+            /**
              * @brief Initialize Trade as opened
              * 
              * @param position Trade position (long/short)
@@ -1439,6 +1444,8 @@ namespace Workers::Implementors
                             "long",
                             price
                         );
+                        if (this->max_opened_trades < (int)this->current_trades.size())
+                            this->max_opened_trades = this->current_trades.size();
                     }
                     if (
                         signals["short_open"] &&
@@ -1455,6 +1462,8 @@ namespace Workers::Implementors
                             "short",
                             price
                         );
+                        if (this->max_opened_trades < (int)this->current_trades.size())
+                            this->max_opened_trades = this->current_trades.size();
                     }
                 } else if (this->type == "scalping") {
                     double opened_price;
@@ -1544,6 +1553,8 @@ namespace Workers::Implementors
             void print_statistic()
             {
                 cout 
+                    << "----------------------------------" << endl
+                    << "Maximum opened trades:" << this->max_opened_trades << endl
                     << "----------------------------------" << endl
                     << "LONG POSITION STATISTIC:" << endl
                     << endl

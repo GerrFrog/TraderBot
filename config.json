@@ -15,7 +15,7 @@
                 "exchange": "binance",
                 "long_amount": -1.0,
                 "short_amount": -1.0,
-                "max_open_trade": 30,
+                "max_open_trade": 20,
                 "stop-loss": 1,
                 "target": 2
             },
