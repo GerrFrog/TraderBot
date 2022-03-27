@@ -97,6 +97,18 @@ int main(int argc, char *argv[]) {
                 short_balance
             );
         }
+        if (worker_name == "worker_3")
+        {
+            Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Cross_Strategy, Candles::Candle> worker(
+                worker_configuration,
+                exchange,
+                dir
+            );
+            worker.online_backtest(
+                long_balance,
+                short_balance
+            );
+        }
     }
     if (mode == "backtest")
     {
@@ -124,6 +136,18 @@ int main(int argc, char *argv[]) {
                 short_balance
             );
         }
+        if (worker_name == "worker_3")
+        {
+            Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Cross_Strategy, Candles::Candle> worker(
+                worker_configuration,
+                exchange,
+                dir
+            );
+            worker.file_backtest(
+                long_balance,
+                short_balance
+            );
+        }
     }
     if (mode == "real")
     {
@@ -139,6 +163,15 @@ int main(int argc, char *argv[]) {
         if (worker_name == "worker_2")
         {
             Workers::Customs::Worker<Strategies::Customs::HMA_CCI_Strategy, Candles::Candle> worker(
+                worker_configuration,
+                exchange,
+                dir
+            );
+            worker.start();
+        }
+        if (worker_name == "worker_3")
+        {
+            Workers::Customs::Worker<Strategies::Customs::RSXC_ADX_Cross_Strategy, Candles::Candle> worker(
                 worker_configuration,
                 exchange,
                 dir

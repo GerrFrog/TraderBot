@@ -1436,7 +1436,7 @@ namespace Workers::Implementors
                             this->positions == "long"
                         ) &&
                         (
-                            this->current_trades.size() <= this->max_open_trade ||
+                            this->current_trades.size() < this->max_open_trade ||
                             this->max_open_trade == -1.0
                         )
                     ) {
@@ -1454,7 +1454,7 @@ namespace Workers::Implementors
                             this->positions == "short"
                         ) &&
                         (
-                            this->current_trades.size() <= this->max_open_trade ||
+                            this->current_trades.size() < this->max_open_trade ||
                             this->max_open_trade == -1.0
                         )
                     ) {

@@ -1690,7 +1690,7 @@ namespace Indicators::TradingView
                 this->lma = indicator_params["lma"];
                 this->tsp = indicator_params["tsp"];
                 this->np = indicator_params["np"];
-                this->type = (string)indicator_params["type"];
+                this->type = (string)indicator_params["typ"];
 
                 nlohmann::json conf_1 = {
                     {"period", this->sma},

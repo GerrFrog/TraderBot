@@ -295,9 +295,14 @@ namespace Strategies::Customs
     {
         private:
             /**
-             * @brief ADX line
+             * @brief ADX low line
              */
-            double adx_line = 25.0; // 25
+            double adx_low_line = 22.0; // 25
+
+            /**
+             * @brief ADX high line
+             */
+            double adx_high_line = 38.0;
 
             /**
              * @brief RSXC_LB long open line
@@ -344,24 +349,211 @@ namespace Strategies::Customs
                 signals["short_open"] = false;
                 signals["short_close"] = false;
 
+                double rsxc_lb = params["rsxc_lb"]["value"];
+                double adx = params["adx"]["value"];
+
                 if (
-                    params["rsxc_lb"]["value"] <= this->rsxc_lb_long_open_line &&
-                    params["adx"]["value"] >= this->adx_line
+                    rsxc_lb <= this->rsxc_lb_long_open_line &&
+                    adx >= this->adx_low_line
+                    // && adx <= this->adx_high_line
                 )
                     signals["long_open"] = true;
                 if (
-                    params["rsxc_lb"]["value"] >= this->rsxc_lb_long_close_line
+                    rsxc_lb >= this->rsxc_lb_long_close_line
                 )
                     signals["long_close"] = true;
                 if (
-                    params["rsxc_lb"]["value"] >= this->rsxc_lb_short_open_line &&
-                    params["adx"]["value"] >= this->adx_line
+                    rsxc_lb >= this->rsxc_lb_short_open_line &&
+                    adx >= this->adx_low_line
+                    // && adx <= this->adx_high_line
                 )
                     signals["short_open"] = true;
                 if (
-                    params["rsxc_lb"]["value"] <= this->rsxc_lb_short_close_line
+                    rsxc_lb <= this->rsxc_lb_short_close_line
                 )
                     signals["short_close"] = true;
+            }
+    };
+
+    /**
+     * @brief RSXC Cross + ADX
+     */
+    class RSXC_ADX_Cross_Strategy
+    {
+        private:
+            /**
+             * @brief ADX low line
+             */
+            double adx_low_line = 25.0; // 25
+
+            /**
+             * @brief ADX high line
+             */
+            double adx_high_line = 38.0;
+
+            /**
+             * @brief RSXC_LB long open line
+             */
+            double rsxc_lb_long_open_line = 25.0;
+
+            /**
+             * @brief RSXC_LB long close line
+             */
+            double rsxc_lb_long_close_line = 70.0;
+
+            /**
+             * @brief RSXC_LB short open line
+             */
+            double rsxc_lb_short_open_line = 75.0;
+
+            /**
+             * @brief RSXC_LB short close line
+             */
+            double rsxc_lb_short_close_line = 30.0;
+
+            /**
+             * @brief Is Short RSX above Long EMA?
+             */
+            bool is_short_above = false;
+
+            /**
+             * @brief Is Short RSX below Long EMA?
+             */
+            bool is_short_below = false;
+
+            /**
+             * @brief Does Short RSX crossed Long RSX above? (Buy signal)
+             * 
+             * @param short_rsx Short RSX
+             * @param long_rsx Long RSX
+             * @return true 
+             * @return false 
+             */
+            bool cross_above(double short_rsx, double long_rsx)
+            {
+                if (!this->is_short_above && !this->is_short_below)
+                {
+                    if (short_rsx > long_rsx)
+                    {
+                        this->is_short_above = true;
+                        this->is_short_below = false;
+                    } else {
+                        this->is_short_above = false;
+                        this->is_short_below = true;
+                    }
+                    return false;
+                }
+
+                if (this->is_short_above && this->is_short_below)
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
+
+                if (this->is_short_below && short_rsx > long_rsx)
+                {
+                    this->is_short_above = true;
+                    this->is_short_below = false;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            /**
+             * @brief Does Short RSX crossed Long EMA below? (Sell signal)
+             * 
+             * @param short_rsx Short RSX
+             * @param long_rsx Long RSX
+             * @return true 
+             * @return false 
+             */
+            bool cross_below(double short_rsx, double long_rsx)
+            {
+                if (!this->is_short_above && !this->is_short_below)
+                {
+                    if (short_rsx > long_rsx)
+                    {
+                        this->is_short_above = true;
+                        this->is_short_below = false;
+                    } else {
+                        this->is_short_above = false;
+                        this->is_short_below = true;
+                    }
+                    return false;
+                }
+
+                if (this->is_short_above && this->is_short_below)
+                    throw Exceptions::Strategies::Logic_Exception(
+                        "Logical error in Strategy. Something can't be",
+                        1,
+                        0
+                    );
+
+                if (this->is_short_above && short_rsx < long_rsx)
+                {
+                    this->is_short_above = false;
+                    this->is_short_below = true;
+
+                    return true;
+                }
+
+                return false;
+            }
+
+        public:
+            /**
+             * @brief Construct a new rsxc adx cross strategy object
+             */
+            RSXC_ADX_Cross_Strategy() = default;
+
+            /**
+             * @brief Destroy the rsxc adx cross strategy object
+             */
+            ~RSXC_ADX_Cross_Strategy() = default;
+
+             /**
+             * @brief Resolve Strategy
+             * 
+             * @param params Parameters for strategy (indicators value)
+             * @param signals Signals of resolving (sell or buy)
+             */
+            void resolve(nlohmann::json &params, std::map<std::string, bool> &signals)
+            {
+                signals["long_open"] = false;
+                signals["long_close"] = false;
+                signals["short_open"] = false;
+                signals["short_close"] = false;
+
+                double rsxc_lb_signal = params["rsxc_lb_signal"]["value"];
+                double adx_fast = params["adx_fast"]["value"];
+
+                double trigger = params["normalized_macd"]["Trigger"];
+                double macnorm = params["normalized_macd"]["MacNorm"];
+
+                if (
+                    adx_fast >= this->adx_low_line
+                    && trigger > macnorm
+                    && rsxc_lb_signal <= this->rsxc_lb_long_open_line
+                )
+                    signals["long_open"] = true;
+                if (
+                    adx_fast >= this->adx_low_line
+                    && trigger < macnorm
+                    && rsxc_lb_signal >= this->rsxc_lb_short_open_line
+                )
+                    signals["short_open"] = true;
+
+                if (
+                    rsxc_lb_signal <= this->rsxc_lb_short_close_line
+                )
+                    signals["short_close"] = true;
+                if (
+                    rsxc_lb_signal >= this->rsxc_lb_long_close_line
+                )
+                    signals["long_close"] = true;
             }
     };
 

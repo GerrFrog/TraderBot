@@ -7,7 +7,7 @@
             "name": "Worker 1",
             "strategy": "RSXC_ADX_Scalping_Strategy",
             "candle": "Candle",
-            "interval": "1m",
+            "interval": "30m",
             "trader_params": {
                 "pair": "ALGO/USDT",
                 "positions": "both",
@@ -29,7 +29,7 @@
                 "adx": {
                     "type": "Indicators::Integral",
                     "indicator": "ADX",
-                    "period": 10,
+                    "period": 25,
                     "dmi_period": 10,
                     "dmi_smoothed": "RMA",
                     "dmi_atr_smoothed": "RMA"
@@ -62,6 +62,48 @@
                     "type": "Indicators::Integral",
                     "indicator": "CCI",
                     "period": 24
+                }
+            }
+        },
+        "worker_3": {
+            "name": "Worker 3",
+            "strategy": "RSXC_ADX_Cross_Strategy",
+            "candle": "Candle",
+            "interval": "30m",
+            "trader_params": {
+                "pair": "ALGO/USDT",
+                "positions": "both",
+                "type": "position",
+                "exchange": "binance",
+                "long_amount": -1.0,
+                "short_amount": -1.0,
+                "max_open_trade": 20,
+                "stop-loss": 1,
+                "target": 2
+            },
+            "strategy_params": {
+                "rsxc_lb_signal": {
+                    "type": "Indicators::TradingView",
+                    "indicator": "RSXC_LB",
+                    "src": "Close",
+                    "length": 10
+                },
+                "adx_fast": {
+                    "type": "Indicators::Integral",
+                    "indicator": "ADX",
+                    "period": 25,
+                    "dmi_period": 10,
+                    "dmi_smoothed": "RMA",
+                    "dmi_atr_smoothed": "RMA"
+                },
+                "normalized_macd": {
+                    "type": "Indicators::TradingView",
+                    "indicator": "Normalized_MACD",
+                    "sma": 20,
+                    "lma": 58,
+                    "tsp": 18,
+                    "np": 60,
+                    "typ": "EMA"
                 }
             }
         }
