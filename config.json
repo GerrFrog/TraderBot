@@ -7,7 +7,7 @@
             "name": "Worker 1",
             "strategy": "RSXC_ADX_Scalping_Strategy",
             "candle": "Candle",
-            "interval": "30m",
+            "interval": "15m",
             "trader_params": {
                 "pair": "ALGO/USDT",
                 "positions": "both",
@@ -15,7 +15,7 @@
                 "exchange": "binance",
                 "long_amount": -1.0,
                 "short_amount": -1.0,
-                "max_open_trade": 20,
+                "max_open_trade": 15,
                 "stop-loss": 1,
                 "target": 2
             },

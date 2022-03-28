@@ -297,7 +297,7 @@ namespace Strategies::Customs
             /**
              * @brief ADX low line
              */
-            double adx_low_line = 22.0; // 25
+            double adx_low_line = 25.0; // 22
 
             /**
              * @brief ADX high line
@@ -307,7 +307,7 @@ namespace Strategies::Customs
             /**
              * @brief RSXC_LB long open line
              */
-            double rsxc_lb_long_open_line = 25.0;
+            double rsxc_lb_long_open_line = 30.0;
 
             /**
              * @brief RSXC_LB long close line
@@ -317,7 +317,7 @@ namespace Strategies::Customs
             /**
              * @brief RSXC_LB short open line
              */
-            double rsxc_lb_short_open_line = 75.0;
+            double rsxc_lb_short_open_line = 70.0;
 
             /**
              * @brief RSXC_LB short close line
